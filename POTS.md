@@ -20,5 +20,3 @@
 | Mexico | Scotland | Qatar |
 | Morocco | Algeria | Curaçao |
 | Turkey | Bosnia & Herzegovina | Iran |
-
-> _Iran (Pot 3) is an inferred 48th team — verify against the confirmed field._

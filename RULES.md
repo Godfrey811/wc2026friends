@@ -85,6 +85,4 @@ Points for the furthest stage a team reaches, realised in the game they're elimi
 | Morocco | Algeria | Curaçao |
 | Turkey | Bosnia & Herzegovina | Iran |
 
-> _Iran's place in Pot 3 is an inferred 48th team and should be checked against the confirmed WC2026 field before the draft._
-
 > _Rules locked from the conversation of June 2026. If anything here doesn't match what you expected, flag it before the draft._

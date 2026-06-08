@@ -18,8 +18,8 @@ from __future__ import annotations
 #   ("note", text)                     small caveat / footnote
 
 # --- The draft pots, seeded by "to reach QF" odds (Pot 1 strongest). ---------
-# NOTE: Iran in Pot 3 is an inferred placement for the 48th team — verify
-# against the confirmed WC2026 field before the draft.
+# Field checked against the confirmed 48-team WC2026 lineup (June 2026):
+# UEFA 16, CONMEBOL 6, AFC 9, CAF 10, CONCACAF 6, OFC 1.
 
 POT1 = [
     "Spain", "France", "England", "Argentina", "Portugal", "Brazil",
@@ -129,9 +129,6 @@ CONTENT = [
      "full 48). The pots are seeded by each team's \"to reach the quarter-finals\" "
      "odds: Pot 1 is the 16 strongest, Pot 3 the 16 longest shots."),
     ("table", _POT_HEADERS, _POT_ROWS),
-    ("note",
-     "Iran's place in Pot 3 is an inferred 48th team and should be checked "
-     "against the confirmed WC2026 field before the draft."),
 
     ("note",
      "Rules locked from the conversation of June 2026. If anything here doesn't "
@@ -267,7 +264,6 @@ if __name__ == "__main__":
         ("h1", "WC2026 Friends — Draft Pots"),
         ("p", "16 players, three teams each (one per pot). Seeded by \"to reach QF\" odds."),
         ("table", _POT_HEADERS, _POT_ROWS),
-        ("note", "Iran (Pot 3) is an inferred 48th team — verify against the confirmed field."),
     ]
     pots_path = os.path.join(here, "POTS.md")
     with open(pots_path, "w", encoding="utf-8") as fh:
