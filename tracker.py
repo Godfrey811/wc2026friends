@@ -315,6 +315,16 @@ CATEGORY_ORDER = [
     "youngest_scorer", "oldest_scorer", "longest_name", "shortest_name",
 ]
 
+CAT_LABELS = {
+    "in_game": "In-game points", "prime": "Prime-goals penalty",
+    "progression": "Progression", "fewest_goals": "Fewest goals",
+    "fewest_cards": "Fewest cards", "quickest_goal": "Quickest goal",
+    "quickest_yellow": "Quickest yellow card", "fastest_sub": "Fastest substitution",
+    "fastest_own_goal": "Fastest own goal", "youngest_scorer": "Youngest scorer",
+    "oldest_scorer": "Oldest scorer", "longest_name": "Longest name",
+    "shortest_name": "Shortest name",
+}
+
 
 def write_outputs(result: dict, out_dir: str) -> None:
     os.makedirs(out_dir, exist_ok=True)
@@ -374,6 +384,22 @@ def write_html(result: dict, out_dir: str) -> None:
         f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td><td>{tt[t]:g}</td></tr>"
         for t in sorted(teams, key=lambda t: tt[t], reverse=True))
 
+    # who leads each scoring category (by owner)
+    pts = result["pts"]
+    cat_rows = ""
+    for cat in CATEGORY_ORDER:
+        by_owner: dict[str, float] = {}
+        for t in teams:
+            o = owner.get(t, "")
+            if o:
+                by_owner[o] = by_owner.get(o, 0.0) + pts[t].get(cat, 0.0)
+        nonzero = {o: v for o, v in by_owner.items() if v}
+        if nonzero:
+            best_o, best_v = max(nonzero.items(), key=lambda kv: kv[1])
+            cat_rows += f"<tr><td>{CAT_LABELS.get(cat, cat)}</td><td>{best_o}</td><td>{best_v:g}</td></tr>\n"
+        else:
+            cat_rows += f"<tr><td>{CAT_LABELS.get(cat, cat)}</td><td>-</td><td>0</td></tr>\n"
+
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WC 2026 Friends Pool</title>
@@ -403,6 +429,12 @@ def write_html(result: dict, out_dir: str) -> None:
 <h2>Teams by points</h2>
 <table class="tt"><tr><th>Team</th><th>Owner</th><th>Points</th></tr>
 {team_rows}
+</table>
+
+<h2>Category leaders</h2>
+<p class="sub">Who's winning each sub-race (points from that category, summed across your teams).</p>
+<table class="tt"><tr><th>Category</th><th>Leader</th><th>Points</th></tr>
+{cat_rows}
 </table>
 
 <p class="sub"><a href="standings.csv">standings.csv</a> · <a href="team_breakdown.csv">team_breakdown.csv</a> · <a href="rules.pdf">rules.pdf</a></p>

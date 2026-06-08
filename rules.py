@@ -184,6 +184,7 @@ def _latin1(text: str) -> str:
 def render_pdf(content, path: str) -> None:
     from fpdf import FPDF
     from fpdf.fonts import FontFace
+    from fpdf.enums import XPos, YPos
 
     NAVY = (15, 30, 75)
     GREY = (90, 90, 90)
@@ -216,10 +217,10 @@ def render_pdf(content, path: str) -> None:
             pdf.set_font("Helvetica", "", 11)
             pdf.set_text_color(0, 0, 0)
             for item in block[1]:
-                x = pdf.get_x()
-                pdf.multi_cell(5, 5.5, chr(149))  # latin-1 bullet
-                pdf.set_xy(x + 5, pdf.get_y() - 5.5)
-                pdf.multi_cell(epw - 5, 5.5, _latin1(item))
+                pdf.set_x(pdf.l_margin)
+                pdf.multi_cell(6, 5.5, chr(149), new_x=XPos.RIGHT, new_y=YPos.TOP)  # bullet
+                pdf.multi_cell(epw - 6, 5.5, _latin1(item),
+                               new_x=XPos.LMARGIN, new_y=YPos.NEXT)               # text, then next line
             pdf.ln(1.5)
         elif kind == "note":
             pdf.ln(1)
