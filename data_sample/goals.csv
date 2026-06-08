@@ -1,0 +1,9 @@
+match_id,team,minute,type,scorer,scorer_age,disallowed
+m1,Spain,30,open,Pedri,23,
+m1,Spain,67,open,Pedri,23,
+m1,Brazil,50,penalty,Neymar,34,
+m1,Brazil,80,freekick,Rodrygo,25,
+m2,Japan,92,open,Mitoma,27,
+m2,Japan,121,shootout,Endo,30,
+m2,Ghana,23,open,Kudus,24,
+m2,Ghana,70,open,Partey,29,1
