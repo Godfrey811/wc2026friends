@@ -64,6 +64,27 @@ Points for the furthest stage a team reaches, realised in the game they're elimi
 
 ## The draft — pots
 
-The 48 finalists are split into three pots of 16 by their "to reach the quarter-finals" odds: Pot 1 = the 16 strongest, Pot 2 = the middle 16, Pot 3 = the 16 longest shots. The pots keep everyone's squad balanced. (Pot contents are listed separately and finalised once the 48-team field is confirmed.)
+16 players. Each player drafts THREE teams — one from each pot — so every squad gets a strong team, a mid team and a long shot (16 players x 3 = the full 48). The pots are seeded by each team's "to reach the quarter-finals" odds: Pot 1 is the 16 strongest, Pot 3 the 16 longest shots.
+
+| Pot 1 — strongest | Pot 2 — middle | Pot 3 — long shots |
+| --- | --- | --- |
+| Spain | Japan | Australia |
+| France | Uruguay | Ghana |
+| England | Ecuador | South Africa |
+| Argentina | Croatia | Panama |
+| Portugal | Canada | DR Congo |
+| Brazil | Senegal | Saudi Arabia |
+| Netherlands | Austria | Tunisia |
+| Belgium | Paraguay | Uzbekistan |
+| Germany | Sweden | New Zealand |
+| Norway | Ivory Coast | Cape Verde |
+| Colombia | Egypt | Jordan |
+| USA | Czechia | Iraq |
+| Switzerland | South Korea | Haiti |
+| Mexico | Scotland | Qatar |
+| Morocco | Algeria | Curaçao |
+| Turkey | Bosnia & Herzegovina | Iran |
+
+> _Iran's place in Pot 3 is an inferred 48th team and should be checked against the confirmed WC2026 field before the draft._
 
 > _Rules locked from the conversation of June 2026. If anything here doesn't match what you expected, flag it before the draft._
