@@ -23,15 +23,15 @@ DATA MODEL (all in the --data dir):
                        (SF = 4th place; third = 3rd-place playoff winner)
                        flip = 1 if a 90'+ goal in their elimination game flips it
 
-KNOWN GAPS / DECISIONS flagged for review (see chat):
-  * Own goals feed only the fastest-own-goal ranking; their effect on the
-    benefiting team's goals-for / clean-sheet / prime tally is NOT modelled.
-  * Clean-sheet "extra time excluded" and the own-both-teams 0-0 = 0 nuance
-    are NOT modelled (a goalless match is a flat -1).
-  * Ranked-category tie-splitting and the "most recent occurrence" tiebreak
-    are NOT modelled (ties resolve by input order); one-win-per-owner IS.
-  * Opponent free-kick doubling stacks (x2 per free kick) and is applied
-    after the 90'+ flip.
+ACCEPTED SIMPLIFICATIONS (confirmed intentional — not bugs):
+  * Own goals feed only the fastest-own-goal ranking; they do NOT affect the
+    benefiting team's goals-for / clean-sheet / prime tally.
+  * Clean sheets are a flat -1 per goalless match: extra-time exclusion and the
+    own-both-teams 0-0 = 0 nuance are deliberately not modelled.
+  * Ranked categories enforce one prize per owner; ties resolve by input order
+    (no tie-splitting or "most recent occurrence" tiebreak).
+  * Opponent free-kick doubling stacks (x2 per free kick) and is applied after
+    the 90'+ flip.
 """
 
 from __future__ import annotations

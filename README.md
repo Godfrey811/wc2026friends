@@ -45,8 +45,9 @@ Outputs (in `out/`, git-ignored):
 
 `data_sample/` is a small worked example (4 teams, 2 matches) used to validate the engine.
 
-### Known gaps (see tracker.py header)
+### Accepted simplifications (see tracker.py header)
 
-Own-goal effects on goals-for/clean-sheet, the extra-time / own-both-teams 0-0
-clean-sheet nuances, and ranked-category tie-splitting / "most recent" tiebreaks
-are not yet modelled. Flag if these matter for settlement.
+By design: own goals only feed the fastest-own-goal ranking; clean sheets are a
+flat -1 per goalless match (no extra-time / own-both-teams 0-0 nuance); ranked
+categories enforce one prize per owner but don't tie-split; free-kick doubling
+stacks and applies after the 90'+ flip.
