@@ -345,6 +345,72 @@ def print_standings(result: dict) -> None:
     print()
 
 
+def write_html(result: dict, out_dir: str) -> None:
+    """Render a self-contained index.html leaderboard for GitHub Pages."""
+    from datetime import datetime, timezone
+    os.makedirs(out_dir, exist_ok=True)
+    owner, tt, teams = result["owner"], result["team_totals"], result["teams"]
+    updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+    standings = sorted(result["owner_totals"].items(), key=lambda kv: kv[1], reverse=True)
+    lb = "\n".join(
+        f"<tr><td>{i}</td><td>{o or '(undrafted)'}</td><td>{total:g}</td></tr>"
+        for i, (o, total) in enumerate(standings, 1)) or '<tr><td colspan="3">-</td></tr>'
+
+    pots = [("Pot 1 - strongest", POT1), ("Pot 2 - middle", POT2), ("Pot 3 - long shots", POT3)]
+    rows = ""
+    for i in range(max(len(p) for _, p in pots)):
+        cells = ""
+        for _, plist in pots:
+            if i < len(plist):
+                t = plist[i]
+                o = owner.get(t, "")
+                cells += f"<td>{t}{(' <span class=o>' + o + '</span>') if o else ''}</td>"
+            else:
+                cells += "<td></td>"
+        rows += f"<tr>{cells}</tr>\n"
+
+    team_rows = "\n".join(
+        f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td><td>{tt[t]:g}</td></tr>"
+        for t in sorted(teams, key=lambda t: tt[t], reverse=True))
+
+    html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WC 2026 Friends Pool</title>
+<style>
+ body{{font:15px/1.5 system-ui,sans-serif;max-width:880px;margin:2rem auto;padding:0 1rem;color:#1a1a1a}}
+ h1{{margin-bottom:.2rem}} h2{{margin-top:2rem;font-size:1.2rem}} .sub{{color:#666;margin-top:0}}
+ table{{border-collapse:collapse;width:100%;margin:.5rem 0 1.5rem}}
+ th,td{{text-align:left;padding:.4rem .6rem;border-bottom:1px solid #e3e6ea}}
+ th{{background:#fafbfc}} a{{color:#2563eb}} .o{{color:#16a34a;font-size:.85rem}}
+ .lb td:last-child,.lb th:last-child,.tt td:last-child,.tt th:last-child{{text-align:right}}
+</style></head><body>
+<h1>🏆 WC 2026 Friends Pool</h1>
+<p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
+<a href="rules.pdf">📜 full rules (PDF)</a></p>
+
+<h2>Leaderboard</h2>
+<table class="lb"><tr><th>#</th><th>Player</th><th>Points</th></tr>
+{lb}
+</table>
+
+<h2>The draft - 3 pots</h2>
+<p class="sub">Seeded by "to reach the quarter-finals" odds. Each player drafts one team per pot.</p>
+<table><tr><th>Pot 1 - strongest</th><th>Pot 2 - middle</th><th>Pot 3 - long shots</th></tr>
+{rows}
+</table>
+
+<h2>Teams by points</h2>
+<table class="tt"><tr><th>Team</th><th>Owner</th><th>Points</th></tr>
+{team_rows}
+</table>
+
+<p class="sub"><a href="standings.csv">standings.csv</a> · <a href="team_breakdown.csv">team_breakdown.csv</a> · <a href="rules.pdf">rules.pdf</a></p>
+</body></html>"""
+    with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as fh:
+        fh.write(html)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="WC2026 Friends scoring tracker")
     ap.add_argument("--data", default="data", help="data directory (default: data)")
@@ -362,8 +428,13 @@ def main() -> None:
 
     result = score(args.data)
     write_outputs(result, args.out)
+    write_html(result, args.out)
+    # copy the rules PDF alongside the site so it's downloadable from Pages
+    import shutil
+    if os.path.exists("rules.pdf"):
+        shutil.copy("rules.pdf", os.path.join(args.out, "rules.pdf"))
     print_standings(result)
-    print(f"  Wrote {args.out}/standings.csv and {args.out}/team_breakdown.csv")
+    print(f"  Wrote {args.out}/index.html, standings.csv, team_breakdown.csv")
 
 
 if __name__ == "__main__":
