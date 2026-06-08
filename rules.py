@@ -61,7 +61,7 @@ CONTENT = [
          ["0 shots on target in a game", "+4"],
          ["Goal scored OR conceded in the 23rd or 67th minute", "+4 (max +4 per game, even if you own both teams)"],
          ["Each game your team fails to score (clean sheet against you)", "-1 (own both teams & it's 0-0 = 0; extra time excluded)"],
-         ["Prime number of total goals (excludes shootout goals)", "-3"],
+         ["Prime number of total goals in the tournament (excludes shootout goals)", "-3"],
      ]),
     ("note",
      "A free-kick goal still counts toward your team's total-goals tally (so it "
