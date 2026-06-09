@@ -410,19 +410,6 @@ def write_html(result: dict, out_dir: str) -> None:
         f"<tr><td>{i}</td><td>{o or '(undrafted)'}</td><td>{total:g}</td></tr>"
         for i, (o, total) in enumerate(standings, 1)) or '<tr><td colspan="3">-</td></tr>'
 
-    pots = [("Pot 1 - strongest", POT1), ("Pot 2 - middle", POT2), ("Pot 3 - long shots", POT3)]
-    rows = ""
-    for i in range(max(len(p) for _, p in pots)):
-        cells = ""
-        for _, plist in pots:
-            if i < len(plist):
-                t = plist[i]
-                o = owner.get(t, "")
-                cells += f"<td>{t}{(' <span class=o>' + o + '</span>') if o else ''}</td>"
-            else:
-                cells += "<td></td>"
-        rows += f"<tr>{cells}</tr>\n"
-
     def ordinal(n):
         suf = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
         return f"{n}{suf}"
@@ -441,13 +428,15 @@ def write_html(result: dict, out_dir: str) -> None:
         if owner.get(t, ""):
             owner_pots[owner[t]][pot_of.get(t, 0)] = t
 
+    seed_rank = {t: i for i, t in enumerate(POT1 + POT2 + POT3, 1)}  # 1 = strongest by odds
+
     def teamcell(t):
-        return f"{t} <span class='r'>({ordinal(team_rank[t])})</span>" if t else "-"
+        return f"{t} <span class='r'>(#{seed_rank.get(t, 0)})</span>" if t else "-"
     player_rows = "\n".join(
         f"<tr><td><b>{o}</b></td><td>{result['owner_totals'].get(o, 0):g}</td>"
         f"<td>{teamcell(owner_pots[o].get(1))}</td><td>{teamcell(owner_pots[o].get(2))}</td>"
         f"<td>{teamcell(owner_pots[o].get(3))}</td></tr>"
-        for o, _v in sorted(result['owner_totals'].items(), key=lambda kv: (-kv[1], kv[0])) if o)
+        for o in sorted(o for o in result['owner_totals'] if o))   # players A-Z
 
     pts, detail, gf = result["pts"], result["detail"], result["goals_for"]
 
@@ -536,14 +525,9 @@ def write_html(result: dict, out_dir: str) -> None:
 {lb}
 </table>
 
-<h2>The draft - 3 pots</h2>
-<p class="sub">Seeded by "to reach the quarter-finals" odds. Each player drafts one team per pot.</p>
-<table><tr><th>Pot 1 - strongest</th><th>Pot 2 - middle</th><th>Pot 3 - long shots</th></tr>
-{rows}
-</table>
-
 <h2>By player</h2>
-<p class="sub">Each player and their three teams (Pot 1 / 2 / 3), with each team's current rank out of 48 in brackets.</p>
+<p class="sub">Each player (A-Z) and their three teams (Pot 1 / 2 / 3). The #number is the team's
+<b>seed out of 48</b> by "reach the quarter-finals" odds (#1 = strongest, #48 = longest shot).</p>
 <table class="pl"><tr><th>Player</th><th>Total</th><th>Pot 1</th><th>Pot 2</th><th>Pot 3</th></tr>
 {player_rows}
 </table>
