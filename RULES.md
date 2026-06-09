@@ -20,8 +20,9 @@ Everyone drafts teams from three odds-tiered pots. Your teams earn (and lose) po
 
 ## The 90'+ rule
 
-- A goal in the 90th minute or its injury/stoppage time (recorded as 90 or 90+X) multiplies ALL of that team's points for that game by -1.
+- A goal in the 90th minute or its injury/stoppage time (recorded as 90 or 90+X) multiplies that team's IN-GAME points for that game by -1 - i.e. the goals, the 23'/67' bonus, the 0-shots-on-target bonus, the clean-sheet, and the red-card dice from that game.
 - INJURY TIME ONLY - this is NOT extra time. A goal in extra time (91-120, e.g. 105 or 120) does NOT count for this rule.
+- It hits ONLY that game's in-game total. It does NOT touch the tournament-long ranked prizes (quickest goal, quickest yellow, fastest sub, fastest own goal, youngest/oldest scorer, longest/shortest name, fewest goals, fewest cards) or the prime-goals penalty - those are never flipped.
 - Two 90'+ goals in the same game cancel out (×-1 ×-1 = back to positive).
 - In-game points flip in ANY game (win or lose).
 - Progression points only flip in your ELIMINATION game. Winning teams bank no progression at that moment, so a champion's Winner points are always safe — but a runner-up who scores a 90'+ goal in the final they lose flips their +8 to -8.

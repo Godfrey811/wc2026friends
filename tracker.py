@@ -532,7 +532,9 @@ def write_html(result: dict, out_dir: str) -> None:
 
 <h2>Goal-points breakdown</h2>
 <p class="sub">Where each team's in-game points come from (raw, before the 90'+ flip &amp; opponent free-kick doubling).
-So you can see who's banked the most from goals and who's bled the most from pens / VAR.</p>
+So you can see who's banked the most from goals and who's bled the most from pens / VAR. The 90'+ flip and
+free-kick doubling only ever touch these in-game points - never the ranked prizes (fastest / youngest /
+fewest etc.) or the prime penalty.</p>
 <div class="scroll"><table class="num grid"><tr>{gd_head}</tr>
 {gd_rows}
 </table></div>
