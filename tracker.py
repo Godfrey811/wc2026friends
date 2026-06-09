@@ -151,7 +151,9 @@ def score(data_dir: str) -> dict:
         cards_by_match[c["match_id"]].append(c)
 
     # category buckets, keyed by team
-    pts = defaultdict(lambda: defaultdict(float))  # team -> category -> points
+    pts = defaultdict(lambda: defaultdict(float))     # team -> category -> points
+    detail = defaultdict(lambda: defaultdict(float))  # team -> in_game sub-component -> RAW points
+    #   (raw = before the 90'+ flip and opponent free-kick doubling are applied)
 
     # ---- per-match in-game scoring ----
     for m in matches:
@@ -167,12 +169,24 @@ def score(data_dir: str) -> dict:
             p = 0.0
             scored = 0
             ninety = 0
+            d_open = d_pen = d_shoot = d_var = 0.0
+            fk_scored = 0
             for g in tg:
                 typ = (g.get("type") or "open").strip()
                 if truthy(g.get("disallowed", "")):
                     p += -1.0  # VAR
+                    d_var += -1.0
                     continue
-                p += GOAL_POINTS.get(typ, 0.0)
+                gp = GOAL_POINTS.get(typ, 0.0)
+                p += gp
+                if typ == "penalty":
+                    d_pen += gp
+                elif typ == "shootout":
+                    d_shoot += gp
+                else:
+                    d_open += gp
+                    if typ == "freekick":
+                        fk_scored += 1
                 if typ != "shootout":
                     scored += 1
                 mn = parse_minute(g.get("minute", ""))
@@ -187,21 +201,30 @@ def score(data_dir: str) -> dict:
                         return True
                 return False
 
-            if hit_2367(tg) or hit_2367(og):
-                p += 4.0  # capped at +4 per game
-            if sot.get(team) == 0:
-                p += 4.0
-            if scored == 0:
-                p += -1.0  # opposition clean sheet
+            b2367 = 4.0 if (hit_2367(tg) or hit_2367(og)) else 0.0   # capped at +4 per game
+            b0sot = 4.0 if sot.get(team) == 0 else 0.0
+            cs = -1.0 if scored == 0 else 0.0                        # opposition clean sheet
+            reddice = 0.0
             for c in cards_by_match.get(mid, []):
                 if c["team"] == team and (c.get("color") == "red") and (c.get("dice") or "").strip():
                     d = int(c["dice"])
-                    p += (d / 2) if d % 2 == 1 else -(d / 2)
+                    reddice += (d / 2) if d % 2 == 1 else -(d / 2)
+            p += b2367 + b0sot + cs + reddice
             if ninety % 2 == 1:
                 p = -p  # 90'+ flip (pairs cancel)
             opp_fk = sum(1 for g in og if g.get("type") == "freekick" and not truthy(g.get("disallowed", "")))
             p *= (2 ** opp_fk)
             pts[team]["in_game"] += p
+
+            detail[team]["goal_open"] += d_open
+            detail[team]["goal_pen"] += d_pen
+            detail[team]["goal_shootout"] += d_shoot
+            detail[team]["var"] += d_var
+            detail[team]["bonus_2367"] += b2367
+            detail[team]["bonus_0sot"] += b0sot
+            detail[team]["clean_sheet"] += cs
+            detail[team]["red_dice"] += reddice
+            detail[team]["freekick_goals"] += fk_scored
 
     # ---- prime number of goals (excl. shootouts & disallowed) ----
     goals_for = defaultdict(int)
@@ -302,6 +325,8 @@ def score(data_dir: str) -> dict:
         "owner": owner,
         "teams": teams,
         "pts": pts,
+        "detail": detail,
+        "goals_for": dict(goals_for),
         "team_totals": team_totals,
         "owner_totals": dict(owner_totals),
     }
@@ -323,6 +348,22 @@ CAT_LABELS = {
     "fastest_own_goal": "Fastest own goal", "youngest_scorer": "Youngest scorer",
     "oldest_scorer": "Oldest scorer", "longest_name": "Longest name",
     "shortest_name": "Shortest name",
+}
+
+CAT_SHORT = {
+    "in_game": "In-game", "prime": "Prime", "progression": "Prog", "fewest_goals": "Few.G",
+    "fewest_cards": "Few.C", "quickest_goal": "Q.goal", "quickest_yellow": "Q.yel",
+    "fastest_sub": "F.sub", "fastest_own_goal": "F.OG", "youngest_scorer": "Young",
+    "oldest_scorer": "Old", "longest_name": "Long", "shortest_name": "Short",
+}
+
+# in_game sub-components (raw, before 90'+ flip / opp free-kick doubling)
+DETAIL_ORDER = ["goal_open", "goal_pen", "goal_shootout", "var",
+                "bonus_2367", "bonus_0sot", "clean_sheet", "red_dice", "freekick_goals"]
+DETAIL_LABELS = {
+    "goal_open": "Open goals (+)", "goal_pen": "Pens (-)", "goal_shootout": "Shootout pens (-)",
+    "var": "VAR ruled out (-)", "bonus_2367": "23'/67' bonus (+)", "bonus_0sot": "0 shots-on-target (+)",
+    "clean_sheet": "Clean sheet vs (-)", "red_dice": "Red-card dice", "freekick_goals": "Free-kick goals",
 }
 
 
@@ -384,21 +425,44 @@ def write_html(result: dict, out_dir: str) -> None:
         f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td><td>{tt[t]:g}</td></tr>"
         for t in sorted(teams, key=lambda t: tt[t], reverse=True))
 
-    # who leads each scoring category (by owner)
-    pts = result["pts"]
+    pts, detail, gf = result["pts"], result["detail"], result["goals_for"]
+
+    def teamlabel(t):
+        o = owner.get(t, "")
+        return f"{t}{(' (' + o + ')') if o else ''}"
+
+    # Category extremes: per category, the team gaining the most and losing the most.
     cat_rows = ""
     for cat in CATEGORY_ORDER:
-        by_owner: dict[str, float] = {}
-        for t in teams:
-            o = owner.get(t, "")
-            if o:
-                by_owner[o] = by_owner.get(o, 0.0) + pts[t].get(cat, 0.0)
-        nonzero = {o: v for o, v in by_owner.items() if v}
-        if nonzero:
-            best_o, best_v = max(nonzero.items(), key=lambda kv: kv[1])
-            cat_rows += f"<tr><td>{CAT_LABELS.get(cat, cat)}</td><td>{best_o}</td><td>{best_v:g}</td></tr>\n"
-        else:
-            cat_rows += f"<tr><td>{CAT_LABELS.get(cat, cat)}</td><td>-</td><td>0</td></tr>\n"
+        vals = [(t, pts[t].get(cat, 0.0)) for t in teams if pts[t].get(cat, 0.0)]
+        top = max(vals, key=lambda kv: kv[1], default=None)
+        bot = min(vals, key=lambda kv: kv[1], default=None)
+        most = f"{teamlabel(top[0])} <b>+{top[1]:g}</b>" if top and top[1] > 0 else "-"
+        least = f"{teamlabel(bot[0])} <b>{bot[1]:g}</b>" if bot and bot[1] < 0 else "-"
+        cat_rows += f"<tr><td>{CAT_LABELS.get(cat, cat)}</td><td>{most}</td><td>{least}</td></tr>\n"
+
+    # Prime watch: teams currently on a prime number of (non-shootout) goals.
+    prime_rows = "\n".join(
+        f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td><td>{gf.get(t, 0)}</td></tr>"
+        for t in sorted(teams, key=lambda t: gf.get(t, 0), reverse=True)
+        if pts[t].get("prime", 0.0)) or '<tr><td colspan="3">none on a prime right now</td></tr>'
+
+    # Goal-points breakdown (in_game sub-components) for teams that have any.
+    gd_teams = [t for t in teams if any(detail[t].get(k) for k in DETAIL_ORDER)]
+    gd_rows = "\n".join(
+        "<tr><td>" + teamlabel(t) + "</td>" +
+        "".join(f"<td>{detail[t].get(k, 0):g}</td>" for k in DETAIL_ORDER) + "</tr>"
+        for t in sorted(gd_teams, key=lambda t: pts[t].get("in_game", 0.0), reverse=True)) \
+        or f'<tr><td colspan="{len(DETAIL_ORDER) + 1}">no goals yet</td></tr>'
+    gd_head = "<th>Team</th>" + "".join(f"<th>{DETAIL_LABELS[k]}</th>" for k in DETAIL_ORDER)
+
+    # Full team x category grid.
+    grid_head = "<th>Team</th><th>Owner</th>" + "".join(f"<th>{CAT_SHORT[c]}</th>" for c in CATEGORY_ORDER) + "<th>Total</th>"
+    grid_rows = "\n".join(
+        f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td>" +
+        "".join(f"<td>{pts[t].get(c, 0):g}</td>" for c in CATEGORY_ORDER) +
+        f"<td><b>{tt[t]:g}</b></td></tr>"
+        for t in sorted(teams, key=lambda t: tt[t], reverse=True))
 
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -410,6 +474,8 @@ def write_html(result: dict, out_dir: str) -> None:
  th,td{{text-align:left;padding:.4rem .6rem;border-bottom:1px solid #e3e6ea}}
  th{{background:#fafbfc}} a{{color:#2563eb}} .o{{color:#16a34a;font-size:.85rem}}
  .lb td:last-child,.lb th:last-child,.tt td:last-child,.tt th:last-child{{text-align:right}}
+ .scroll{{overflow-x:auto}} .grid{{font-size:.82rem}} .grid td,.grid th{{padding:.3rem .45rem;white-space:nowrap}}
+ .num td:not(:first-child),.num th:not(:first-child){{text-align:right}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
@@ -431,11 +497,31 @@ def write_html(result: dict, out_dir: str) -> None:
 {team_rows}
 </table>
 
-<h2>Category leaders</h2>
-<p class="sub">Who's winning each sub-race (points from that category, summed across your teams).</p>
-<table class="tt"><tr><th>Category</th><th>Leader</th><th>Points</th></tr>
+<h2>Category extremes</h2>
+<p class="sub">For every scoring category: the team gaining the most, and the team losing the most (owner in brackets).</p>
+<table class="num"><tr><th>Category</th><th>🟢 Most points</th><th>🔴 Most lost</th></tr>
 {cat_rows}
 </table>
+
+<h2>Goal-points breakdown</h2>
+<p class="sub">Where each team's in-game points come from (raw, before the 90'+ flip &amp; opponent free-kick doubling).
+So you can see who's banked the most from goals and who's bled the most from pens / VAR.</p>
+<div class="scroll"><table class="num grid"><tr>{gd_head}</tr>
+{gd_rows}
+</table></div>
+
+<h2>🔢 Prime watch</h2>
+<p class="sub">Teams currently on a <b>prime</b> number of goals (that's a -3 penalty right now), and who owns them.</p>
+<table class="tt"><tr><th>Team</th><th>Owner</th><th>Goals</th></tr>
+{prime_rows}
+</table>
+
+<h2>Full breakdown - every team, every category</h2>
+<div class="scroll"><table class="num grid"><tr>{grid_head}</tr>
+{grid_rows}
+</table></div>
+<p class="sub">Key: In-game · Prime · Prog(ression) · Few.G/Few.C (fewest goals/cards) · Q.goal/Q.yel (quickest goal/yellow) ·
+F.sub/F.OG (fastest sub/own goal) · Young/Old scorer · Long/Short name.</p>
 
 <p class="sub"><a href="standings.csv">standings.csv</a> · <a href="team_breakdown.csv">team_breakdown.csv</a> · <a href="rules.pdf">rules.pdf</a></p>
 </body></html>"""
