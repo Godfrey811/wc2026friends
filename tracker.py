@@ -381,7 +381,7 @@ def write_outputs(result: dict, out_dir: str) -> None:
             row.append(round(result["team_totals"][t], 2))
             w.writerow(row)
 
-    standings = sorted(result["owner_totals"].items(), key=lambda kv: kv[1], reverse=True)
+    standings = sorted(result["owner_totals"].items(), key=lambda kv: (-kv[1], kv[0]))
     with open(os.path.join(out_dir, "standings.csv"), "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["position", "owner", "total"])
@@ -390,7 +390,7 @@ def write_outputs(result: dict, out_dir: str) -> None:
 
 
 def print_standings(result: dict) -> None:
-    standings = sorted(result["owner_totals"].items(), key=lambda kv: kv[1], reverse=True)
+    standings = sorted(result["owner_totals"].items(), key=lambda kv: (-kv[1], kv[0]))
     print("\n  WC2026 Friends — standings")
     print("  " + "-" * 30)
     for i, (o, total) in enumerate(standings, 1):
@@ -405,7 +405,7 @@ def write_html(result: dict, out_dir: str) -> None:
     owner, tt, teams = result["owner"], result["team_totals"], result["teams"]
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-    standings = sorted(result["owner_totals"].items(), key=lambda kv: kv[1], reverse=True)
+    standings = sorted(result["owner_totals"].items(), key=lambda kv: (-kv[1], kv[0]))
     lb = "\n".join(
         f"<tr><td>{i}</td><td>{o or '(undrafted)'}</td><td>{total:g}</td></tr>"
         for i, (o, total) in enumerate(standings, 1)) or '<tr><td colspan="3">-</td></tr>'
@@ -447,7 +447,7 @@ def write_html(result: dict, out_dir: str) -> None:
         f"<tr><td><b>{o}</b></td><td>{result['owner_totals'].get(o, 0):g}</td>"
         f"<td>{teamcell(owner_pots[o].get(1))}</td><td>{teamcell(owner_pots[o].get(2))}</td>"
         f"<td>{teamcell(owner_pots[o].get(3))}</td></tr>"
-        for o, _v in sorted(result['owner_totals'].items(), key=lambda kv: kv[1], reverse=True) if o)
+        for o, _v in sorted(result['owner_totals'].items(), key=lambda kv: (-kv[1], kv[0])) if o)
 
     pts, detail, gf = result["pts"], result["detail"], result["goals_for"]
 
