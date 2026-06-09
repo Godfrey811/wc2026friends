@@ -190,7 +190,9 @@ def score(data_dir: str) -> dict:
                 if typ != "shootout":
                     scored += 1
                 mn = parse_minute(g.get("minute", ""))
-                if typ != "shootout" and mn is not None and mn >= 90:
+                # 90'+ = the 90th minute or its injury/stoppage time ("90" or "90+X"),
+                # NOT extra time (91-120). parse_minute("90+5") -> 90, "105" -> 105.
+                if typ != "shootout" and mn == 90:
                     ninety += 1
 
             def hit_2367(rows):
@@ -447,16 +449,30 @@ def write_html(result: dict, out_dir: str) -> None:
 
     cat_rows = ""
     for cat in CATEGORY_ORDER:
+        if cat == "prime":      # prime has its own section below
+            continue
         vals = [(t, pts[t].get(cat, 0.0)) for t in teams if pts[t].get(cat, 0.0)]
         cat_rows += (f"<tr><td>{CAT_LABELS.get(cat, cat)}</td>"
                      f"<td>{extreme_cell(vals, True)}</td>"
                      f"<td>{extreme_cell(vals, False)}</td></tr>\n")
 
     # Prime watch: teams currently on a prime number of (non-shootout) goals.
+    on_prime = [t for t in teams if pts[t].get("prime", 0.0)]
+    n_on, n_total = len(on_prime), len(teams)
+    n_off = n_total - n_on
     prime_rows = "\n".join(
         f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td><td>{gf.get(t, 0)}</td></tr>"
-        for t in sorted(teams, key=lambda t: gf.get(t, 0), reverse=True)
-        if pts[t].get("prime", 0.0)) or '<tr><td colspan="3">none on a prime right now</td></tr>'
+        for t in sorted(on_prime, key=lambda t: gf.get(t, 0), reverse=True)) \
+        or '<tr><td colspan="3">none on a prime right now</td></tr>'
+    owner_prime: dict[str, int] = {}
+    for t in on_prime:
+        o = owner.get(t, "")
+        if o:
+            owner_prime[o] = owner_prime.get(o, 0) + 1
+    prime_person = "\n".join(
+        f"<tr><td>{o}</td><td>{c}</td><td>{-3 * c:g}</td></tr>"
+        for o, c in sorted(owner_prime.items(), key=lambda kv: -kv[1])) \
+        or '<tr><td colspan="3">nobody affected yet</td></tr>'
 
     # Goal-points breakdown (in_game sub-components) for teams that have any.
     gd_teams = [t for t in teams if any(detail[t].get(k) for k in DETAIL_ORDER)]
@@ -522,7 +538,12 @@ So you can see who's banked the most from goals and who's bled the most from pen
 </table></div>
 
 <h2>🔢 Prime watch</h2>
-<p class="sub">Teams currently on a <b>prime</b> number of goals (that's a -3 penalty right now), and who owns them.</p>
+<p class="sub"><b>{n_on}</b> of {n_total} teams are on a <b>prime</b> number of goals right now
+(<b>{n_off}</b> are not). Each prime team is a <b>-3</b> hit to its owner.</p>
+<table class="tt num"><tr><th>Player</th><th>Teams on a prime</th><th>Points lost</th></tr>
+{prime_person}
+</table>
+<p class="sub">Which teams:</p>
 <table class="tt"><tr><th>Team</th><th>Owner</th><th>Goals</th></tr>
 {prime_rows}
 </table>
