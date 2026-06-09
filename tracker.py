@@ -432,14 +432,25 @@ def write_html(result: dict, out_dir: str) -> None:
         return f"{t}{(' (' + o + ')') if o else ''}"
 
     # Category extremes: per category, the team gaining the most and losing the most.
+    # Tie-aware: when many teams share the extreme (e.g. everyone level early on), say so.
+    def extreme_cell(vals, positive):
+        if not vals:
+            return "-"
+        best = max(v for _, v in vals) if positive else min(v for _, v in vals)
+        if (positive and best <= 0) or (not positive and best >= 0):
+            return "-"
+        tied = [t for t, v in vals if v == best]
+        s = f"{'+' if best > 0 else ''}{round(best, 2):g}"
+        if len(tied) == 1:
+            return f"{teamlabel(tied[0])} <b>{s}</b>"
+        return f"<b>{len(tied)} teams tied</b> ({s} each)"
+
     cat_rows = ""
     for cat in CATEGORY_ORDER:
         vals = [(t, pts[t].get(cat, 0.0)) for t in teams if pts[t].get(cat, 0.0)]
-        top = max(vals, key=lambda kv: kv[1], default=None)
-        bot = min(vals, key=lambda kv: kv[1], default=None)
-        most = f"{teamlabel(top[0])} <b>+{top[1]:g}</b>" if top and top[1] > 0 else "-"
-        least = f"{teamlabel(bot[0])} <b>{bot[1]:g}</b>" if bot and bot[1] < 0 else "-"
-        cat_rows += f"<tr><td>{CAT_LABELS.get(cat, cat)}</td><td>{most}</td><td>{least}</td></tr>\n"
+        cat_rows += (f"<tr><td>{CAT_LABELS.get(cat, cat)}</td>"
+                     f"<td>{extreme_cell(vals, True)}</td>"
+                     f"<td>{extreme_cell(vals, False)}</td></tr>\n")
 
     # Prime watch: teams currently on a prime number of (non-shootout) goals.
     prime_rows = "\n".join(
