@@ -359,6 +359,25 @@ CAT_SHORT = {
     "oldest_scorer": "Old", "longest_name": "Long", "shortest_name": "Short",
 }
 
+CAT_DESC = {
+    "in_game": "In-game points: goals (open +0.5, pen -1.5, shootout -0.5, free-kick 0), VAR -1, "
+               "a goal/concede in the 23rd or 67th min +4, 0 shots on target +4, clean sheet against you -1, "
+               "red-card dice - then the 90'+ flip and opponent free-kick doubling are applied.",
+    "prime": "-3 while the team is on a PRIME number of (non-shootout) goals.",
+    "progression": "Stage points: R32 +1, R16 +2, QF +3, SF +5, runner-up +8, winner +10 "
+                   "(flipped to negative if a 90'+ goal loses their elimination game).",
+    "fewest_goals": "+7 shared between the team(s) that have scored the FEWEST goals.",
+    "fewest_cards": "+7 shared between the team(s) with the FEWEST cards.",
+    "quickest_goal": "Ranked 10/8/5/3/2/1 for the quickest goal of the tournament (earliest minute).",
+    "quickest_yellow": "Ranked 10/8/5/3/2/1 for the quickest yellow card.",
+    "fastest_sub": "Ranked 10/8/5/3/2/1 for the fastest substitution.",
+    "fastest_own_goal": "Ranked 10/8/5/3/2/1 for the fastest own goal.",
+    "youngest_scorer": "Ranked 10/8/5/3/2/1 for the youngest goalscorer.",
+    "oldest_scorer": "Ranked -10/-8/-5/-3/-2/-1 for the OLDEST goalscorer (a penalty).",
+    "longest_name": "Ranked 10/8/5/3/2/1 for the longest goalscorer name.",
+    "shortest_name": "Ranked -10/-8/-5/-3/-2/-1 for the SHORTEST goalscorer name (a penalty).",
+}
+
 # in_game sub-components (raw, before 90'+ flip / opp free-kick doubling)
 DETAIL_ORDER = ["goal_open", "goal_pen", "goal_shootout", "var",
                 "bonus_2367", "bonus_0sot", "clean_sheet", "red_dice", "freekick_goals"]
@@ -494,12 +513,15 @@ def write_html(result: dict, out_dir: str) -> None:
         or f'<tr><td colspan="{len(DETAIL_ORDER) + 1}">no goals yet</td></tr>'
     gd_head = "<th>Team</th>" + "".join(f"<th>{DETAIL_LABELS[k]}</th>" for k in DETAIL_ORDER)
 
-    # Full team x category grid.
-    grid_head = "<th>Team</th><th>Owner</th>" + "".join(f"<th>{CAT_SHORT[c]}</th>" for c in CATEGORY_ORDER) + "<th>Total</th>"
+    # Full team x category grid (full labels + descriptions as hover tooltips).
+    grid_head = ('<th title="The team">Team</th><th title="Who drafted it">Owner</th>'
+                 + "".join(f'<th title="{CAT_LABELS[c]} - {CAT_DESC[c]}">{CAT_LABELS[c]}</th>'
+                           for c in CATEGORY_ORDER)
+                 + '<th title="Sum of every category">Total</th>')
     grid_rows = "\n".join(
         f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td>" +
-        "".join(f"<td>{pts[t].get(c, 0):g}</td>" for c in CATEGORY_ORDER) +
-        f"<td><b>{tt[t]:g}</b></td></tr>"
+        "".join(f"<td>{round(pts[t].get(c, 0), 2):g}</td>" for c in CATEGORY_ORDER) +
+        f"<td><b>{round(tt[t], 2):g}</b></td></tr>"
         for t in sorted(teams, key=lambda t: tt[t], reverse=True))
 
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -515,6 +537,9 @@ def write_html(result: dict, out_dir: str) -> None:
  .scroll{{overflow-x:auto}} .grid{{font-size:.82rem}} .grid td,.grid th{{padding:.3rem .45rem;white-space:nowrap}}
  .num td:not(:first-child),.num th:not(:first-child){{text-align:right}}
  .r{{color:#888;font-size:.85rem}} .pl td:nth-child(2){{text-align:right}}
+ .wide{{width:96vw;max-width:1500px;position:relative;left:50%;transform:translateX(-50%)}}
+ table.sortable th{{cursor:pointer;user-select:none}} table.sortable th:hover{{background:#eef2ff}}
+ table.sortable th::after{{content:" \\2195";color:#bbb;font-size:.8em}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
