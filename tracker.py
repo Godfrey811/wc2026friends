@@ -423,9 +423,31 @@ def write_html(result: dict, out_dir: str) -> None:
                 cells += "<td></td>"
         rows += f"<tr>{cells}</tr>\n"
 
+    def ordinal(n):
+        suf = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+        return f"{n}{suf}"
+    team_rank = {t: 1 + sum(1 for o in teams if tt[o] > tt[t]) for t in teams}
+
+    # All teams, alphabetical, with current points rank out of 48
     team_rows = "\n".join(
-        f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td><td>{tt[t]:g}</td></tr>"
-        for t in sorted(teams, key=lambda t: tt[t], reverse=True))
+        f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td><td>{tt[t]:g}</td>"
+        f"<td>{ordinal(team_rank[t])}</td></tr>"
+        for t in sorted(teams))
+
+    # By player: their three teams (by pot) + each team's rank out of 48
+    pot_of = {t: i for i, pl in enumerate([POT1, POT2, POT3], 1) for t in pl}
+    owner_pots = defaultdict(dict)
+    for t in teams:
+        if owner.get(t, ""):
+            owner_pots[owner[t]][pot_of.get(t, 0)] = t
+
+    def teamcell(t):
+        return f"{t} <span class='r'>({ordinal(team_rank[t])})</span>" if t else "-"
+    player_rows = "\n".join(
+        f"<tr><td><b>{o}</b></td><td>{result['owner_totals'].get(o, 0):g}</td>"
+        f"<td>{teamcell(owner_pots[o].get(1))}</td><td>{teamcell(owner_pots[o].get(2))}</td>"
+        f"<td>{teamcell(owner_pots[o].get(3))}</td></tr>"
+        for o, _v in sorted(result['owner_totals'].items(), key=lambda kv: kv[1], reverse=True) if o)
 
     pts, detail, gf = result["pts"], result["detail"], result["goals_for"]
 
@@ -503,6 +525,7 @@ def write_html(result: dict, out_dir: str) -> None:
  .lb td:last-child,.lb th:last-child,.tt td:last-child,.tt th:last-child{{text-align:right}}
  .scroll{{overflow-x:auto}} .grid{{font-size:.82rem}} .grid td,.grid th{{padding:.3rem .45rem;white-space:nowrap}}
  .num td:not(:first-child),.num th:not(:first-child){{text-align:right}}
+ .r{{color:#888;font-size:.85rem}} .pl td:nth-child(2){{text-align:right}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
@@ -519,8 +542,14 @@ def write_html(result: dict, out_dir: str) -> None:
 {rows}
 </table>
 
-<h2>Teams by points</h2>
-<table class="tt"><tr><th>Team</th><th>Owner</th><th>Points</th></tr>
+<h2>By player</h2>
+<p class="sub">Each player and their three teams (Pot 1 / 2 / 3), with each team's current rank out of 48 in brackets.</p>
+<table class="pl"><tr><th>Player</th><th>Total</th><th>Pot 1</th><th>Pot 2</th><th>Pot 3</th></tr>
+{player_rows}
+</table>
+
+<h2>All teams (A-Z)</h2>
+<table class="tt"><tr><th>Team</th><th>Owner</th><th>Points</th><th>Rank</th></tr>
 {team_rows}
 </table>
 
