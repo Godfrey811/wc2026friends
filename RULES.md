@@ -72,19 +72,19 @@ Points for the furthest stage a team reaches, realised in the game they're elimi
 | --- | --- | --- |
 | Spain | Japan | Australia |
 | France | Uruguay | Ghana |
-| England | Ecuador | South Africa |
-| Argentina | Croatia | Panama |
-| Portugal | Canada | DR Congo |
-| Brazil | Senegal | Saudi Arabia |
-| Netherlands | Austria | Tunisia |
-| Belgium | Paraguay | Uzbekistan |
-| Germany | Sweden | New Zealand |
-| Norway | Ivory Coast | Cape Verde |
-| Colombia | Egypt | Jordan |
-| USA | Czechia | Iraq |
-| Switzerland | South Korea | Haiti |
-| Mexico | Scotland | Qatar |
-| Morocco | Algeria | Curaçao |
+| England | Croatia | South Africa |
+| Portugal | Ecuador | Panama |
+| Argentina | Senegal | DR Congo |
+| Brazil | Austria | Saudi Arabia |
+| Germany | Ivory Coast | Tunisia |
+| Netherlands | Canada | Uzbekistan |
+| Norway | Sweden | New Zealand |
+| Belgium | Paraguay | Cape Verde |
+| Colombia | Scotland | Jordan |
+| Morocco | South Korea | Iraq |
+| Mexico | Egypt | Haiti |
+| USA | Algeria | Qatar |
+| Switzerland | Czechia | Curaçao |
 | Turkey | Bosnia & Herzegovina | Iran |
 
 > _Rules locked from the conversation of June 2026. If anything here doesn't match what you expected, flag it before the draft._

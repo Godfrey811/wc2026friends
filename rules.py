@@ -17,19 +17,20 @@ from __future__ import annotations
 #   ("table", [headers], [[row], ...]) table
 #   ("note", text)                     small caveat / footnote
 
-# --- The draft pots, seeded by "to reach QF" odds (Pot 1 strongest). ---------
+# --- Draft pots: membership by "to reach QF" odds; order within each pot (the #1-48
+# --- seed) by Polymarket winner odds, June 2026. Pot 1 strongest. -----------
 # Field checked against the confirmed 48-team WC2026 lineup (June 2026):
 # UEFA 16, CONMEBOL 6, AFC 9, CAF 10, CONCACAF 6, OFC 1.
 
 POT1 = [
-    "Spain", "France", "England", "Argentina", "Portugal", "Brazil",
-    "Netherlands", "Belgium", "Germany", "Norway", "Colombia", "USA",
-    "Switzerland", "Mexico", "Morocco", "Turkey",
+    "Spain", "France", "England", "Portugal", "Argentina", "Brazil",
+    "Germany", "Netherlands", "Norway", "Belgium", "Colombia", "Morocco",
+    "Mexico", "USA", "Switzerland", "Turkey",
 ]
 POT2 = [
-    "Japan", "Uruguay", "Ecuador", "Croatia", "Canada", "Senegal", "Austria",
-    "Paraguay", "Sweden", "Ivory Coast", "Egypt", "Czechia", "South Korea",
-    "Scotland", "Algeria", "Bosnia & Herzegovina",
+    "Japan", "Uruguay", "Croatia", "Ecuador", "Senegal", "Austria",
+    "Ivory Coast", "Canada", "Sweden", "Paraguay", "Scotland", "South Korea",
+    "Egypt", "Algeria", "Czechia", "Bosnia & Herzegovina",
 ]
 POT3 = [
     "Australia", "Ghana", "South Africa", "Panama", "DR Congo", "Saudi Arabia",
@@ -265,7 +266,7 @@ if __name__ == "__main__":
     # Standalone teams-only reference.
     pots_content = [
         ("h1", "WC2026 Friends — Draft Pots"),
-        ("p", "16 players, three teams each (one per pot). Seeded by \"to reach QF\" odds."),
+        ("p", "16 players, three teams each (one per pot). Pots by \"reach QF\" odds; order within each pot by Polymarket winner odds."),
         ("table", _POT_HEADERS, _POT_ROWS),
     ]
     pots_path = os.path.join(here, "POTS.md")

@@ -561,7 +561,7 @@ def write_html(result: dict, out_dir: str) -> None:
 
 <h2>By player</h2>
 <p class="sub">Each player (sorted by average seed, strongest squad first) and their three teams (Pot 1 / 2 / 3). The #number is the team's
-<b>seed out of 48</b> by "reach the quarter-finals" odds (#1 = strongest, #48 = longest shot).</p>
+<b>seed out of 48</b> by Polymarket winner odds, within the draft pot tiers (#1 = strongest, #48 = longest shot).</p>
 <table class="pl sortable"><tr><th>Player</th><th>Total</th><th>Avg seed</th><th>Pot 1</th><th>Pot 2</th><th>Pot 3</th></tr>
 {player_rows}
 </table>
