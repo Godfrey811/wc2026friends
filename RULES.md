@@ -73,7 +73,8 @@ A reward for drafting teams that all crash out early. Players are ranked by when
 | 5 | 4 | 3 | 2 | 1 | 0 |
 
 - Your exit is set by your FURTHEST team - you're only 'out' once all three are eliminated.
-- Players knocked out at the SAME stage tie, and split the summed points for the positions they fill. Example: if the first three players all have their last team go out in the group stage, they take positions 1-3 and split 5 + 4 + 3 = 12, i.e. 4 points each.
+- It's about WHEN you're confirmed out, not just the stage. A team mathematically eliminated earlier in its group (say after game 5) ranks ahead of one that isn't confirmed out until a later game - you don't wait for the group to finish.
+- Players confirmed out at the SAME time tie, and split the summed points for the positions they fill. Example: if three players' last teams are all confirmed out together, they take positions 1-3 and split 5 + 4 + 3 = 12, i.e. 4 points each.
 - A team that wins the tournament never goes out, so its owner finishes last here (0).
 
 ## The draft — pots
