@@ -36,14 +36,15 @@ Everyone drafts teams from three odds-tiered pots. Your teams earn (and lose) po
 
 ## Ranked categories
 
-Each category ranks the top 6 teams across the whole tournament. Positive categories pay 10 / 8 / 5 / 3 / 2 / 1; penalty categories pay the negative of that.
+Each category ranks the top 6 teams across the WHOLE tournament, and the points go to their owners. Reward categories pay 10 / 8 / 5 / 3 / 2 / 1 to the six best; deduction categories take the same off (-10 / -8 / -5 / -3 / -2 / -1) for topping a list you do NOT want to top.
 
-| Direction | Points (top 6) | Categories |
+| Type | Points (top 6) | Categories |
 | --- | --- | --- |
 | Reward | 10 / 8 / 5 / 3 / 2 / 1 | Quickest Goal · Youngest Goalscorer · Fastest Substitute · Fastest Own Goal · Quickest Yellow Card · Longest-Named Goalscorer |
-| Penalty | -10 / -8 / -5 / -3 / -2 / -1 | Oldest Goalscorer · Shortest-Named Goalscorer |
+| Deduction | -10 / -8 / -5 / -3 / -2 / -1 | Oldest Goalscorer · Shortest-Named Goalscorer |
 
-- Only ONE of your teams can qualify in each category - your HIGHEST-ranked team in it. If you own two of the top teams, only your best one takes a place; the other is skipped and the next prize rolls down to the next DISTINCT owner.
+- Each person can only have ONE team qualify per category - their single best-scoring team in it. If two of your teams would both place, only the higher one counts; the other is skipped and that prize rolls down to the next DISTINCT owner.
+- Worked example: own the team with the tournament's 2nd-quickest goal and you score +8 in Quickest Goal. Own the team with the OLDEST goalscorer and you lose -10 in the Oldest Goalscorer deduction.
 - Ties split the points between the tied owners (owning several tied teams = a bigger share).
 - Tiebreak: the most recent occurrence ranks higher.
 - Data source priority: official FIFA, else BBC, else ITV.

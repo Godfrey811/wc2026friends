@@ -471,9 +471,9 @@ CAT_DESC = {
     "fastest_sub": "Ranked 10/8/5/3/2/1 for the fastest substitution.",
     "fastest_own_goal": "Ranked 10/8/5/3/2/1 for the fastest own goal.",
     "youngest_scorer": "Ranked 10/8/5/3/2/1 for the youngest goalscorer.",
-    "oldest_scorer": "Ranked -10/-8/-5/-3/-2/-1 for the OLDEST goalscorer (a penalty).",
+    "oldest_scorer": "Ranked -10/-8/-5/-3/-2/-1 for the OLDEST goalscorer (a deduction; only your best team qualifies).",
     "longest_name": "Ranked 10/8/5/3/2/1 for the longest goalscorer name.",
-    "shortest_name": "Ranked -10/-8/-5/-3/-2/-1 for the SHORTEST goalscorer name (a penalty).",
+    "shortest_name": "Ranked -10/-8/-5/-3/-2/-1 for the SHORTEST goalscorer name (a deduction; only your best team qualifies).",
 }
 
 # in_game sub-components (raw, before 90'+ flip / opp free-kick doubling)

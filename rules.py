@@ -89,19 +89,21 @@ CONTENT = [
 
     ("h2", "Ranked categories"),
     ("p",
-     "Each category ranks the top 6 teams across the whole tournament. Positive "
-     "categories pay 10 / 8 / 5 / 3 / 2 / 1; penalty categories pay the negative "
-     "of that."),
+     "Each category ranks the top 6 teams across the WHOLE tournament, and the points "
+     "go to their owners. Reward categories pay 10 / 8 / 5 / 3 / 2 / 1 to the six best; "
+     "deduction categories take the same off (-10 / -8 / -5 / -3 / -2 / -1) for topping "
+     "a list you do NOT want to top."),
     ("table",
-     ["Direction", "Points (top 6)", "Categories"],
+     ["Type", "Points (top 6)", "Categories"],
      [
          ["Reward", "10 / 8 / 5 / 3 / 2 / 1",
           "Quickest Goal · Youngest Goalscorer · Fastest Substitute · Fastest Own Goal · Quickest Yellow Card · Longest-Named Goalscorer"],
-         ["Penalty", "-10 / -8 / -5 / -3 / -2 / -1",
+         ["Deduction", "-10 / -8 / -5 / -3 / -2 / -1",
           "Oldest Goalscorer · Shortest-Named Goalscorer"],
      ]),
     ("bullets", [
-        "Only ONE of your teams can qualify in each category - your HIGHEST-ranked team in it. If you own two of the top teams, only your best one takes a place; the other is skipped and the next prize rolls down to the next DISTINCT owner.",
+        "Each person can only have ONE team qualify per category - their single best-scoring team in it. If two of your teams would both place, only the higher one counts; the other is skipped and that prize rolls down to the next DISTINCT owner.",
+        "Worked example: own the team with the tournament's 2nd-quickest goal and you score +8 in Quickest Goal. Own the team with the OLDEST goalscorer and you lose -10 in the Oldest Goalscorer deduction.",
         "Ties split the points between the tied owners (owning several tied teams = a bigger share).",
         "Tiebreak: the most recent occurrence ranks higher.",
         "Data source priority: official FIFA, else BBC, else ITV.",
@@ -293,12 +295,17 @@ MINI_RULES = [
         ("Goal from 90:00 onwards (injury time, not extra time)", "flips that team's in-game points x -1; they STACK - an ODD number flips, an EVEN number cancels (3 still flips, 2 cancels)"),
         ("Red card - roll a d6", "odd = +(roll/2): 1=+0.5, 3=+1.5, 5=+2.5;  even = -(roll/2): 2=-1, 4=-2, 6=-3"),
     ]),
-    ("Ranked rewards - top 6 teams score 10 / 8 / 5 / 3 / 2 / 1", (22, 163, 74), (220, 252, 231), [
-        ("Quickest goal", "+"), ("Quickest yellow card", "+"), ("Fastest substitution", "+"),
-        ("Fastest own goal", "+"), ("Youngest goalscorer", "+"), ("Longest-named goalscorer", "+"),
+    ("Ranked rewards - 6 best teams score 10/8/5/3/2/1 (only your best team qualifies per category)", (22, 163, 74), (220, 252, 231), [
+        ("Quickest goal", "earliest goal of the tournament"),
+        ("Quickest yellow card", "earliest booking"),
+        ("Fastest substitution", "earliest substitution"),
+        ("Fastest own goal", "earliest own goal"),
+        ("Youngest goalscorer", "youngest scorer"),
+        ("Longest-named goalscorer", "most letters in the name"),
     ]),
-    ("Ranked penalties - top 6 teams score -10 / -8 / -5 / -3 / -2 / -1", (220, 38, 38), (254, 226, 226), [
-        ("Oldest goalscorer", "-"), ("Shortest-named goalscorer", "-"),
+    ("Ranked deductions - the 6 teams topping each list LOSE 10/8/5/3/2/1 (only your best team qualifies)", (220, 38, 38), (254, 226, 226), [
+        ("Oldest goalscorer", "oldest scorer"),
+        ("Shortest-named goalscorer", "fewest letters in the name"),
     ]),
     ("Flat awards", (13, 148, 136), (204, 251, 241), [
         ("Fewest goals (whole tournament)", "+7 (tie-split between owners)"),
