@@ -539,11 +539,15 @@ def write_html(result: dict, out_dir: str) -> None:
  th,td{{text-align:left;padding:.4rem .6rem;border-bottom:1px solid #e3e6ea}}
  th{{background:#fafbfc}} a{{color:#2563eb}} .o{{color:#16a34a;font-size:.85rem}}
  .lb td:last-child,.lb th:last-child,.tt td:last-child,.tt th:last-child{{text-align:right}}
- .scroll{{overflow-x:auto}} .grid{{font-size:.82rem}} .grid td,.grid th{{padding:.3rem .45rem;white-space:nowrap}}
+ .scroll{{overflow-x:auto}} .grid{{font-size:.78rem}}
+ .grid td,.grid th{{padding:.25rem .35rem}} .grid td{{white-space:nowrap;text-align:center}}
+ .grid th{{white-space:normal;vertical-align:bottom;line-height:1.15}}
+ .grid td:first-child,.grid th:first-child{{text-align:left}}
  .num td:not(:first-child),.num th:not(:first-child){{text-align:right}}
  .r{{color:#888;font-size:.85rem}} .pl td:nth-child(2){{text-align:right}}
- .wide{{width:96vw;max-width:1500px;position:relative;left:50%;transform:translateX(-50%)}}
- table.sortable th{{cursor:pointer;user-select:none}} table.sortable th:hover{{background:#eef2ff}}
+ .wide{{width:98vw;max-width:1700px;position:relative;left:50%;transform:translateX(-50%)}}
+ table.sortable th{{cursor:pointer;user-select:none;text-decoration:underline dotted #bbb}}
+ table.sortable th:hover{{background:#eef2ff;color:#2563eb}}
  table.sortable th::after{{content:" \\2195";color:#bbb;font-size:.8em}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
