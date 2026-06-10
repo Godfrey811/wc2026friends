@@ -18,10 +18,12 @@ DATA MODEL (all in the --data dir):
                        color = yellow | red ; dice = the d6 roll for a red card
     subs.csv         match_id,team,minute
     own_goals.csv    match_id,team,minute        (team = the side that erred)
-    progression.csv  team,stage,flip
+    progression.csv  team,stage,flip,out
                        stage = group|R32|R16|QF|SF|RU|winner|third
                        (SF = 4th place; third = 3rd-place playoff winner)
                        flip = 1 if a 90'+ goal in their elimination game flips it
+                       out  = 1 once the team is eliminated (drives the early-exit
+                              bonus; leave blank while the team is still in)
     fixtures.csv     date,kickoff,stage,group,home,away,venue   (display only;
                        not used in scoring. date as YYYY-MM-DD so it sorts.)
 
@@ -115,7 +117,7 @@ TEMPLATE_HEADERS = {
     "cards.csv": ["match_id", "team", "minute", "color", "dice"],
     "subs.csv": ["match_id", "team", "minute"],
     "own_goals.csv": ["match_id", "team", "minute"],
-    "progression.csv": ["team", "stage", "flip"],
+    "progression.csv": ["team", "stage", "flip", "out"],
     "fixtures.csv": ["date", "kickoff", "stage", "group", "home", "away", "venue"],
 }
 
@@ -134,9 +136,9 @@ def init_templates(data_dir: str) -> None:
     prog_path = os.path.join(data_dir, "progression.csv")
     with open(prog_path, "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
-        w.writerow(["team", "stage", "flip"])
+        w.writerow(["team", "stage", "flip", "out"])
         for team in POT1 + POT2 + POT3:
-            w.writerow([team, "group", ""])
+            w.writerow([team, "group", "", ""])
     for name, headers in TEMPLATE_HEADERS.items():
         if name == "progression.csv":
             continue
@@ -336,12 +338,15 @@ def score(data_dir: str) -> dict:
     award_fewest(cards_total, "fewest_cards")
 
     # ---- early-exit bonus (owner-level: scored when your LAST team is out) ----
-    # Rank players by the furthest stage any of their teams reached (lower = out
-    # sooner). Earliest all-out scores most; players out at the same stage tie and
-    # split the summed points for the positions they fill. The bonus is attached to
-    # the team that set the owner's exit, so it flows into that owner's total.
+    # Players are ranked by the stage their FURTHEST team is knocked out at (lower =
+    # out sooner); earliest all-out scores most, and players out at the same stage tie
+    # and split the summed points for the positions they fill. A player only places
+    # once ALL three of their teams are eliminated (progression.csv `out` = 1) - until
+    # then they score 0, so nobody banks anything before teams actually go out. The
+    # bonus is attached to the team that set the owner's exit, so it flows into totals.
     team_stage = {r["team"]: ((r.get("stage") or "group").strip() or "group")
                   for r in progression}
+    team_out = {r["team"]: truthy(r.get("out", "")) for r in progression}
     owner_teams: dict[str, list] = defaultdict(list)
     for t in teams:
         if owner.get(t, ""):
@@ -350,19 +355,27 @@ def score(data_dir: str) -> dict:
     def stage_rank(t):
         return STAGE_RANK.get(team_stage.get(t, "group"), 0)
 
-    early_exit = []  # (owner, exit_team, exit_stage, points), for the site section
+    OUT_SENTINEL = 99  # players not yet fully eliminated sort last and score nothing
+    placed = {o for o, ts in owner_teams.items() if ts and all(team_out.get(t, False) for t in ts)}
     exit_team = {o: max(ts, key=lambda t: (stage_rank(t), t)) for o, ts in owner_teams.items()}
-    order = sorted(owner_teams, key=lambda o: (stage_rank(exit_team[o]), o))
+
+    def exit_rank(o):
+        return stage_rank(exit_team[o]) if o in placed else OUT_SENTINEL
+
+    early_exit = []  # (owner, exit_team, exit_stage, points) for placed players only
+    order = sorted(owner_teams, key=lambda o: (exit_rank(o), o))
     i = 0
     while i < len(order):
         j = i
-        while j < len(order) and stage_rank(exit_team[order[j]]) == stage_rank(exit_team[order[i]]):
+        while j < len(order) and exit_rank(order[j]) == exit_rank(order[i]):
             j += 1
         block = order[i:j]
         total = sum(EARLY_EXIT_POINTS[i + k] for k in range(len(block))
                     if i + k < len(EARLY_EXIT_POINTS))
         share = total / len(block)
         for o in block:
+            if o not in placed:        # still in - forfeit these positions' points for now
+                continue
             et = exit_team[o]
             pts[et]["early_exit"] += share
             early_exit.append((o, et, team_stage.get(et, "group"), share))
@@ -425,7 +438,8 @@ CAT_DESC = {
     "early_exit": "Owner-level: players ranked by when their LAST team is knocked out - "
                   "earliest all-out scores most (1st 5, 2nd 4, 3rd/4th 3, 5th/6th 2, 7th/8th 1, "
                   "rest 0). Players out at the same stage tie and split the summed points for the "
-                  "positions they fill. Shown on the team that set your exit.",
+                  "positions they fill. You only place once all three of your teams are out; until "
+                  "then it's 0. Shown on the team that set your exit.",
     "fewest_goals": "+7 shared between the team(s) that have scored the FEWEST goals.",
     "fewest_cards": "+7 shared between the team(s) with the FEWEST cards.",
     "quickest_goal": "Ranked 10/8/5/3/2/1 for the quickest goal of the tournament (earliest minute).",
@@ -675,7 +689,8 @@ def write_html(result: dict, out_dir: str) -> None:
 <h2>🚪 Early-exit bonus</h2>
 <p class="sub">Score for your teams crashing out early: you're ranked by when your <b>last</b> team is knocked out.
 1st all-out = 5, 2nd = 4, 3rd/4th = 3, 5th/6th = 2, 7th/8th = 1. Players out at the same stage tie and
-split the summed points for the positions they fill. Settles as the tournament unfolds.</p>
+split the summed points for the positions they fill. You only place once <b>all three</b> of your teams
+are eliminated - nobody scores here until teams actually start going out.</p>
 <table class="tt num sortable"><tr><th>Player</th><th>Last team out</th><th>Knocked out at</th><th>Bonus</th></tr>
 {ee_rows}
 </table>
