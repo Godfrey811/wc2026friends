@@ -22,6 +22,8 @@ DATA MODEL (all in the --data dir):
                        stage = group|R32|R16|QF|SF|RU|winner|third
                        (SF = 4th place; third = 3rd-place playoff winner)
                        flip = 1 if a 90'+ goal in their elimination game flips it
+    fixtures.csv     date,kickoff,stage,group,home,away,venue   (display only;
+                       not used in scoring. date as YYYY-MM-DD so it sorts.)
 
 ACCEPTED SIMPLIFICATIONS (confirmed intentional — not bugs):
   * Own goals feed only the fastest-own-goal ranking; they do NOT affect the
@@ -101,6 +103,7 @@ TEMPLATE_HEADERS = {
     "subs.csv": ["match_id", "team", "minute"],
     "own_goals.csv": ["match_id", "team", "minute"],
     "progression.csv": ["team", "stage", "flip"],
+    "fixtures.csv": ["date", "kickoff", "stage", "group", "home", "away", "venue"],
 }
 
 
@@ -142,6 +145,7 @@ def score(data_dir: str) -> dict:
     subs = load(data_dir, "subs.csv")
     own_goals = load(data_dir, "own_goals.csv")
     progression = load(data_dir, "progression.csv")
+    fixtures = load(data_dir, "fixtures.csv")
 
     goals_by_match: dict[str, list] = defaultdict(list)
     for g in goals:
@@ -332,6 +336,7 @@ def score(data_dir: str) -> dict:
         "goals_for": dict(goals_for),
         "team_totals": team_totals,
         "owner_totals": dict(owner_totals),
+        "fixtures": fixtures,
     }
 
 
@@ -519,6 +524,27 @@ def write_html(result: dict, out_dir: str) -> None:
         or f'<tr><td colspan="{len(DETAIL_ORDER) + 1}">no goals yet</td></tr>'
     gd_head = "<th>Team</th>" + "".join(f"<th>{DETAIL_LABELS[k]}</th>" for k in DETAIL_ORDER)
 
+    # Fixtures: who plays whom on which day (display only; owners annotated).
+    fixtures = result.get("fixtures", [])
+    def fx_key(r):
+        return ((r.get("date") or "").strip(), (r.get("kickoff") or "").strip())
+    def matchcell(t):
+        o = owner.get((t or "").strip(), "")
+        return f"{t} <span class='o'>({o})</span>" if o else f"{t}"
+    fx_rows = ""
+    for r in sorted((r for r in fixtures
+                     if (r.get("home") or "").strip() and (r.get("away") or "").strip()),
+                    key=fx_key):
+        sg = ((r.get("stage") or "").strip() + " " + (r.get("group") or "").strip()).strip() or "-"
+        fx_rows += (f"<tr><td>{(r.get('date') or '').strip() or '-'}</td>"
+                    f"<td>{(r.get('kickoff') or '').strip() or '-'}</td>"
+                    f"<td>{sg}</td>"
+                    f"<td>{matchcell(r['home'].strip())} <span class='r'>v</span> "
+                    f"{matchcell(r['away'].strip())}</td>"
+                    f"<td>{(r.get('venue') or '').strip() or '-'}</td></tr>\n")
+    fx_rows = fx_rows or ('<tr><td colspan="5">no fixtures loaded yet - '
+                          'add rows to data/fixtures.csv</td></tr>')
+
     # Full team x category grid (full labels + descriptions as hover tooltips).
     grid_head = ('<th title="The team">Team</th><th title="Who drafted it">Owner</th>'
                  + "".join(f'<th title="{CAT_LABELS[c]} - {CAT_DESC[c]}">{CAT_LABELS[c]}</th>'
@@ -566,6 +592,12 @@ def write_html(result: dict, out_dir: str) -> None:
 <table class="pl sortable"><tr><th>Player</th><th>Total</th><th>Avg seed</th><th>Pot 1</th><th>Pot 2</th><th>Pot 3</th></tr>
 {player_rows}
 </table>
+
+<h2>📅 Fixtures</h2>
+<p class="sub">Who plays whom, and when (your players' teams in green). Click a header to sort - by date, kickoff, stage or venue.</p>
+<div class="scroll"><table class="fx sortable"><tr><th>Date</th><th>Kickoff</th><th>Stage</th><th>Match</th><th>Venue</th></tr>
+{fx_rows}
+</table></div>
 
 <h2>All teams (A-Z)</h2>
 <table class="tt sortable"><tr><th>Team</th><th>Owner</th><th>Points</th><th>Rank</th></tr>
