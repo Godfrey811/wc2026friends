@@ -190,8 +190,9 @@ def score(data_dir: str) -> dict:
                 if typ != "shootout":
                     scored += 1
                 mn = parse_minute(g.get("minute", ""))
-                # 90'+ = the 90th minute or its injury/stoppage time ("90" or "90+X"),
-                # NOT extra time (91-120). parse_minute("90+5") -> 90, "105" -> 105.
+                # 90'+ = from 90:00 onwards - the 90th minute and all its injury/
+                # stoppage time ("90" or "90+X"), NOT extra time (91-120).
+                # parse_minute("90+5") -> 90, "105" -> 105.
                 if typ != "shootout" and mn == 90:
                     ninety += 1
 
