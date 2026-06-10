@@ -333,9 +333,10 @@ def score(data_dir: str) -> dict:
             idx += 1
 
     # ---- flat fewest-goals / fewest-cards (+7, tie-split across teams) ----
+    # Card count is WEIGHTED: a yellow = 1, a red = 2.
     cards_total = defaultdict(int)
     for c in cards:
-        cards_total[c["team"]] += 1
+        cards_total[c["team"]] += 2 if (c.get("color") or "").strip().lower() == "red" else 1
 
     def award_fewest(tally: dict, cat: str):
         if not teams:
@@ -465,7 +466,7 @@ CAT_DESC = {
                   "earlier group exit beats one settled later. You only place once all three of your "
                   "teams are out; until then it's 0. Shown on the team that set your exit.",
     "fewest_goals": "+7 shared between the team(s) that have scored the FEWEST goals.",
-    "fewest_cards": "+7 shared between the team(s) with the FEWEST cards.",
+    "fewest_cards": "+7 shared between the team(s) with the FEWEST cards, where a yellow = 1 and a red = 2.",
     "quickest_goal": "Ranked 10/8/5/3/2/1 for the quickest goal of the tournament (earliest minute).",
     "quickest_yellow": "Ranked 10/8/5/3/2/1 for the quickest yellow card.",
     "fastest_sub": "Ranked 10/8/5/3/2/1 for the fastest substitution.",

@@ -113,7 +113,7 @@ CONTENT = [
     ("h2", "Flat awards"),
     ("bullets", [
         "Fewest Goals (whole tournament): +7 to the single team with fewest (tie-split between owners).",
-        "Fewest Cards (whole tournament): +7 to the single team with fewest (tie-split between owners).",
+        "Fewest Cards (whole tournament): +7 to the single team with fewest (tie-split between owners). Cards are WEIGHTED - a yellow counts as 1, a red counts as 2 (a second-yellow dismissal = the two yellows, so 2).",
     ]),
 
     ("h2", "Tournament progression"),
@@ -310,7 +310,7 @@ MINI_RULES = [
     ]),
     ("Flat awards", (13, 148, 136), (204, 251, 241), [
         ("Fewest goals (whole tournament)", "+7 (tie-split between owners)"),
-        ("Fewest cards (whole tournament)", "+7 (tie-split between owners)"),
+        ("Fewest cards (whole tournament) - yellow = 1 card, red = 2", "+7 (tie-split between owners)"),
     ]),
     ("Tournament progression - banked when the team is eliminated", (217, 119, 6), (254, 243, 199), [
         ("Knocked out in the Round of 32", "+1"), ("Knocked out in the Round of 16", "+2"),

@@ -53,7 +53,7 @@ Each category ranks the top 6 teams across the WHOLE tournament, and the points 
 ## Flat awards
 
 - Fewest Goals (whole tournament): +7 to the single team with fewest (tie-split between owners).
-- Fewest Cards (whole tournament): +7 to the single team with fewest (tie-split between owners).
+- Fewest Cards (whole tournament): +7 to the single team with fewest (tie-split between owners). Cards are WEIGHTED - a yellow counts as 1, a red counts as 2 (a second-yellow dismissal = the two yellows, so 2).
 
 ## Tournament progression
 
