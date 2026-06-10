@@ -64,6 +64,18 @@ Points for the furthest stage a team reaches, realised in the game they're elimi
 - 3rd-place playoff WINNER: -5 (cancels their SF +5, so 3rd place nets 0).
 - 4th place (loses the 3rd-place playoff): keeps the SF +5.
 
+## Early-exit bonus
+
+A reward for drafting teams that all crash out early. Players are ranked by when their LAST surviving team is knocked out - the sooner all three of your teams are gone, the more you score.
+
+| 1st all-out | 2nd | 3rd or 4th | 5th or 6th | 7th or 8th | 9th-16th |
+| --- | --- | --- | --- | --- | --- |
+| 5 | 4 | 3 | 2 | 1 | 0 |
+
+- Your exit is set by your FURTHEST team - you're only 'out' once all three are eliminated.
+- Players knocked out at the SAME stage tie, and split the summed points for the positions they fill. Example: if the first three players all have their last team go out in the group stage, they take positions 1-3 and split 5 + 4 + 3 = 12, i.e. 4 points each.
+- A team that wins the tournament never goes out, so its owner finishes last here (0).
+
 ## The draft — pots
 
 16 players. Each player drafts THREE teams — one from each pot — so every squad gets a strong team, a mid team and a long shot (16 players x 3 = the full 48). The pots are seeded by each team's "to reach the quarter-finals" odds: Pot 1 is the 16 strongest, Pot 3 the 16 longest shots.

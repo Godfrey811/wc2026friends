@@ -51,6 +51,19 @@ STAGE_POINTS = {
     "SF": 5, "RU": 8, "winner": 10, "third": 0,
 }
 
+# How early a team was knocked out (lower = out sooner), for the early-exit bonus.
+# A 3rd/4th-place side exits around the semis; a champion never exits.
+STAGE_RANK = {
+    "group": 0, "R32": 1, "R16": 2, "QF": 3, "SF": 4, "third": 4, "RU": 5, "winner": 6,
+}
+STAGE_LABEL = {
+    "group": "Group stage", "R32": "Round of 32", "R16": "Round of 16",
+    "QF": "Quarter-final", "SF": "Semi-final", "third": "3rd-place game",
+    "RU": "Final (runner-up)", "winner": "Champion (never out)",
+}
+# Points by finishing position in the early-exit race (1st all-out = position 1).
+EARLY_EXIT_POINTS = [5, 4, 3, 3, 2, 2, 1, 1] + [0] * 8
+
 POS_DIST = [10, 8, 5, 3, 2, 1]
 NEG_DIST = [-10, -8, -5, -3, -2, -1]
 
@@ -322,6 +335,40 @@ def score(data_dir: str) -> dict:
     award_fewest(goals_for, "fewest_goals")
     award_fewest(cards_total, "fewest_cards")
 
+    # ---- early-exit bonus (owner-level: scored when your LAST team is out) ----
+    # Rank players by the furthest stage any of their teams reached (lower = out
+    # sooner). Earliest all-out scores most; players out at the same stage tie and
+    # split the summed points for the positions they fill. The bonus is attached to
+    # the team that set the owner's exit, so it flows into that owner's total.
+    team_stage = {r["team"]: ((r.get("stage") or "group").strip() or "group")
+                  for r in progression}
+    owner_teams: dict[str, list] = defaultdict(list)
+    for t in teams:
+        if owner.get(t, ""):
+            owner_teams[owner[t]].append(t)
+
+    def stage_rank(t):
+        return STAGE_RANK.get(team_stage.get(t, "group"), 0)
+
+    early_exit = []  # (owner, exit_team, exit_stage, points), for the site section
+    exit_team = {o: max(ts, key=lambda t: (stage_rank(t), t)) for o, ts in owner_teams.items()}
+    order = sorted(owner_teams, key=lambda o: (stage_rank(exit_team[o]), o))
+    i = 0
+    while i < len(order):
+        j = i
+        while j < len(order) and stage_rank(exit_team[order[j]]) == stage_rank(exit_team[order[i]]):
+            j += 1
+        block = order[i:j]
+        total = sum(EARLY_EXIT_POINTS[i + k] for k in range(len(block))
+                    if i + k < len(EARLY_EXIT_POINTS))
+        share = total / len(block)
+        for o in block:
+            et = exit_team[o]
+            pts[et]["early_exit"] += share
+            early_exit.append((o, et, team_stage.get(et, "group"), share))
+        i = j
+    early_exit.sort(key=lambda x: (-x[3], x[0]))
+
     # ---- totals ----
     team_totals = {t: sum(pts[t].values()) for t in teams}
     owner_totals = defaultdict(float)
@@ -337,20 +384,22 @@ def score(data_dir: str) -> dict:
         "team_totals": team_totals,
         "owner_totals": dict(owner_totals),
         "fixtures": fixtures,
+        "early_exit": early_exit,
     }
 
 
 # --- output ------------------------------------------------------------------
 
 CATEGORY_ORDER = [
-    "in_game", "prime", "progression", "fewest_goals", "fewest_cards",
+    "in_game", "prime", "progression", "early_exit", "fewest_goals", "fewest_cards",
     "quickest_goal", "quickest_yellow", "fastest_sub", "fastest_own_goal",
     "youngest_scorer", "oldest_scorer", "longest_name", "shortest_name",
 ]
 
 CAT_LABELS = {
     "in_game": "In-game points", "prime": "Prime-goals penalty",
-    "progression": "Progression", "fewest_goals": "Fewest goals",
+    "progression": "Progression", "early_exit": "Early-exit bonus",
+    "fewest_goals": "Fewest goals",
     "fewest_cards": "Fewest cards", "quickest_goal": "Quickest goal",
     "quickest_yellow": "Quickest yellow card", "fastest_sub": "Fastest substitution",
     "fastest_own_goal": "Fastest own goal", "youngest_scorer": "Youngest scorer",
@@ -359,7 +408,8 @@ CAT_LABELS = {
 }
 
 CAT_SHORT = {
-    "in_game": "In-game", "prime": "Prime", "progression": "Prog", "fewest_goals": "Few.G",
+    "in_game": "In-game", "prime": "Prime", "progression": "Prog", "early_exit": "Exit",
+    "fewest_goals": "Few.G",
     "fewest_cards": "Few.C", "quickest_goal": "Q.goal", "quickest_yellow": "Q.yel",
     "fastest_sub": "F.sub", "fastest_own_goal": "F.OG", "youngest_scorer": "Young",
     "oldest_scorer": "Old", "longest_name": "Long", "shortest_name": "Short",
@@ -372,6 +422,10 @@ CAT_DESC = {
     "prime": "-3 while the team is on a PRIME number of (non-shootout) goals.",
     "progression": "Stage points: R32 +1, R16 +2, QF +3, SF +5, runner-up +8, winner +10 "
                    "(flipped to negative if a 90'+ goal loses their elimination game).",
+    "early_exit": "Owner-level: players ranked by when their LAST team is knocked out - "
+                  "earliest all-out scores most (1st 5, 2nd 4, 3rd/4th 3, 5th/6th 2, 7th/8th 1, "
+                  "rest 0). Players out at the same stage tie and split the summed points for the "
+                  "positions they fill. Shown on the team that set your exit.",
     "fewest_goals": "+7 shared between the team(s) that have scored the FEWEST goals.",
     "fewest_cards": "+7 shared between the team(s) with the FEWEST cards.",
     "quickest_goal": "Ranked 10/8/5/3/2/1 for the quickest goal of the tournament (earliest minute).",
@@ -490,7 +544,7 @@ def write_html(result: dict, out_dir: str) -> None:
 
     cat_rows = ""
     for cat in CATEGORY_ORDER:
-        if cat == "prime":      # prime has its own section below
+        if cat in ("prime", "early_exit"):   # these are owner-level; own sections below
             continue
         vals = [(t, pts[t].get(cat, 0.0)) for t in teams if pts[t].get(cat, 0.0)]
         cat_rows += (f"<tr><td>{CAT_LABELS.get(cat, cat)}</td>"
@@ -514,6 +568,14 @@ def write_html(result: dict, out_dir: str) -> None:
         f"<tr><td>{o}</td><td>{c}</td><td>{-3 * c:g}</td></tr>"
         for o, c in sorted(owner_prime.items(), key=lambda kv: -kv[1])) \
         or '<tr><td colspan="3">nobody affected yet</td></tr>'
+
+    # Early-exit bonus: players ranked by when their last team is knocked out.
+    ee = result.get("early_exit", [])
+    ee_rows = "\n".join(
+        f"<tr><td>{o}</td><td>{et}</td><td>{STAGE_LABEL.get(stg, stg)}</td>"
+        f"<td>{('+' if p else '') + format(round(p, 2), 'g')}</td></tr>"
+        for (o, et, stg, p) in ee) \
+        or '<tr><td colspan="4">settles as teams are knocked out</td></tr>'
 
     # Goal-points breakdown (in_game sub-components) for teams that have any.
     gd_teams = [t for t in teams if any(detail[t].get(k) for k in DETAIL_ORDER)]
@@ -608,6 +670,14 @@ def write_html(result: dict, out_dir: str) -> None:
 <p class="sub">For every scoring category: the team gaining the most, and the team losing the most (owner in brackets).</p>
 <table class="num"><tr><th>Category</th><th>🟢 Most points</th><th>🔴 Most lost</th></tr>
 {cat_rows}
+</table>
+
+<h2>🚪 Early-exit bonus</h2>
+<p class="sub">Score for your teams crashing out early: you're ranked by when your <b>last</b> team is knocked out.
+1st all-out = 5, 2nd = 4, 3rd/4th = 3, 5th/6th = 2, 7th/8th = 1. Players out at the same stage tie and
+split the summed points for the positions they fill. Settles as the tournament unfolds.</p>
+<table class="tt num sortable"><tr><th>Player</th><th>Last team out</th><th>Knocked out at</th><th>Bonus</th></tr>
+{ee_rows}
 </table>
 
 <h2>Goal-points breakdown</h2>

@@ -125,6 +125,20 @@ CONTENT = [
         "4th place (loses the 3rd-place playoff): keeps the SF +5.",
     ]),
 
+    ("h2", "Early-exit bonus"),
+    ("p",
+     "A reward for drafting teams that all crash out early. Players are ranked by "
+     "when their LAST surviving team is knocked out - the sooner all three of your "
+     "teams are gone, the more you score."),
+    ("table",
+     ["1st all-out", "2nd", "3rd or 4th", "5th or 6th", "7th or 8th", "9th-16th"],
+     [["5", "4", "3", "2", "1", "0"]]),
+    ("bullets", [
+        "Your exit is set by your FURTHEST team - you're only 'out' once all three are eliminated.",
+        "Players knocked out at the SAME stage tie, and split the summed points for the positions they fill. Example: if the first three players all have their last team go out in the group stage, they take positions 1-3 and split 5 + 4 + 3 = 12, i.e. 4 points each.",
+        "A team that wins the tournament never goes out, so its owner finishes last here (0).",
+    ]),
+
     ("h2", "The draft — pots"),
     ("p",
      "16 players. Each player drafts THREE teams — one from each pot — so every "
