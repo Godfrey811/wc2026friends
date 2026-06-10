@@ -274,6 +274,90 @@ def render_pdf(content, path: str) -> None:
     pdf.output(path)
 
 
+# --- Mini one-page, colour-coded scoring table -------------------------------
+
+# (group title, header colour, row tint, [(rule, points/effect), ...])
+MINI_RULES = [
+    ("In-game points (per match)", (37, 99, 235), (219, 234, 254), [
+        ("Open-play goal", "+0.5 each"),
+        ("Penalty scored - not a shootout", "-1.5 each"),
+        ("Penalty scored - in a shootout", "-0.5 each"),
+        ("Goal ruled out by VAR", "-1 each"),
+        ("0 shots on target in a game", "+4"),
+        ("Goal scored OR conceded in the 23rd or 67th minute", "+4 (max +4 per game)"),
+        ("Fail to score in a game (clean sheet against you)", "-1 (own both & 0-0 = 0; extra time excluded)"),
+        ("Prime number of total goals in the tournament (excl. shootout goals)", "-3"),
+    ]),
+    ("Modifiers - these change other points, not flat", (124, 58, 237), (237, 233, 254), [
+        ("Free-kick goal", "doubles the OPPONENT team's points that game (nothing for you)"),
+        ("Goal from 90:00 onwards (injury time, not extra time)", "flips that team's in-game points x -1 (two cancel out)"),
+        ("Red card - roll a d6", "odd = +(roll/2): 1=+0.5, 3=+1.5, 5=+2.5;  even = -(roll/2): 2=-1, 4=-2, 6=-3"),
+    ]),
+    ("Ranked rewards - top 6 teams score 10 / 8 / 5 / 3 / 2 / 1", (22, 163, 74), (220, 252, 231), [
+        ("Quickest goal", "+"), ("Quickest yellow card", "+"), ("Fastest substitution", "+"),
+        ("Fastest own goal", "+"), ("Youngest goalscorer", "+"), ("Longest-named goalscorer", "+"),
+    ]),
+    ("Ranked penalties - top 6 teams score -10 / -8 / -5 / -3 / -2 / -1", (220, 38, 38), (254, 226, 226), [
+        ("Oldest goalscorer", "-"), ("Shortest-named goalscorer", "-"),
+    ]),
+    ("Flat awards", (13, 148, 136), (204, 251, 241), [
+        ("Fewest goals (whole tournament)", "+7 (tie-split between owners)"),
+        ("Fewest cards (whole tournament)", "+7 (tie-split between owners)"),
+    ]),
+    ("Tournament progression - banked when the team is eliminated", (217, 119, 6), (254, 243, 199), [
+        ("Reach Round of 32", "+1"), ("Reach Round of 16", "+2"), ("Reach Quarter-final", "+3"),
+        ("Reach Semi-final", "+5"), ("Runner-up", "+8"), ("Winner", "+10"),
+        ("3rd-place playoff winner", "-5 (cancels the SF +5, so 3rd nets 0)"),
+    ]),
+    ("Early-exit bonus - ranked by when your LAST team is knocked out", (234, 88, 12), (255, 237, 213), [
+        ("1st player all-out", "+5"), ("2nd", "+4"), ("3rd or 4th", "+3"),
+        ("5th or 6th", "+2"), ("7th or 8th", "+1"), ("9th - 16th", "0"),
+    ]),
+]
+
+
+def render_mini_pdf(path: str) -> None:
+    """One landscape-free A4 page: every points rule in a single colour-coded table."""
+    from fpdf import FPDF
+    from fpdf.fonts import FontFace
+
+    NAVY = (15, 30, 75)
+    pdf = FPDF(format="A4")
+    pdf.set_auto_page_break(auto=True, margin=12)
+    pdf.add_page()
+    pdf.set_margins(14, 12, 14)
+    epw = pdf.epw
+
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.set_text_color(*NAVY)
+    pdf.multi_cell(epw, 8, _latin1("WC2026 Friends Pool - Scoring at a glance"))
+    pdf.set_font("Helvetica", "", 9.5)
+    pdf.set_text_color(90, 90, 90)
+    pdf.multi_cell(epw, 5, _latin1("Every points rule on one page, colour-coded by type. "
+                                   "Full wording and edge cases are in rules.pdf."))
+    pdf.ln(2.5)
+
+    head = FontFace(emphasis="BOLD", color=(255, 255, 255), fill_color=NAVY)
+    pdf.set_font("Helvetica", "", 9.5)
+    pdf.set_text_color(0, 0, 0)
+    with pdf.table(first_row_as_headings=False, col_widths=(62, 38),
+                   line_height=5.4, text_align=("LEFT", "LEFT"), width=epw) as table:
+        r = table.row()
+        r.cell(_latin1("Rule"), style=head)
+        r.cell(_latin1("Points / effect"), style=head)
+        for name, hrgb, tint, rows in MINI_RULES:
+            gr = table.row()
+            gr.cell(_latin1(name), colspan=2,
+                    style=FontFace(emphasis="BOLD", color=(255, 255, 255), fill_color=hrgb))
+            face = FontFace(color=(0, 0, 0), fill_color=tint)
+            for rule, pts in rows:
+                row = table.row()
+                row.cell(_latin1(rule), style=face)
+                row.cell(_latin1(pts), style=face)
+
+    pdf.output(path)
+
+
 if __name__ == "__main__":
     import os
 
@@ -299,5 +383,8 @@ if __name__ == "__main__":
     try:
         render_pdf(CONTENT, pdf_path)
         print(f"wrote {pdf_path}")
+        mini_path = os.path.join(here, "mini-rules.pdf")
+        render_mini_pdf(mini_path)
+        print(f"wrote {mini_path}")
     except ImportError:
         print("fpdf2 not installed — skipped PDF (run: pip install fpdf2)")

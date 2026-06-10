@@ -700,7 +700,7 @@ def write_html(result: dict, out_dir: str) -> None:
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
-<a href="rules.pdf">📜 full rules (PDF)</a></p>
+<a href="rules.pdf">📜 full rules (PDF)</a> · <a href="mini-rules.pdf">📋 scoring cheat-sheet (PDF)</a></p>
 
 <nav class="tabs">
 <a href="#tab-leaderboard">🏆 Leaderboard</a>
@@ -784,7 +784,7 @@ fewest etc.) or the prime penalty.</p>
 <p class="sub"><b>Hover</b> any column header for its full scoring rule, and <b>click</b> a header to sort by it.</p>
 </section>
 
-<p class="sub"><a href="standings.csv">standings.csv</a> · <a href="team_breakdown.csv">team_breakdown.csv</a> · <a href="rules.pdf">rules.pdf</a></p>
+<p class="sub"><a href="standings.csv">standings.csv</a> · <a href="team_breakdown.csv">team_breakdown.csv</a> · <a href="rules.pdf">rules.pdf</a> · <a href="mini-rules.pdf">mini-rules.pdf</a></p>
 </body></html>"""
     sort_js = """<script>
 document.querySelectorAll('table.sortable').forEach(function(tbl){
@@ -852,8 +852,9 @@ def main() -> None:
     write_html(result, args.out)
     # copy the rules PDF alongside the site so it's downloadable from Pages
     import shutil
-    if os.path.exists("rules.pdf"):
-        shutil.copy("rules.pdf", os.path.join(args.out, "rules.pdf"))
+    for doc in ("rules.pdf", "mini-rules.pdf"):
+        if os.path.exists(doc):
+            shutil.copy(doc, os.path.join(args.out, doc))
     print_standings(result)
     print(f"  Wrote {args.out}/index.html, standings.csv, team_breakdown.csv")
 
