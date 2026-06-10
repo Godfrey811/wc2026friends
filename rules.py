@@ -133,6 +133,13 @@ CONTENT = [
      "odds: Pot 1 is the 16 strongest, Pot 3 the 16 longest shots."),
     ("table", _POT_HEADERS, _POT_ROWS),
 
+    ("h2", "Prizes & forfeits"),
+    ("bullets", [
+        "1st place: a shirt of any sports team of their choice, paid for by everyone else (capped at £150).",
+        "Last place: must buy SEVEN other players (their choice) dessert - in person, and within 3 months of the final.",
+        "The dice gift: once the final standings are locked, roll a 16-sided die twice. The player who finished in the FIRST position rolled buys the player who finished in the SECOND a £20 gift. Re-roll if the same position comes up twice.",
+    ]),
+
     ("note",
      "Rules locked from the conversation of June 2026. If anything here doesn't "
      "match what you expected, flag it before the draft."),
