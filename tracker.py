@@ -426,7 +426,7 @@ def write_html(result: dict, out_dir: str) -> None:
 
     standings = sorted(result["owner_totals"].items(), key=lambda kv: (-kv[1], kv[0]))
     lb = "\n".join(
-        f"<tr><td>{i}</td><td>{o or '(undrafted)'}</td><td>{total:g}</td></tr>"
+        f"<tr><td>{i}</td><td>{o or '(undrafted)'}</td><td>{round(total, 2):g}</td></tr>"
         for i, (o, total) in enumerate(standings, 1)) or '<tr><td colspan="3">-</td></tr>'
 
     def ordinal(n):
@@ -436,7 +436,7 @@ def write_html(result: dict, out_dir: str) -> None:
 
     # All teams, alphabetical, with current points rank out of 48
     team_rows = "\n".join(
-        f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td><td>{tt[t]:g}</td>"
+        f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td><td>{round(tt[t], 2):g}</td>"
         f"<td>{ordinal(team_rank[t])}</td></tr>"
         for t in sorted(teams))
 
@@ -455,7 +455,7 @@ def write_html(result: dict, out_dir: str) -> None:
         rs = [seed_rank[t] for t in owner_pots[o].values() if t]
         return sum(rs) / len(rs) if rs else 0.0
     player_rows = "\n".join(
-        f"<tr><td><b>{o}</b></td><td>{result['owner_totals'].get(o, 0):g}</td>"
+        f"<tr><td><b>{o}</b></td><td>{round(result['owner_totals'].get(o, 0), 2):g}</td>"
         f"<td>{avg_seed(o):.2f}</td>"
         f"<td>{teamcell(owner_pots[o].get(1))}</td><td>{teamcell(owner_pots[o].get(2))}</td>"
         f"<td>{teamcell(owner_pots[o].get(3))}</td></tr>"
@@ -513,7 +513,7 @@ def write_html(result: dict, out_dir: str) -> None:
     gd_teams = [t for t in teams if any(detail[t].get(k) for k in DETAIL_ORDER)]
     gd_rows = "\n".join(
         "<tr><td>" + teamlabel(t) + "</td>" +
-        "".join(f"<td>{detail[t].get(k, 0):g}</td>" for k in DETAIL_ORDER) + "</tr>"
+        "".join(f"<td>{round(detail[t].get(k, 0), 2):g}</td>" for k in DETAIL_ORDER) + "</tr>"
         for t in sorted(gd_teams, key=lambda t: pts[t].get("in_game", 0.0), reverse=True)) \
         or f'<tr><td colspan="{len(DETAIL_ORDER) + 1}">no goals yet</td></tr>'
     gd_head = "<th>Team</th>" + "".join(f"<th>{DETAIL_LABELS[k]}</th>" for k in DETAIL_ORDER)
@@ -551,19 +551,19 @@ def write_html(result: dict, out_dir: str) -> None:
 <a href="rules.pdf">📜 full rules (PDF)</a></p>
 
 <h2>Leaderboard</h2>
-<table class="lb"><tr><th>#</th><th>Player</th><th>Points</th></tr>
+<table class="lb sortable"><tr><th>#</th><th>Player</th><th>Points</th></tr>
 {lb}
 </table>
 
 <h2>By player</h2>
 <p class="sub">Each player (sorted by average seed, strongest squad first) and their three teams (Pot 1 / 2 / 3). The #number is the team's
 <b>seed out of 48</b> by "reach the quarter-finals" odds (#1 = strongest, #48 = longest shot).</p>
-<table class="pl"><tr><th>Player</th><th>Total</th><th>Avg seed</th><th>Pot 1</th><th>Pot 2</th><th>Pot 3</th></tr>
+<table class="pl sortable"><tr><th>Player</th><th>Total</th><th>Avg seed</th><th>Pot 1</th><th>Pot 2</th><th>Pot 3</th></tr>
 {player_rows}
 </table>
 
 <h2>All teams (A-Z)</h2>
-<table class="tt"><tr><th>Team</th><th>Owner</th><th>Points</th><th>Rank</th></tr>
+<table class="tt sortable"><tr><th>Team</th><th>Owner</th><th>Points</th><th>Rank</th></tr>
 {team_rows}
 </table>
 
@@ -578,7 +578,7 @@ def write_html(result: dict, out_dir: str) -> None:
 So you can see who's banked the most from goals and who's bled the most from pens / VAR. The 90'+ flip and
 free-kick doubling only ever touch these in-game points - never the ranked prizes (fastest / youngest /
 fewest etc.) or the prime penalty.</p>
-<div class="scroll"><table class="num grid"><tr>{gd_head}</tr>
+<div class="scroll wide"><table class="num grid sortable"><tr>{gd_head}</tr>
 {gd_rows}
 </table></div>
 
@@ -594,14 +594,36 @@ fewest etc.) or the prime penalty.</p>
 </table>
 
 <h2>Full breakdown - every team, every category</h2>
-<div class="scroll"><table class="num grid"><tr>{grid_head}</tr>
+<div class="scroll wide"><table class="num grid sortable"><tr>{grid_head}</tr>
 {grid_rows}
 </table></div>
-<p class="sub">Key: In-game · Prime · Prog(ression) · Few.G/Few.C (fewest goals/cards) · Q.goal/Q.yel (quickest goal/yellow) ·
-F.sub/F.OG (fastest sub/own goal) · Young/Old scorer · Long/Short name.</p>
+<p class="sub"><b>Hover</b> any column header for its full scoring rule, and <b>click</b> a header to sort by it.</p>
 
 <p class="sub"><a href="standings.csv">standings.csv</a> · <a href="team_breakdown.csv">team_breakdown.csv</a> · <a href="rules.pdf">rules.pdf</a></p>
 </body></html>"""
+    sort_js = """<script>
+document.querySelectorAll('table.sortable').forEach(function(tbl){
+  var head = tbl.rows[0];
+  Array.prototype.forEach.call(head.cells, function(th, i){
+    th.addEventListener('click', function(){
+      var asc = th.getAttribute('data-asc') !== 'true';
+      Array.prototype.forEach.call(head.cells, function(c){ c.removeAttribute('data-asc'); });
+      th.setAttribute('data-asc', asc);
+      var body = head.parentNode;
+      var rows = Array.prototype.slice.call(tbl.rows, 1);
+      rows.sort(function(a, b){
+        var x = a.cells[i].innerText.trim(), y = b.cells[i].innerText.trim();
+        var nx = parseFloat(x.replace(/[^0-9.\\-]/g, '')), ny = parseFloat(y.replace(/[^0-9.\\-]/g, ''));
+        var num = !isNaN(nx) && !isNaN(ny) && /[0-9]/.test(x) && /[0-9]/.test(y);
+        var c = num ? nx - ny : x.localeCompare(y);
+        return asc ? c : -c;
+      });
+      rows.forEach(function(r){ body.appendChild(r); });
+    });
+  });
+});
+</script>"""
+    html = html.replace("</body></html>", sort_js + "\n</body></html>")
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as fh:
         fh.write(html)
 
