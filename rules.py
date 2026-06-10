@@ -73,10 +73,11 @@ CONTENT = [
     ("bullets", [
         "A goal from 90:00 onwards - the 90th minute and ALL of its injury/stoppage time (recorded as 90 or 90+X) - multiplies that team's IN-GAME points for that game by -1 - i.e. the goals, the 23'/67' bonus, the 0-shots-on-target bonus, the clean-sheet, and the red-card dice from that game.",
         "90:00 ONWARDS, INJURY TIME ONLY - this is NOT extra time. A goal in extra time (91-120, e.g. 105 or 120) does NOT count for this rule.",
-        "It hits ONLY that game's in-game total. It does NOT touch the tournament-long ranked prizes (quickest goal, quickest yellow, fastest sub, fastest own goal, youngest/oldest scorer, longest/shortest name, fewest goals, fewest cards) or the prime-goals penalty - those are never flipped.",
-        "They STACK as repeated x -1, so an ODD number of 90:00+ goals flips the game and an EVEN number cancels back. 1 or 3 such goals = flipped; 2 or 4 = unchanged. Worked example: say a team's in-game total for the match is +6. One 90:00+ goal makes it -6; a second cancels it back to +6; a THIRD flips it again to -6.",
-        "In-game points flip in ANY game (win or lose).",
-        "Progression points only flip in your ELIMINATION game. Winning teams bank no progression at that moment, so a champion's Winner points are always safe — but a runner-up who scores a 90'+ goal in the final they lose flips their +8 to -8.",
+        "It hits ONLY that game's in-game total. It does NOT touch the tournament-long ranked prizes (quickest goal, quickest yellow, fastest sub, fastest own goal, youngest/oldest scorer, longest/shortest name, fewest goals, fewest cards) or the prime-goals penalty - this multiply never touches those.",
+        "Each one MULTIPLIES the game's in-game total by -1, so they STACK: an ODD number of 90:00+ goals leaves it negative, an EVEN number cancels back to positive. 1 or 3 such goals = negative; 2 or 4 = unchanged. Worked example: say a team's in-game total for the match is +6. One 90:00+ goal multiplies it to -6; a second multiplies it back to +6; a THIRD makes it -6 again.",
+        "This multiply (x -1) applies in ANY game (win or lose), and it covers EVERY in-game point including the RED-CARD DICE from that game - nothing in-game is exempt.",
+        "Multipliers on the same game COMBINE. A free-kick goal doubles the opponent's in-game total (x2), so a team hit by BOTH an opponent free-kick AND a 90:00+ goal ends up at x -2 for that game (x2 then x -1).",
+        "Progression points are only multiplied by -1 in your ELIMINATION game. Winning teams bank no progression at that moment, so a champion's Winner points are always safe - but a runner-up who scores a 90:00+ goal in the final they lose has their +8 multiplied to -8.",
     ]),
 
     ("h2", "Red card — roll the dice"),
@@ -291,8 +292,8 @@ MINI_RULES = [
         ("Prime number of total goals in the tournament (excl. shootout goals)", "-3"),
     ]),
     ("Modifiers - these change other points, not flat", (124, 58, 237), (237, 233, 254), [
-        ("Free-kick goal", "doubles the OPPONENT team's points that game (nothing for you)"),
-        ("Goal from 90:00 onwards (injury time, not extra time)", "flips that team's in-game points x -1; they STACK - an ODD number flips, an EVEN number cancels (3 still flips, 2 cancels)"),
+        ("Free-kick goal", "doubles the OPPONENT team's in-game points that game - x2 (and with a 90:00 x -1 that becomes x -2). Nothing for you"),
+        ("Goal from 90:00 onwards (injury time, not extra time)", "MULTIPLIES ALL that team's in-game points by -1 - goals, bonuses, clean sheet AND red-card dice; they STACK: ODD = negative, EVEN = cancels (3 = negative, 2 = cancels)"),
         ("Red card - roll a d6", "odd = +(roll/2): 1=+0.5, 3=+1.5, 5=+2.5;  even = -(roll/2): 2=-1, 4=-2, 6=-3"),
     ]),
     ("Ranked rewards - 6 best teams score 10/8/5/3/2/1 (only your best team qualifies per category)", (22, 163, 74), (220, 252, 231), [

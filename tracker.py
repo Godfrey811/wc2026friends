@@ -453,11 +453,11 @@ CAT_SHORT = {
 CAT_DESC = {
     "in_game": "In-game points: goals (open +0.5, pen -1.5, shootout -0.5, free-kick 0), VAR -1, "
                "a goal/concede in the 23rd or 67th min +4, 0 shots on target +4, clean sheet against you -1, "
-               "red-card dice - then the 90'+ flip and opponent free-kick doubling are applied.",
+               "red-card dice - then the 90:00+ multiply (x -1) and opponent free-kick doubling (x2) are applied (both together = x -2).",
     "prime": "-3 while the team is on a PRIME number of (non-shootout) goals.",
     "progression": "Points for the round a team is knocked out in: R32 +1, R16 +2, QF +3, SF +5, "
                    "runner-up +8, winner +10; the 3rd-place playoff winner is -5 overall "
-                   "(flipped to negative if a 90:00+ goal loses their elimination game).",
+                   "(multiplied by -1 if a 90:00+ goal loses their elimination game).",
     "early_exit": "Owner-level: players ranked by when their LAST team is knocked out - "
                   "earliest all-out scores most (1st 5, 2nd 4, 3rd/4th 3, 5th/6th 2, 7th/8th 1, "
                   "rest 0). Players out at the same stage tie and split the summed points for the "
@@ -759,8 +759,8 @@ are eliminated - nobody scores here until teams actually start going out.</p>
 </table>
 
 <h2>Goal-points breakdown</h2>
-<p class="sub">Where each team's in-game points come from (raw, before the 90'+ flip &amp; opponent free-kick doubling).
-So you can see who's banked the most from goals and who's bled the most from pens / VAR. The 90'+ flip and
+<p class="sub">Where each team's in-game points come from (raw, before the 90:00+ multiply (&times;-1) &amp; opponent free-kick doubling).
+So you can see who's banked the most from goals and who's bled the most from pens / VAR. The 90:00+ multiply and
 free-kick doubling only ever touch these in-game points - never the ranked prizes (fastest / youngest /
 fewest etc.) or the prime penalty.</p>
 <div class="scroll wide"><table class="num grid sortable"><tr>{gd_head}</tr>
