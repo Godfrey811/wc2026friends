@@ -70,6 +70,15 @@ STAGE_LABEL = {
 # Points by finishing position in the early-exit race (1st all-out = position 1).
 EARLY_EXIT_POINTS = [5, 4, 3, 3, 2, 2, 1, 1] + [0] * 8
 
+# Live-leaderboard position markers (purely cosmetic). 1st gets 👑 (wins the shirt,
+# everyone chips in <=£150); last gets 💩 (buys seven others dessert).
+# The end-of-tournament £20 dice gift lands on two RANDOM positions via the d16 -
+# it is NOT fixed to 4 & 7 (that was only an example roll). Once you roll it, set
+# these two and the board flags them: payer 😈 (has to pay - bad), receiver 😇
+# (gets the gift - good). Leave None until rolled.
+DICE_PAYER = None       # finishing position that has to pay,    e.g. 4
+DICE_RECEIVER = None    # finishing position that gets the gift, e.g. 7
+
 POS_DIST = [10, 8, 5, 3, 2, 1]
 NEG_DIST = [-10, -8, -5, -3, -2, -1]
 
@@ -513,9 +522,25 @@ def write_html(result: dict, out_dir: str) -> None:
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     standings = sorted(result["owner_totals"].items(), key=lambda kv: (-kv[1], kv[0]))
+    n_players = len(standings)
+
+    def lb_mark(pos):
+        m = ""
+        if pos == 1:
+            m += "👑"
+        if n_players > 1 and pos == n_players:
+            m += "💩"
+        if DICE_PAYER and pos == DICE_PAYER:
+            m += "😈"
+        if DICE_RECEIVER and pos == DICE_RECEIVER:
+            m += "😇"
+        return f" {m}" if m else ""
+
     lb = "\n".join(
-        f"<tr><td>{i}</td><td>{o or '(undrafted)'}</td><td>{round(total, 2):g}</td></tr>"
+        f"<tr><td>{i}</td><td>{(o or '(undrafted)')}{lb_mark(i)}</td><td>{round(total, 2):g}</td></tr>"
         for i, (o, total) in enumerate(standings, 1)) or '<tr><td colspan="3">-</td></tr>'
+    dice_note = (" The £20 dice gift hasn't been rolled yet."
+                 if not (DICE_PAYER or DICE_RECEIVER) else "")
 
     def ordinal(n):
         suf = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
@@ -667,29 +692,50 @@ def write_html(result: dict, out_dir: str) -> None:
  table.sortable th{{cursor:pointer;user-select:none;text-decoration:underline dotted #bbb}}
  table.sortable th:hover{{background:#eef2ff;color:#2563eb}}
  table.sortable th::after{{content:" \\2195";color:#bbb;font-size:.8em}}
+ nav.tabs{{position:sticky;top:0;background:#fff;border-bottom:1px solid #e3e6ea;margin:1rem 0 .5rem;
+   padding:.45rem 0;display:flex;flex-wrap:wrap;gap:.3rem;z-index:5}}
+ nav.tabs a{{padding:.35rem .75rem;border-radius:6px;text-decoration:none;color:#2563eb;font-weight:600;font-size:.95rem}}
+ nav.tabs a:hover{{background:#eef2ff}} nav.tabs a.active{{background:#2563eb;color:#fff}}
+ section.tab[hidden]{{display:none}} .legend{{color:#555;font-size:.9rem;margin:.2rem 0 1.5rem}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
 <a href="rules.pdf">📜 full rules (PDF)</a></p>
 
+<nav class="tabs">
+<a href="#tab-leaderboard">🏆 Leaderboard</a>
+<a href="#tab-players">👥 Player teams</a>
+<a href="#tab-fixtures">📅 Fixtures</a>
+<a href="#tab-stats">📊 Stats &amp; breakdown</a>
+</nav>
+
+<section class="tab" id="tab-leaderboard">
 <h2>Leaderboard</h2>
 <table class="lb sortable"><tr><th>#</th><th>Player</th><th>Points</th></tr>
 {lb}
 </table>
+<p class="legend">👑 1st - wins a sports shirt of their choice (everyone chips in, up to £150) ·
+💩 last - buys seven other players dessert · 😈 pays the £20 dice gift · 😇 receives it.{dice_note}</p>
+</section>
 
-<h2>By player</h2>
+<section class="tab" id="tab-players">
+<h2>Player teams</h2>
 <p class="sub">Each player (sorted by average seed, strongest squad first) and their three teams (Pot 1 / 2 / 3). The #number is the team's
 <b>seed out of 48</b> by Polymarket winner odds, within the draft pot tiers (#1 = strongest, #48 = longest shot).</p>
 <table class="pl sortable"><tr><th>Player</th><th>Total</th><th>Avg seed</th><th>Pot 1</th><th>Pot 2</th><th>Pot 3</th></tr>
 {player_rows}
 </table>
+</section>
 
+<section class="tab" id="tab-fixtures">
 <h2>📅 Fixtures</h2>
 <p class="sub">All 104 matches - who plays whom, and when (your players' teams in green; knockout slots show the bracket code until teams are known). Kickoffs are <b>local venue time</b>. Click a header to sort - by date, kickoff, stage or venue.</p>
 <div class="scroll"><table class="fx sortable"><tr><th>Date</th><th>Kickoff</th><th>Stage</th><th>Match</th><th>Venue</th></tr>
 {fx_rows}
 </table></div>
+</section>
 
+<section class="tab" id="tab-stats">
 <h2>All teams (A-Z)</h2>
 <table class="tt sortable"><tr><th>Team</th><th>Owner</th><th>Points</th><th>Rank</th></tr>
 {team_rows}
@@ -736,6 +782,7 @@ fewest etc.) or the prime penalty.</p>
 {grid_rows}
 </table></div>
 <p class="sub"><b>Hover</b> any column header for its full scoring rule, and <b>click</b> a header to sort by it.</p>
+</section>
 
 <p class="sub"><a href="standings.csv">standings.csv</a> · <a href="team_breakdown.csv">team_breakdown.csv</a> · <a href="rules.pdf">rules.pdf</a></p>
 </body></html>"""
@@ -761,7 +808,26 @@ document.querySelectorAll('table.sortable').forEach(function(tbl){
   });
 });
 </script>"""
-    html = html.replace("</body></html>", sort_js + "\n</body></html>")
+    tab_js = """<script>
+(function(){
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('nav.tabs a'));
+  var panels = Array.prototype.slice.call(document.querySelectorAll('section.tab'));
+  if(!tabs.length || !panels.length) return;
+  function show(id){
+    if(!document.getElementById(id)) id = panels[0].id;
+    panels.forEach(function(p){ p.hidden = (p.id !== id); });
+    tabs.forEach(function(t){ t.classList.toggle('active', t.getAttribute('href') === '#'+id); });
+    if(history.replaceState) history.replaceState(null, '', '#'+id);
+  }
+  tabs.forEach(function(t){
+    t.addEventListener('click', function(e){
+      e.preventDefault(); show(t.getAttribute('href').slice(1)); window.scrollTo(0,0);
+    });
+  });
+  show(location.hash ? location.hash.slice(1) : panels[0].id);
+})();
+</script>"""
+    html = html.replace("</body></html>", sort_js + tab_js + "\n</body></html>")
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as fh:
         fh.write(html)
 

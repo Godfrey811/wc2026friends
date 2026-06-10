@@ -152,7 +152,7 @@ CONTENT = [
     ("bullets", [
         "1st place: a shirt of any sports team of their choice, paid for by everyone else (capped at £150).",
         "Last place: must buy SEVEN other players (their choice) dessert - in person, and within 3 months of the final.",
-        "The dice gift: once the final standings are locked, roll a 16-sided die twice. The player who finished in the FIRST position rolled buys the player who finished in the SECOND a £20 gift. Re-roll if the same position comes up twice.",
+        "The dice gift: once the final standings are locked, roll a 16-sided die twice. The player who finished in the FIRST position rolled buys the player who finished in the SECOND a £20 gift - e.g. a roll of 4 then 7 means whoever finished 4th has to buy whoever finished 7th. Re-roll if the same position comes up twice.",
     ]),
 
     ("note",
