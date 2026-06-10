@@ -23,7 +23,7 @@ Everyone drafts teams from three odds-tiered pots. Your teams earn (and lose) po
 - A goal from 90:00 onwards - the 90th minute and ALL of its injury/stoppage time (recorded as 90 or 90+X) - multiplies that team's IN-GAME points for that game by -1 - i.e. the goals, the 23'/67' bonus, the 0-shots-on-target bonus, the clean-sheet, and the red-card dice from that game.
 - 90:00 ONWARDS, INJURY TIME ONLY - this is NOT extra time. A goal in extra time (91-120, e.g. 105 or 120) does NOT count for this rule.
 - It hits ONLY that game's in-game total. It does NOT touch the tournament-long ranked prizes (quickest goal, quickest yellow, fastest sub, fastest own goal, youngest/oldest scorer, longest/shortest name, fewest goals, fewest cards) or the prime-goals penalty - those are never flipped.
-- Two 90'+ goals in the same game cancel out (×-1 ×-1 = back to positive).
+- They STACK as repeated x -1, so an ODD number of 90:00+ goals flips the game and an EVEN number cancels back. 1 or 3 such goals = flipped; 2 or 4 = unchanged. Worked example: say a team's in-game total for the match is +6. One 90:00+ goal makes it -6; a second cancels it back to +6; a THIRD flips it again to -6.
 - In-game points flip in ANY game (win or lose).
 - Progression points only flip in your ELIMINATION game. Winning teams bank no progression at that moment, so a champion's Winner points are always safe — but a runner-up who scores a 90'+ goal in the final they lose flips their +8 to -8.
 
@@ -43,7 +43,7 @@ Each category ranks the top 6 teams across the whole tournament. Positive catego
 | Reward | 10 / 8 / 5 / 3 / 2 / 1 | Quickest Goal · Youngest Goalscorer · Fastest Substitute · Fastest Own Goal · Quickest Yellow Card · Longest-Named Goalscorer |
 | Penalty | -10 / -8 / -5 / -3 / -2 / -1 | Oldest Goalscorer · Shortest-Named Goalscorer |
 
-- An owner can only win a given category once — if you own both the best and second-best team in it, the second prize rolls down to the next DISTINCT owner.
+- Only ONE of your teams can qualify in each category - your HIGHEST-ranked team in it. If you own two of the top teams, only your best one takes a place; the other is skipped and the next prize rolls down to the next DISTINCT owner.
 - Ties split the points between the tied owners (owning several tied teams = a bigger share).
 - Tiebreak: the most recent occurrence ranks higher.
 - Data source priority: official FIFA, else BBC, else ITV.
@@ -55,13 +55,13 @@ Each category ranks the top 6 teams across the whole tournament. Positive catego
 
 ## Tournament progression
 
-Points for the furthest stage a team reaches, realised in the game they're eliminated.
+Points for how far each team gets - scored in the round it's KNOCKED OUT (the winner is never knocked out).
 
-| R32 | R16 | QF | SF | Runner-up | Winner |
-| --- | --- | --- | --- | --- | --- |
-| +1 | +2 | +3 | +5 | +8 | +10 |
+| Knocked out in... | R32 | R16 | QF | SF | Final (runner-up) | Won it |
+| --- | --- | --- | --- | --- | --- | --- |
+| Points | +1 | +2 | +3 | +5 | +8 | +10 |
 
-- 3rd-place playoff WINNER: -5 (cancels their SF +5, so 3rd place nets 0).
+- 3rd-place playoff WINNER: -5 overall (NOT the SF +5) - winning the consolation game is punished, so finishing 3rd is worse than 4th.
 - 4th place (loses the 3rd-place playoff): keeps the SF +5.
 
 ## Early-exit bonus

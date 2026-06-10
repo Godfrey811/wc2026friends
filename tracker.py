@@ -54,7 +54,7 @@ from rules import POT1, POT2, POT3
 
 STAGE_POINTS = {
     "group": 0, "R32": 1, "R16": 2, "QF": 3,
-    "SF": 5, "RU": 8, "winner": 10, "third": 0,
+    "SF": 5, "RU": 8, "winner": 10, "third": -5,  # 3rd-place playoff winner: -5 overall
 }
 
 # How early a team was knocked out (lower = out sooner), for the early-exit bonus.
@@ -276,7 +276,7 @@ def score(data_dir: str) -> dict:
         team = r["team"]
         val = STAGE_POINTS.get((r.get("stage") or "group").strip(), 0)
         if r.get("stage") == "third":
-            val = STAGE_POINTS["SF"] - 5  # SF reward then -5 = 0
+            val = -5  # 3rd-place playoff WINNER: -5 overall (NOT the SF +5)
         if truthy(r.get("flip", "")):
             val = -val
         pts[team]["progression"] += val
@@ -455,8 +455,9 @@ CAT_DESC = {
                "a goal/concede in the 23rd or 67th min +4, 0 shots on target +4, clean sheet against you -1, "
                "red-card dice - then the 90'+ flip and opponent free-kick doubling are applied.",
     "prime": "-3 while the team is on a PRIME number of (non-shootout) goals.",
-    "progression": "Stage points: R32 +1, R16 +2, QF +3, SF +5, runner-up +8, winner +10 "
-                   "(flipped to negative if a 90'+ goal loses their elimination game).",
+    "progression": "Points for the round a team is knocked out in: R32 +1, R16 +2, QF +3, SF +5, "
+                   "runner-up +8, winner +10; the 3rd-place playoff winner is -5 overall "
+                   "(flipped to negative if a 90:00+ goal loses their elimination game).",
     "early_exit": "Owner-level: players ranked by when their LAST team is knocked out - "
                   "earliest all-out scores most (1st 5, 2nd 4, 3rd/4th 3, 5th/6th 2, 7th/8th 1, "
                   "rest 0). Players out at the same stage tie and split the summed points for the "

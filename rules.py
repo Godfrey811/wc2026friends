@@ -74,7 +74,7 @@ CONTENT = [
         "A goal from 90:00 onwards - the 90th minute and ALL of its injury/stoppage time (recorded as 90 or 90+X) - multiplies that team's IN-GAME points for that game by -1 - i.e. the goals, the 23'/67' bonus, the 0-shots-on-target bonus, the clean-sheet, and the red-card dice from that game.",
         "90:00 ONWARDS, INJURY TIME ONLY - this is NOT extra time. A goal in extra time (91-120, e.g. 105 or 120) does NOT count for this rule.",
         "It hits ONLY that game's in-game total. It does NOT touch the tournament-long ranked prizes (quickest goal, quickest yellow, fastest sub, fastest own goal, youngest/oldest scorer, longest/shortest name, fewest goals, fewest cards) or the prime-goals penalty - those are never flipped.",
-        "Two 90'+ goals in the same game cancel out (×-1 ×-1 = back to positive).",
+        "They STACK as repeated x -1, so an ODD number of 90:00+ goals flips the game and an EVEN number cancels back. 1 or 3 such goals = flipped; 2 or 4 = unchanged. Worked example: say a team's in-game total for the match is +6. One 90:00+ goal makes it -6; a second cancels it back to +6; a THIRD flips it again to -6.",
         "In-game points flip in ANY game (win or lose).",
         "Progression points only flip in your ELIMINATION game. Winning teams bank no progression at that moment, so a champion's Winner points are always safe — but a runner-up who scores a 90'+ goal in the final they lose flips their +8 to -8.",
     ]),
@@ -101,7 +101,7 @@ CONTENT = [
           "Oldest Goalscorer · Shortest-Named Goalscorer"],
      ]),
     ("bullets", [
-        "An owner can only win a given category once — if you own both the best and second-best team in it, the second prize rolls down to the next DISTINCT owner.",
+        "Only ONE of your teams can qualify in each category - your HIGHEST-ranked team in it. If you own two of the top teams, only your best one takes a place; the other is skipped and the next prize rolls down to the next DISTINCT owner.",
         "Ties split the points between the tied owners (owning several tied teams = a bigger share).",
         "Tiebreak: the most recent occurrence ranks higher.",
         "Data source priority: official FIFA, else BBC, else ITV.",
@@ -115,13 +115,13 @@ CONTENT = [
 
     ("h2", "Tournament progression"),
     ("p",
-     "Points for the furthest stage a team reaches, realised in the game they're "
-     "eliminated."),
+     "Points for how far each team gets - scored in the round it's KNOCKED OUT "
+     "(the winner is never knocked out)."),
     ("table",
-     ["R32", "R16", "QF", "SF", "Runner-up", "Winner"],
-     [["+1", "+2", "+3", "+5", "+8", "+10"]]),
+     ["Knocked out in...", "R32", "R16", "QF", "SF", "Final (runner-up)", "Won it"],
+     [["Points", "+1", "+2", "+3", "+5", "+8", "+10"]]),
     ("bullets", [
-        "3rd-place playoff WINNER: -5 (cancels their SF +5, so 3rd place nets 0).",
+        "3rd-place playoff WINNER: -5 overall (NOT the SF +5) - winning the consolation game is punished, so finishing 3rd is worse than 4th.",
         "4th place (loses the 3rd-place playoff): keeps the SF +5.",
     ]),
 
@@ -305,9 +305,10 @@ MINI_RULES = [
         ("Fewest cards (whole tournament)", "+7 (tie-split between owners)"),
     ]),
     ("Tournament progression - banked when the team is eliminated", (217, 119, 6), (254, 243, 199), [
-        ("Reach Round of 32", "+1"), ("Reach Round of 16", "+2"), ("Reach Quarter-final", "+3"),
-        ("Reach Semi-final", "+5"), ("Runner-up", "+8"), ("Winner", "+10"),
-        ("3rd-place playoff winner", "-5 (cancels the SF +5, so 3rd nets 0)"),
+        ("Knocked out in the Round of 32", "+1"), ("Knocked out in the Round of 16", "+2"),
+        ("Knocked out in the Quarter-finals", "+3"), ("Knocked out in the Semi-finals", "+5"),
+        ("Runner-up (lose the final)", "+8"), ("Winner", "+10"),
+        ("3rd-place playoff winner", "-5 overall (NOT the SF +5)"),
     ]),
     ("Early-exit bonus - ranked by when your LAST team is knocked out", (234, 88, 12), (255, 237, 213), [
         ("1st player all-out", "+5"), ("2nd", "+4"), ("3rd or 4th", "+3"),
@@ -320,6 +321,7 @@ def render_mini_pdf(path: str) -> None:
     """One landscape-free A4 page: every points rule in a single colour-coded table."""
     from fpdf import FPDF
     from fpdf.fonts import FontFace
+    from fpdf.enums import XPos, YPos
 
     NAVY = (15, 30, 75)
     pdf = FPDF(format="A4")
@@ -330,11 +332,13 @@ def render_mini_pdf(path: str) -> None:
 
     pdf.set_font("Helvetica", "B", 18)
     pdf.set_text_color(*NAVY)
-    pdf.multi_cell(epw, 8, _latin1("WC2026 Friends Pool - Scoring at a glance"))
+    pdf.multi_cell(epw, 8, _latin1("WC2026 Friends Pool - Scoring at a glance"),
+                   new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.set_font("Helvetica", "", 9.5)
     pdf.set_text_color(90, 90, 90)
     pdf.multi_cell(epw, 5, _latin1("Every points rule on one page, colour-coded by type. "
-                                   "Full wording and edge cases are in rules.pdf."))
+                                   "Full wording and edge cases are in rules.pdf."),
+                   new_x=XPos.LMARGIN, new_y=YPos.NEXT)
     pdf.ln(2.5)
 
     head = FontFace(emphasis="BOLD", color=(255, 255, 255), fill_color=NAVY)
