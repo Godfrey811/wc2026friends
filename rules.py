@@ -290,7 +290,7 @@ MINI_RULES = [
     ]),
     ("Modifiers - these change other points, not flat", (124, 58, 237), (237, 233, 254), [
         ("Free-kick goal", "doubles the OPPONENT team's points that game (nothing for you)"),
-        ("Goal from 90:00 onwards (injury time, not extra time)", "flips that team's in-game points x -1 (two cancel out)"),
+        ("Goal from 90:00 onwards (injury time, not extra time)", "flips that team's in-game points x -1; they STACK - an ODD number flips, an EVEN number cancels (3 still flips, 2 cancels)"),
         ("Red card - roll a d6", "odd = +(roll/2): 1=+0.5, 3=+1.5, 5=+2.5;  even = -(roll/2): 2=-1, 4=-2, 6=-3"),
     ]),
     ("Ranked rewards - top 6 teams score 10 / 8 / 5 / 3 / 2 / 1", (22, 163, 74), (220, 252, 231), [
