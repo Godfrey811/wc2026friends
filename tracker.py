@@ -451,11 +451,16 @@ def write_html(result: dict, out_dir: str) -> None:
 
     def teamcell(t):
         return f"{t} <span class='r'>(#{seed_rank.get(t, 0)})</span>" if t else "-"
+    def avg_seed(o):                       # mean of the player's three team seeds (lower = stronger)
+        rs = [seed_rank[t] for t in owner_pots[o].values() if t]
+        return sum(rs) / len(rs) if rs else 0.0
     player_rows = "\n".join(
         f"<tr><td><b>{o}</b></td><td>{result['owner_totals'].get(o, 0):g}</td>"
+        f"<td>{avg_seed(o):.2f}</td>"
         f"<td>{teamcell(owner_pots[o].get(1))}</td><td>{teamcell(owner_pots[o].get(2))}</td>"
         f"<td>{teamcell(owner_pots[o].get(3))}</td></tr>"
-        for o in sorted(o for o in result['owner_totals'] if o))   # players A-Z
+        for o in sorted((o for o in result['owner_totals'] if o),
+                        key=lambda o: (avg_seed(o), o)))   # strongest average seed first
 
     pts, detail, gf = result["pts"], result["detail"], result["goals_for"]
 
@@ -551,9 +556,9 @@ def write_html(result: dict, out_dir: str) -> None:
 </table>
 
 <h2>By player</h2>
-<p class="sub">Each player (A-Z) and their three teams (Pot 1 / 2 / 3). The #number is the team's
+<p class="sub">Each player (sorted by average seed, strongest squad first) and their three teams (Pot 1 / 2 / 3). The #number is the team's
 <b>seed out of 48</b> by "reach the quarter-finals" odds (#1 = strongest, #48 = longest shot).</p>
-<table class="pl"><tr><th>Player</th><th>Total</th><th>Pot 1</th><th>Pot 2</th><th>Pot 3</th></tr>
+<table class="pl"><tr><th>Player</th><th>Total</th><th>Avg seed</th><th>Pot 1</th><th>Pot 2</th><th>Pot 3</th></tr>
 {player_rows}
 </table>
 
