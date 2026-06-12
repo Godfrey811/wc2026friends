@@ -13,7 +13,9 @@ DATA MODEL (all in the --data dir):
     matches.csv      match_id,stage,team_a,team_b,team_a_sot,team_b_sot
     goals.csv        match_id,team,minute,type,scorer,scorer_age,disallowed
                        type = open | freekick | penalty | shootout
-                       disallowed = 1 for a VAR-chalked-off goal (else blank/0)
+                       disallowed = 1 ONLY for a goal that was GIVEN then chalked
+                         off by VAR (a real-time offside flag is not a goal at all,
+                         so don't record it); else blank/0
     cards.csv        match_id,team,minute,color,dice
                        color = yellow | red ; dice = the d6 roll for a red card
     subs.csv         match_id,team,minute

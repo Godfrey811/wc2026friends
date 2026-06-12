@@ -10,7 +10,7 @@ Everyone drafts teams from three odds-tiered pots. Your teams earn (and lose) po
 | Free-kick goal | doubles the OPPONENT team's points for that game (scores nothing for you) |
 | Penalty scored — not a shootout | -1.5 each |
 | Penalty scored — in a shootout | -0.5 each |
-| Goal ruled out by VAR | -1 each |
+| Goal GIVEN then ruled out by VAR | -1 each (only a goal that was awarded and then chalked off by VAR - a real-time offside flag does NOT count) |
 | 0 shots on target in a game | +4 |
 | Goal scored OR conceded in the 23rd or 67th minute | +4 (max +4 per game, even if you own both teams) |
 | Each game your team fails to score (clean sheet against you) | -1 (own both teams & it's 0-0 = 0; extra time excluded) |
