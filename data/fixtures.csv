@@ -1,105 +1,105 @@
 date,kickoff,stage,group,home,away,venue
-2026-06-11,13:00 (UTC-6),Group,A,Mexico,South Africa,Mexico City
-2026-06-11,20:00 (UTC-6),Group,A,South Korea,Czechia,Guadalajara (Zapopan)
-2026-06-12,15:00 (UTC-4),Group,B,Canada,Bosnia & Herzegovina,Toronto
-2026-06-12,18:00 (UTC-7),Group,D,USA,Paraguay,Los Angeles (Inglewood)
-2026-06-13,12:00 (UTC-7),Group,B,Qatar,Switzerland,San Francisco Bay Area (Santa Clara)
-2026-06-13,18:00 (UTC-4),Group,C,Brazil,Morocco,New York/New Jersey (East Rutherford)
-2026-06-13,21:00 (UTC-4),Group,C,Haiti,Scotland,Boston (Foxborough)
-2026-06-13,21:00 (UTC-7),Group,D,Australia,Turkey,Vancouver
-2026-06-14,12:00 (UTC-5),Group,E,Germany,Curaçao,Houston
-2026-06-14,15:00 (UTC-5),Group,F,Netherlands,Japan,Dallas (Arlington)
-2026-06-14,19:00 (UTC-4),Group,E,Ivory Coast,Ecuador,Philadelphia
-2026-06-14,20:00 (UTC-6),Group,F,Sweden,Tunisia,Monterrey (Guadalupe)
-2026-06-15,12:00 (UTC-4),Group,H,Spain,Cape Verde,Atlanta
-2026-06-15,12:00 (UTC-7),Group,G,Belgium,Egypt,Seattle
-2026-06-15,18:00 (UTC-4),Group,H,Saudi Arabia,Uruguay,Miami (Miami Gardens)
-2026-06-15,18:00 (UTC-7),Group,G,Iran,New Zealand,Los Angeles (Inglewood)
-2026-06-16,15:00 (UTC-4),Group,I,France,Senegal,New York/New Jersey (East Rutherford)
-2026-06-16,18:00 (UTC-4),Group,I,Iraq,Norway,Boston (Foxborough)
-2026-06-16,20:00 (UTC-5),Group,J,Argentina,Algeria,Kansas City
-2026-06-16,21:00 (UTC-7),Group,J,Austria,Jordan,San Francisco Bay Area (Santa Clara)
-2026-06-17,12:00 (UTC-5),Group,K,Portugal,DR Congo,Houston
-2026-06-17,15:00 (UTC-5),Group,L,England,Croatia,Dallas (Arlington)
-2026-06-17,19:00 (UTC-4),Group,L,Ghana,Panama,Toronto
-2026-06-17,20:00 (UTC-6),Group,K,Uzbekistan,Colombia,Mexico City
-2026-06-18,12:00 (UTC-4),Group,A,Czechia,South Africa,Atlanta
-2026-06-18,12:00 (UTC-7),Group,B,Switzerland,Bosnia & Herzegovina,Los Angeles (Inglewood)
-2026-06-18,15:00 (UTC-7),Group,B,Canada,Qatar,Vancouver
-2026-06-18,19:00 (UTC-6),Group,A,Mexico,South Korea,Guadalajara (Zapopan)
-2026-06-19,12:00 (UTC-7),Group,D,USA,Australia,Seattle
-2026-06-19,18:00 (UTC-4),Group,C,Scotland,Morocco,Boston (Foxborough)
-2026-06-19,20:00 (UTC-7),Group,D,Turkey,Paraguay,San Francisco Bay Area (Santa Clara)
-2026-06-19,20:30 (UTC-4),Group,C,Brazil,Haiti,Philadelphia
-2026-06-20,12:00 (UTC-5),Group,F,Netherlands,Sweden,Houston
-2026-06-20,16:00 (UTC-4),Group,E,Germany,Ivory Coast,Toronto
-2026-06-20,19:00 (UTC-5),Group,E,Ecuador,Curaçao,Kansas City
-2026-06-20,22:00 (UTC-6),Group,F,Tunisia,Japan,Monterrey (Guadalupe)
-2026-06-21,12:00 (UTC-4),Group,H,Spain,Saudi Arabia,Atlanta
-2026-06-21,12:00 (UTC-7),Group,G,Belgium,Iran,Los Angeles (Inglewood)
-2026-06-21,18:00 (UTC-4),Group,H,Uruguay,Cape Verde,Miami (Miami Gardens)
-2026-06-21,18:00 (UTC-7),Group,G,New Zealand,Egypt,Vancouver
-2026-06-22,12:00 (UTC-5),Group,J,Argentina,Austria,Dallas (Arlington)
-2026-06-22,17:00 (UTC-4),Group,I,France,Iraq,Philadelphia
-2026-06-22,20:00 (UTC-4),Group,I,Norway,Senegal,New York/New Jersey (East Rutherford)
-2026-06-22,20:00 (UTC-7),Group,J,Jordan,Algeria,San Francisco Bay Area (Santa Clara)
-2026-06-23,12:00 (UTC-5),Group,K,Portugal,Uzbekistan,Houston
-2026-06-23,16:00 (UTC-4),Group,L,England,Ghana,Boston (Foxborough)
-2026-06-23,19:00 (UTC-4),Group,L,Panama,Croatia,Toronto
-2026-06-23,20:00 (UTC-6),Group,K,Colombia,DR Congo,Guadalajara (Zapopan)
-2026-06-24,12:00 (UTC-7),Group,B,Switzerland,Canada,Vancouver
-2026-06-24,12:00 (UTC-7),Group,B,Bosnia & Herzegovina,Qatar,Seattle
-2026-06-24,18:00 (UTC-4),Group,C,Scotland,Brazil,Miami (Miami Gardens)
-2026-06-24,18:00 (UTC-4),Group,C,Morocco,Haiti,Atlanta
-2026-06-24,19:00 (UTC-6),Group,A,Czechia,Mexico,Mexico City
-2026-06-24,19:00 (UTC-6),Group,A,South Africa,South Korea,Monterrey (Guadalupe)
-2026-06-25,16:00 (UTC-4),Group,E,Curaçao,Ivory Coast,Philadelphia
-2026-06-25,16:00 (UTC-4),Group,E,Ecuador,Germany,New York/New Jersey (East Rutherford)
-2026-06-25,18:00 (UTC-5),Group,F,Japan,Sweden,Dallas (Arlington)
-2026-06-25,18:00 (UTC-5),Group,F,Tunisia,Netherlands,Kansas City
-2026-06-25,19:00 (UTC-7),Group,D,Turkey,USA,Los Angeles (Inglewood)
-2026-06-25,19:00 (UTC-7),Group,D,Paraguay,Australia,San Francisco Bay Area (Santa Clara)
-2026-06-26,15:00 (UTC-4),Group,I,Norway,France,Boston (Foxborough)
-2026-06-26,15:00 (UTC-4),Group,I,Senegal,Iraq,Toronto
-2026-06-26,18:00 (UTC-6),Group,H,Uruguay,Spain,Guadalajara (Zapopan)
-2026-06-26,19:00 (UTC-5),Group,H,Cape Verde,Saudi Arabia,Houston
-2026-06-26,20:00 (UTC-7),Group,G,Egypt,Iran,Seattle
-2026-06-26,20:00 (UTC-7),Group,G,New Zealand,Belgium,Vancouver
-2026-06-27,17:00 (UTC-4),Group,L,Panama,England,New York/New Jersey (East Rutherford)
-2026-06-27,17:00 (UTC-4),Group,L,Croatia,Ghana,Philadelphia
-2026-06-27,19:30 (UTC-4),Group,K,Colombia,Portugal,Miami (Miami Gardens)
-2026-06-27,19:30 (UTC-4),Group,K,DR Congo,Uzbekistan,Atlanta
-2026-06-27,21:00 (UTC-5),Group,J,Algeria,Austria,Kansas City
-2026-06-27,21:00 (UTC-5),Group,J,Jordan,Argentina,Dallas (Arlington)
-2026-06-28,12:00 (UTC-7),Round of 32,,2A,2B,Los Angeles (Inglewood)
-2026-06-29,12:00 (UTC-5),Round of 32,,1C,2F,Houston
-2026-06-29,16:30 (UTC-4),Round of 32,,1E,3A/B/C/D/F,Boston (Foxborough)
-2026-06-29,19:00 (UTC-6),Round of 32,,1F,2C,Monterrey (Guadalupe)
-2026-06-30,12:00 (UTC-5),Round of 32,,2E,2I,Dallas (Arlington)
-2026-06-30,17:00 (UTC-4),Round of 32,,1I,3C/D/F/G/H,New York/New Jersey (East Rutherford)
-2026-06-30,19:00 (UTC-6),Round of 32,,1A,3C/E/F/H/I,Mexico City
-2026-07-01,12:00 (UTC-4),Round of 32,,1L,3E/H/I/J/K,Atlanta
-2026-07-01,13:00 (UTC-7),Round of 32,,1G,3A/E/H/I/J,Seattle
-2026-07-01,17:00 (UTC-7),Round of 32,,1D,3B/E/F/I/J,San Francisco Bay Area (Santa Clara)
-2026-07-02,12:00 (UTC-7),Round of 32,,1H,2J,Los Angeles (Inglewood)
-2026-07-02,19:00 (UTC-4),Round of 32,,2K,2L,Toronto
-2026-07-02,20:00 (UTC-7),Round of 32,,1B,3E/F/G/I/J,Vancouver
-2026-07-03,13:00 (UTC-5),Round of 32,,2D,2G,Dallas (Arlington)
-2026-07-03,18:00 (UTC-4),Round of 32,,1J,2H,Miami (Miami Gardens)
-2026-07-03,20:30 (UTC-5),Round of 32,,1K,3D/E/I/J/L,Kansas City
-2026-07-04,12:00 (UTC-5),Round of 16,,W73,W75,Houston
-2026-07-04,17:00 (UTC-4),Round of 16,,W74,W77,Philadelphia
-2026-07-05,16:00 (UTC-4),Round of 16,,W76,W78,New York/New Jersey (East Rutherford)
-2026-07-05,18:00 (UTC-6),Round of 16,,W79,W80,Mexico City
-2026-07-06,14:00 (UTC-5),Round of 16,,W83,W84,Dallas (Arlington)
-2026-07-06,17:00 (UTC-7),Round of 16,,W81,W82,Seattle
-2026-07-07,12:00 (UTC-4),Round of 16,,W86,W88,Atlanta
-2026-07-07,13:00 (UTC-7),Round of 16,,W85,W87,Vancouver
-2026-07-09,16:00 (UTC-4),Quarter-final,,W89,W90,Boston (Foxborough)
-2026-07-10,12:00 (UTC-7),Quarter-final,,W93,W94,Los Angeles (Inglewood)
-2026-07-11,17:00 (UTC-4),Quarter-final,,W91,W92,Miami (Miami Gardens)
-2026-07-11,20:00 (UTC-5),Quarter-final,,W95,W96,Kansas City
-2026-07-14,14:00 (UTC-5),Semi-final,,W97,W98,Dallas (Arlington)
-2026-07-15,15:00 (UTC-4),Semi-final,,W99,W100,Atlanta
-2026-07-18,17:00 (UTC-4),3rd place,,L101,L102,Miami (Miami Gardens)
-2026-07-19,15:00 (UTC-4),Final,,W101,W102,New York/New Jersey (East Rutherford)
+2026-06-11,20:00 BST,Group,A,Mexico,South Africa,Mexico City
+2026-06-12,03:00 BST,Group,A,South Korea,Czechia,Guadalajara (Zapopan)
+2026-06-12,20:00 BST,Group,B,Canada,Bosnia & Herzegovina,Toronto
+2026-06-13,02:00 BST,Group,D,USA,Paraguay,Los Angeles (Inglewood)
+2026-06-13,20:00 BST,Group,B,Qatar,Switzerland,San Francisco Bay Area (Santa Clara)
+2026-06-13,23:00 BST,Group,C,Brazil,Morocco,New York/New Jersey (East Rutherford)
+2026-06-14,02:00 BST,Group,C,Haiti,Scotland,Boston (Foxborough)
+2026-06-14,05:00 BST,Group,D,Australia,Turkey,Vancouver
+2026-06-14,18:00 BST,Group,E,Germany,Curaçao,Houston
+2026-06-14,21:00 BST,Group,F,Netherlands,Japan,Dallas (Arlington)
+2026-06-15,00:00 BST,Group,E,Ivory Coast,Ecuador,Philadelphia
+2026-06-15,03:00 BST,Group,F,Sweden,Tunisia,Monterrey (Guadalupe)
+2026-06-15,17:00 BST,Group,H,Spain,Cape Verde,Atlanta
+2026-06-15,20:00 BST,Group,G,Belgium,Egypt,Seattle
+2026-06-15,23:00 BST,Group,H,Saudi Arabia,Uruguay,Miami (Miami Gardens)
+2026-06-16,02:00 BST,Group,G,Iran,New Zealand,Los Angeles (Inglewood)
+2026-06-16,20:00 BST,Group,I,France,Senegal,New York/New Jersey (East Rutherford)
+2026-06-16,23:00 BST,Group,I,Iraq,Norway,Boston (Foxborough)
+2026-06-17,02:00 BST,Group,J,Argentina,Algeria,Kansas City
+2026-06-17,05:00 BST,Group,J,Austria,Jordan,San Francisco Bay Area (Santa Clara)
+2026-06-17,18:00 BST,Group,K,Portugal,DR Congo,Houston
+2026-06-17,21:00 BST,Group,L,England,Croatia,Dallas (Arlington)
+2026-06-18,00:00 BST,Group,L,Ghana,Panama,Toronto
+2026-06-18,03:00 BST,Group,K,Uzbekistan,Colombia,Mexico City
+2026-06-18,17:00 BST,Group,A,Czechia,South Africa,Atlanta
+2026-06-18,20:00 BST,Group,B,Switzerland,Bosnia & Herzegovina,Los Angeles (Inglewood)
+2026-06-18,23:00 BST,Group,B,Canada,Qatar,Vancouver
+2026-06-19,02:00 BST,Group,A,Mexico,South Korea,Guadalajara (Zapopan)
+2026-06-19,20:00 BST,Group,D,USA,Australia,Seattle
+2026-06-19,23:00 BST,Group,C,Scotland,Morocco,Boston (Foxborough)
+2026-06-20,04:00 BST,Group,D,Turkey,Paraguay,San Francisco Bay Area (Santa Clara)
+2026-06-20,01:30 BST,Group,C,Brazil,Haiti,Philadelphia
+2026-06-20,18:00 BST,Group,F,Netherlands,Sweden,Houston
+2026-06-20,21:00 BST,Group,E,Germany,Ivory Coast,Toronto
+2026-06-21,01:00 BST,Group,E,Ecuador,Curaçao,Kansas City
+2026-06-21,05:00 BST,Group,F,Tunisia,Japan,Monterrey (Guadalupe)
+2026-06-21,17:00 BST,Group,H,Spain,Saudi Arabia,Atlanta
+2026-06-21,20:00 BST,Group,G,Belgium,Iran,Los Angeles (Inglewood)
+2026-06-21,23:00 BST,Group,H,Uruguay,Cape Verde,Miami (Miami Gardens)
+2026-06-22,02:00 BST,Group,G,New Zealand,Egypt,Vancouver
+2026-06-22,18:00 BST,Group,J,Argentina,Austria,Dallas (Arlington)
+2026-06-22,22:00 BST,Group,I,France,Iraq,Philadelphia
+2026-06-23,01:00 BST,Group,I,Norway,Senegal,New York/New Jersey (East Rutherford)
+2026-06-23,04:00 BST,Group,J,Jordan,Algeria,San Francisco Bay Area (Santa Clara)
+2026-06-23,18:00 BST,Group,K,Portugal,Uzbekistan,Houston
+2026-06-23,21:00 BST,Group,L,England,Ghana,Boston (Foxborough)
+2026-06-24,00:00 BST,Group,L,Panama,Croatia,Toronto
+2026-06-24,03:00 BST,Group,K,Colombia,DR Congo,Guadalajara (Zapopan)
+2026-06-24,20:00 BST,Group,B,Switzerland,Canada,Vancouver
+2026-06-24,20:00 BST,Group,B,Bosnia & Herzegovina,Qatar,Seattle
+2026-06-24,23:00 BST,Group,C,Scotland,Brazil,Miami (Miami Gardens)
+2026-06-24,23:00 BST,Group,C,Morocco,Haiti,Atlanta
+2026-06-25,02:00 BST,Group,A,Czechia,Mexico,Mexico City
+2026-06-25,02:00 BST,Group,A,South Africa,South Korea,Monterrey (Guadalupe)
+2026-06-25,21:00 BST,Group,E,Curaçao,Ivory Coast,Philadelphia
+2026-06-25,21:00 BST,Group,E,Ecuador,Germany,New York/New Jersey (East Rutherford)
+2026-06-26,00:00 BST,Group,F,Japan,Sweden,Dallas (Arlington)
+2026-06-26,00:00 BST,Group,F,Tunisia,Netherlands,Kansas City
+2026-06-26,03:00 BST,Group,D,Turkey,USA,Los Angeles (Inglewood)
+2026-06-26,03:00 BST,Group,D,Paraguay,Australia,San Francisco Bay Area (Santa Clara)
+2026-06-26,20:00 BST,Group,I,Norway,France,Boston (Foxborough)
+2026-06-26,20:00 BST,Group,I,Senegal,Iraq,Toronto
+2026-06-27,01:00 BST,Group,H,Uruguay,Spain,Guadalajara (Zapopan)
+2026-06-27,01:00 BST,Group,H,Cape Verde,Saudi Arabia,Houston
+2026-06-27,04:00 BST,Group,G,Egypt,Iran,Seattle
+2026-06-27,04:00 BST,Group,G,New Zealand,Belgium,Vancouver
+2026-06-27,22:00 BST,Group,L,Panama,England,New York/New Jersey (East Rutherford)
+2026-06-27,22:00 BST,Group,L,Croatia,Ghana,Philadelphia
+2026-06-28,00:30 BST,Group,K,Colombia,Portugal,Miami (Miami Gardens)
+2026-06-28,00:30 BST,Group,K,DR Congo,Uzbekistan,Atlanta
+2026-06-28,03:00 BST,Group,J,Algeria,Austria,Kansas City
+2026-06-28,03:00 BST,Group,J,Jordan,Argentina,Dallas (Arlington)
+2026-06-28,20:00 BST,Round of 32,,2A,2B,Los Angeles (Inglewood)
+2026-06-29,18:00 BST,Round of 32,,1C,2F,Houston
+2026-06-29,21:30 BST,Round of 32,,1E,3A/B/C/D/F,Boston (Foxborough)
+2026-06-30,02:00 BST,Round of 32,,1F,2C,Monterrey (Guadalupe)
+2026-06-30,18:00 BST,Round of 32,,2E,2I,Dallas (Arlington)
+2026-06-30,22:00 BST,Round of 32,,1I,3C/D/F/G/H,New York/New Jersey (East Rutherford)
+2026-07-01,02:00 BST,Round of 32,,1A,3C/E/F/H/I,Mexico City
+2026-07-01,17:00 BST,Round of 32,,1L,3E/H/I/J/K,Atlanta
+2026-07-01,21:00 BST,Round of 32,,1G,3A/E/H/I/J,Seattle
+2026-07-02,01:00 BST,Round of 32,,1D,3B/E/F/I/J,San Francisco Bay Area (Santa Clara)
+2026-07-02,20:00 BST,Round of 32,,1H,2J,Los Angeles (Inglewood)
+2026-07-03,00:00 BST,Round of 32,,2K,2L,Toronto
+2026-07-03,04:00 BST,Round of 32,,1B,3E/F/G/I/J,Vancouver
+2026-07-03,19:00 BST,Round of 32,,2D,2G,Dallas (Arlington)
+2026-07-03,23:00 BST,Round of 32,,1J,2H,Miami (Miami Gardens)
+2026-07-04,02:30 BST,Round of 32,,1K,3D/E/I/J/L,Kansas City
+2026-07-04,18:00 BST,Round of 16,,W73,W75,Houston
+2026-07-04,22:00 BST,Round of 16,,W74,W77,Philadelphia
+2026-07-05,21:00 BST,Round of 16,,W76,W78,New York/New Jersey (East Rutherford)
+2026-07-06,01:00 BST,Round of 16,,W79,W80,Mexico City
+2026-07-06,20:00 BST,Round of 16,,W83,W84,Dallas (Arlington)
+2026-07-07,01:00 BST,Round of 16,,W81,W82,Seattle
+2026-07-07,17:00 BST,Round of 16,,W86,W88,Atlanta
+2026-07-07,21:00 BST,Round of 16,,W85,W87,Vancouver
+2026-07-09,21:00 BST,Quarter-final,,W89,W90,Boston (Foxborough)
+2026-07-10,20:00 BST,Quarter-final,,W93,W94,Los Angeles (Inglewood)
+2026-07-11,22:00 BST,Quarter-final,,W91,W92,Miami (Miami Gardens)
+2026-07-12,02:00 BST,Quarter-final,,W95,W96,Kansas City
+2026-07-14,20:00 BST,Semi-final,,W97,W98,Dallas (Arlington)
+2026-07-15,20:00 BST,Semi-final,,W99,W100,Atlanta
+2026-07-18,22:00 BST,3rd place,,L101,L102,Miami (Miami Gardens)
+2026-07-19,20:00 BST,Final,,W101,W102,New York/New Jersey (East Rutherford)

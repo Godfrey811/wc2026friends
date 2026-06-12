@@ -731,7 +731,7 @@ def write_html(result: dict, out_dir: str) -> None:
 
 <section class="tab" id="tab-fixtures">
 <h2>📅 Fixtures</h2>
-<p class="sub">All 104 matches - who plays whom, and when (your players' teams in green; knockout slots show the bracket code until teams are known). Kickoffs are <b>local venue time</b>. Click a header to sort - by date, kickoff, stage or venue.</p>
+<p class="sub">All 104 matches - who plays whom, and when (your players' teams in green; knockout slots show the bracket code until teams are known). Kickoffs are <b>UK time (BST)</b> - late US games roll into the early hours of the next UK day, and the date shown is the UK date. Click a header to sort - by date, kickoff, stage or venue.</p>
 <div class="scroll"><table class="fx sortable"><tr><th>Date</th><th>Kickoff</th><th>Stage</th><th>Match</th><th>Venue</th></tr>
 {fx_rows}
 </table></div>
