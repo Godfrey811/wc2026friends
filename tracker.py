@@ -78,8 +78,8 @@ EARLY_EXIT_POINTS = [5, 4, 3, 3, 2, 2, 1, 1] + [0] * 8
 # it is NOT fixed to 4 & 7 (that was only an example roll). Once you roll it, set
 # these two and the board flags them: payer 😈 (has to pay - bad), receiver 😇
 # (gets the gift - good). Leave None until rolled.
-DICE_PAYER = 3          # finishing position that has to pay (d16 rolled 2026-06-12)
-DICE_RECEIVER = 15      # finishing position that gets the gift (d16 rolled 2026-06-12)
+DICE_PAYER = 4          # finishing position that has to pay (£20 dice gift)
+DICE_RECEIVER = 7       # finishing position that gets the gift
 
 POS_DIST = [10, 8, 5, 3, 2, 1]
 NEG_DIST = [-10, -8, -5, -3, -2, -1]
