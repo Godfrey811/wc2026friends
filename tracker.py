@@ -733,6 +733,22 @@ def write_html(result: dict, out_dir: str) -> None:
         + f"<td><b>{round(result['owner_totals'].get(o, 0), 2):g}</b></td></tr>"
         for o in sorted(owner_teams_grid, key=lambda o: -result['owner_totals'].get(o, 0)))
 
+    # By-category tab: one mini by-player leaderboard per scoring category (who qualifies).
+    def _cat_card(title, desc, pairs):
+        pairs = [(o, v) for o, v in pairs if round(v, 2) != 0]
+        pairs.sort(key=lambda ov: (-abs(ov[1]), ov[0]))
+        body = "".join(f"<tr><td>{o}</td><td>{_cell(v)}</td></tr>" for o, v in pairs) \
+            or '<tr><td colspan="2">nobody yet</td></tr>'
+        return (f'<div class="catcard"><h3 title="{desc}">{title}</h3>'
+                f'<table class="tt num"><tr><th>Player</th><th>Pts</th></tr>{body}</table></div>')
+
+    cat_cards = _cat_card(
+        "Overall total", "Every player's total across all scoring",
+        [(o, result["owner_totals"].get(o, 0)) for o in owner_teams_grid])
+    for (_short, full, desc, fn) in grid_cols:
+        cat_cards += _cat_card(full, desc,
+                               [(o, sum(fn(t) for t in owner_teams_grid[o])) for o in owner_teams_grid])
+
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WC 2026 Friends Pool</title>
@@ -758,6 +774,9 @@ def write_html(result: dict, out_dir: str) -> None:
  nav.tabs a{{padding:.35rem .75rem;border-radius:6px;text-decoration:none;color:#2563eb;font-weight:600;font-size:.95rem}}
  nav.tabs a:hover{{background:#eef2ff}} nav.tabs a.active{{background:#2563eb;color:#fff}}
  section.tab[hidden]{{display:none}} .legend{{color:#555;font-size:.9rem;margin:.2rem 0 1.5rem}}
+ .catgrid{{display:flex;flex-wrap:wrap;gap:.8rem 1.4rem;align-items:flex-start}}
+ .catcard{{flex:1 1 230px;min-width:210px;max-width:340px}} .catcard h3{{margin:.4rem 0 .1rem;font-size:1rem}}
+ .catcard table{{margin:.2rem 0 .6rem;font-size:.92rem}}
  table.fx tr.done td{{background:#e6f6ec}} table.fx tr.done td:first-child{{box-shadow:inset 3px 0 #16a34a}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
@@ -770,6 +789,7 @@ def write_html(result: dict, out_dir: str) -> None:
 <a href="#tab-fixtures">📅 Fixtures</a>
 <a href="#tab-stats">📊 Stats</a>
 <a href="#tab-breakdown">🧮 Full breakdown</a>
+<a href="#tab-categories">🗂️ By category</a>
 </nav>
 
 <section class="tab" id="tab-leaderboard">
@@ -847,6 +867,15 @@ plus a <b>90'+/FK x</b> column for the 90:00+ flip and free-kick doubling - then
 {pgrid_rows}
 </table></div>
 <p class="sub"><b>Hover</b> any column header for its full scoring rule, and <b>click</b> a header to sort by it.</p>
+</section>
+
+<section class="tab" id="tab-categories">
+<h2>Every category - by player</h2>
+<p class="sub">Each scoring category as its own by-player leaderboard - who's qualifying, and for how much.
+Ranked prizes (quickest goal/yellow, youngest/oldest, etc.) show the players currently in the top 6.</p>
+<div class="catgrid">
+{cat_cards}
+</div>
 </section>
 
 <p class="sub"><a href="standings.csv">standings.csv</a> · <a href="team_breakdown.csv">team_breakdown.csv</a> · <a href="rules.pdf">rules.pdf</a> · <a href="mini-rules.pdf">mini-rules.pdf</a></p>
