@@ -116,6 +116,19 @@ def is_prime(n: int) -> bool:
     return True
 
 
+def _age_days(s):
+    """'25y 60d' -> days, for ranking youngest/oldest. Tolerates plain numbers."""
+    import re
+    s = str(s or "").strip()
+    m = re.match(r"(\d+)\s*y\s*(\d+)\s*d", s)
+    if m:
+        return int(m.group(1)) * 365 + int(m.group(2))
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
 def load(data_dir: str, name: str) -> list[dict]:
     path = os.path.join(data_dir, name)
     if not os.path.exists(path):
@@ -129,7 +142,7 @@ def load(data_dir: str, name: str) -> list[dict]:
 TEMPLATE_HEADERS = {
     "matches.csv": ["match_id", "stage", "team_a", "team_b", "team_a_sot", "team_b_sot"],
     "goals.csv": ["match_id", "team", "minute", "type", "scorer", "scorer_age", "disallowed"],
-    "cards.csv": ["match_id", "team", "minute", "color", "dice"],
+    "cards.csv": ["match_id", "team", "minute", "color", "dice", "player"],
     "subs.csv": ["match_id", "team", "minute"],
     "own_goals.csv": ["match_id", "team", "minute"],
     "progression.csv": ["team", "stage", "flip", "out"],
@@ -297,7 +310,7 @@ def score(data_dir: str) -> dict:
                 raw = (r.get(key) or "").strip()
                 if not raw:
                     continue
-                v = float(raw) if "." in raw or key == "scorer_age" else len(raw)
+                v = _age_days(raw) if key == "scorer_age" else len(raw)
             if v is None:
                 continue
             if team not in out:
@@ -434,6 +447,8 @@ def score(data_dir: str) -> dict:
         "fixtures": fixtures,
         "early_exit": early_exit,
         "match_scores": match_scores,
+        "cards_total": dict(cards_total),
+        "raw": {"goals": goals, "cards": cards, "subs": subs, "own_goals": own_goals},
     }
 
 
@@ -690,30 +705,30 @@ def write_html(result: dict, out_dir: str) -> None:
         raw = sum(detail[t].get(k, 0) for k in _ingame_pts)
         return round(pts[t].get("in_game", 0.0) - raw, 2)
 
-    grid_cols = []   # (short, full, desc, num_fn) where num_fn(team) -> number
+    grid_cols = []   # (short, full, desc, num_fn, key) where num_fn(team) -> number
     for k in _ingame_pts:
         grid_cols.append((_gd_short[k], DETAIL_LABELS[k],
                           "In-game component (raw, before the 90:00+ / free-kick multipliers).",
-                          lambda t, k=k: detail[t].get(k, 0)))
+                          lambda t, k=k: detail[t].get(k, 0), k))
     grid_cols.append(("90'+/FK x", "90:00+ & free-kick multiplier",
                       "Effect of the 90:00+ x-1 flip and opponent free-kick doubling on this game's in-game total.",
-                      _effect))
+                      _effect, "effect"))
     for c in CATEGORY_ORDER:
         if c == "in_game":
             continue
         grid_cols.append((CAT_SHORT.get(c, c), CAT_LABELS[c], CAT_DESC.get(c, ""),
-                          lambda t, c=c: pts[t].get(c, 0)))
+                          lambda t, c=c: pts[t].get(c, 0), c))
 
     def _cell(x):
         return f"{round(x, 2):g}"
 
     grid_head = ('<th title="The team">Team</th><th title="Who drafted it">Owner</th>'
                  + "".join(f'<th title="{full} - {desc}">{short}</th>'
-                           for (short, full, desc, _fn) in grid_cols)
+                           for (short, full, desc, _fn, _k) in grid_cols)
                  + '<th title="Sum of every column">Total</th>')
     grid_rows = "\n".join(
         f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td>"
-        + "".join(f"<td>{_cell(fn(t))}</td>" for (_s, _f, _d, fn) in grid_cols)
+        + "".join(f"<td>{_cell(fn(t))}</td>" for (_s, _f, _d, fn, _k) in grid_cols)
         + f"<td><b>{round(tt[t], 2):g}</b></td></tr>"
         for t in sorted(teams, key=lambda t: tt[t], reverse=True))
 
@@ -724,30 +739,91 @@ def write_html(result: dict, out_dir: str) -> None:
             owner_teams_grid[owner[t]].append(t)
     pgrid_head = ('<th title="The player">Player</th>'
                   + "".join(f'<th title="{full} - {desc}">{short}</th>'
-                            for (short, full, desc, _fn) in grid_cols)
+                            for (short, full, desc, _fn, _k) in grid_cols)
                   + '<th title="Player total (all three teams)">Total</th>')
     pgrid_rows = "\n".join(
         f"<tr><td>{o}</td>"
         + "".join(f"<td>{_cell(sum(fn(t) for t in owner_teams_grid[o]))}</td>"
-                  for (_s, _f, _d, fn) in grid_cols)
+                  for (_s, _f, _d, fn, _k) in grid_cols)
         + f"<td><b>{round(result['owner_totals'].get(o, 0), 2):g}</b></td></tr>"
         for o in sorted(owner_teams_grid, key=lambda o: -result['owner_totals'].get(o, 0)))
 
-    # By-category tab: one mini by-player leaderboard per scoring category (who qualifies).
-    def _cat_card(title, desc, pairs):
-        pairs = [(o, v) for o, v in pairs if round(v, 2) != 0]
-        pairs.sort(key=lambda ov: (-abs(ov[1]), ov[0]))
-        body = "".join(f"<tr><td>{o}</td><td>{_cell(v)}</td></tr>" for o, v in pairs) \
-            or '<tr><td colspan="2">nobody yet</td></tr>'
-        return (f'<div class="catcard"><h3 title="{desc}">{title}</h3>'
-                f'<table class="tt num"><tr><th>Player</th><th>Pts</th></tr>{body}</table></div>')
+    # ---- per-category DETAIL extractors (which team/scorer/minute earned the points) ----
+    _raw = result.get("raw", {})
+    rgoals, rcards, rsubs, rog = (_raw.get("goals", []), _raw.get("cards", []),
+                                  _raw.get("subs", []), _raw.get("own_goals", []))
+    gfor, ctot = result["goals_for"], result.get("cards_total", {})
 
-    cat_cards = _cat_card(
-        "Overall total", "Every player's total across all scoring",
-        [(o, result["owner_totals"].get(o, 0)) for o in owner_teams_grid])
-    for (_short, full, desc, fn) in grid_cols:
-        cat_cards += _cat_card(full, desc,
-                               [(o, sum(fn(t) for t in owner_teams_grid[o])) for o in owner_teams_grid])
+    def _tg(t):   # a team's countable goals (open/pen/freekick, not disallowed/shootout)
+        return [g for g in rgoals if g["team"] == t
+                and not truthy(g.get("disallowed", "")) and g.get("type") != "shootout"]
+
+    def _minrow(rows, key):
+        rows = [(parse_minute(r.get(key, "")), r) for r in rows]
+        rows = [(m, r) for m, r in rows if m is not None]
+        return min(rows, key=lambda mr: mr[0])[1] if rows else None
+
+    def d_qgoal(t):
+        r = _minrow(_tg(t), "minute"); return f"{r['scorer']} {r['minute']}'" if r else ""
+    def d_qyel(t):
+        r = _minrow([c for c in rcards if c["team"] == t and c.get("color") == "yellow"], "minute")
+        return f"{r.get('player') or '?'} {r['minute']}'" if r else ""
+    def d_fsub(t):
+        r = _minrow([s for s in rsubs if s["team"] == t], "minute"); return f"{r['minute']}'" if r else ""
+    def d_fog(t):
+        r = _minrow([o for o in rog if o["team"] == t], "minute"); return f"{r['minute']}'" if r else ""
+    def _age_pick(t, oldest):
+        gs = [g for g in _tg(t) if (g.get("scorer_age") or "").strip()]
+        if not gs:
+            return ""
+        g = (max if oldest else min)(gs, key=lambda g: _age_days(g["scorer_age"]) or (-1 if oldest else 1e9))
+        return f"{g['scorer']} ({g['scorer_age']})"
+    def d_young(t): return _age_pick(t, False)
+    def d_old(t):   return _age_pick(t, True)
+    def _name_pick(t, longest):
+        gs = _tg(t)
+        if not gs:
+            return ""
+        g = (max if longest else min)(gs, key=lambda g: len(g["scorer"]))
+        return f"{g['scorer']} ({len(g['scorer'])} letters)"
+    def d_long(t):  return _name_pick(t, True)
+    def d_short(t): return _name_pick(t, False)
+
+    CAT_DETAIL = {"quickest_goal": d_qgoal, "quickest_yellow": d_qyel, "fastest_sub": d_fsub,
+                  "fastest_own_goal": d_fog, "youngest_scorer": d_young, "oldest_scorer": d_old,
+                  "longest_name": d_long, "shortest_name": d_short,
+                  "prime": lambda t: f"{gfor.get(t, 0)} goals",
+                  "fewest_goals": lambda t: f"{gfor.get(t, 0)} goals",
+                  "fewest_cards": lambda t: f"{ctot.get(t, 0):g} cards"}
+
+    # By-category tab: one mini by-player leaderboard per category (with the why).
+    def _cat_card(title, desc, key, num_fn):
+        dfn = CAT_DETAIL.get(key)
+        rows = []
+        for o in owner_teams_grid:
+            v = sum(num_fn(t) for t in owner_teams_grid[o])
+            if round(v, 2) == 0:
+                continue
+            det = ""
+            if dfn:
+                tms = [t for t in owner_teams_grid[o] if round(pts[t].get(key, 0), 2) != 0]
+                det = "; ".join(f"{t} - {dfn(t)}" for t in tms if dfn(t))
+            rows.append((o, v, det))
+        rows.sort(key=lambda r: (-abs(r[1]), r[0]))
+        if any(r[2] for r in rows):
+            head = '<tr><th>Player</th><th>Detail</th><th>Pts</th></tr>'
+            body = "".join(f"<tr><td>{o}</td><td class='det'>{det}</td><td>{_cell(v)}</td></tr>"
+                           for o, v, det in rows) or '<tr><td colspan="3">nobody yet</td></tr>'
+        else:
+            head = '<tr><th>Player</th><th>Pts</th></tr>'
+            body = "".join(f"<tr><td>{o}</td><td>{_cell(v)}</td></tr>"
+                           for o, v, _ in rows) or '<tr><td colspan="2">nobody yet</td></tr>'
+        return f'<div class="catcard"><h3 title="{desc}">{title}</h3><table class="tt num">{head}{body}</table></div>'
+
+    cat_cards = _cat_card("Overall total", "Every player's total across all scoring", "_total",
+                          lambda t: tt[t])
+    for (_short, full, desc, fn, key) in grid_cols:
+        cat_cards += _cat_card(full, desc, key, fn)
 
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -777,6 +853,7 @@ def write_html(result: dict, out_dir: str) -> None:
  .catgrid{{display:flex;flex-wrap:wrap;gap:.8rem 1.4rem;align-items:flex-start}}
  .catcard{{flex:1 1 230px;min-width:210px;max-width:340px}} .catcard h3{{margin:.4rem 0 .1rem;font-size:1rem}}
  .catcard table{{margin:.2rem 0 .6rem;font-size:.92rem}}
+ .catcard td.det{{text-align:left;white-space:normal;font-size:.82rem;color:#444}}
  table.fx tr.done td{{background:#e6f6ec}} table.fx tr.done td:first-child{{box-shadow:inset 3px 0 #16a34a}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>

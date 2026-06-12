@@ -1,7 +1,7 @@
-match_id,team,minute,color,dice
-1,South Africa,49,red,
-1,South Africa,52,red,
-1,Mexico,90,red,
-1,Mexico,23,yellow,
-1,South Africa,17,yellow,
-2,South Korea,90+6,yellow,
+match_id,team,minute,color,dice,player
+1,South Africa,17,yellow,,Mokoena
+1,Mexico,23,yellow,,Brian Gutiérrez
+1,South Africa,49,red,,Sithole
+1,South Africa,52,red,,Zwane
+1,Mexico,90,red,,César Montes
+2,South Korea,90+6,yellow,,Lee Gi-hyuk
