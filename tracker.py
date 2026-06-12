@@ -78,8 +78,8 @@ EARLY_EXIT_POINTS = [5, 4, 3, 3, 2, 2, 1, 1] + [0] * 8
 # it is NOT fixed to 4 & 7 (that was only an example roll). Once you roll it, set
 # these two and the board flags them: payer 😈 (has to pay - bad), receiver 😇
 # (gets the gift - good). Leave None until rolled.
-DICE_PAYER = None       # finishing position that has to pay,    e.g. 4
-DICE_RECEIVER = None    # finishing position that gets the gift, e.g. 7
+DICE_PAYER = 3          # finishing position that has to pay (d16 rolled 2026-06-12)
+DICE_RECEIVER = 15      # finishing position that gets the gift (d16 rolled 2026-06-12)
 
 POS_DIST = [10, 8, 5, 3, 2, 1]
 NEG_DIST = [-10, -8, -5, -3, -2, -1]
@@ -554,8 +554,11 @@ def write_html(result: dict, out_dir: str) -> None:
     lb = "\n".join(
         f"<tr><td>{i}</td><td>{(o or '(undrafted)')}{lb_mark(i)}</td><td>{round(total, 2):g}</td></tr>"
         for i, (o, total) in enumerate(standings, 1)) or '<tr><td colspan="3">-</td></tr>'
-    dice_note = (" The £20 dice gift hasn't been rolled yet."
-                 if not (DICE_PAYER or DICE_RECEIVER) else "")
+    def _ord(n):
+        return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+    dice_note = (f" Dice rolled: whoever finishes {_ord(DICE_PAYER)} (😈) buys whoever finishes "
+                 f"{_ord(DICE_RECEIVER)} (😇) the £20 gift."
+                 if (DICE_PAYER and DICE_RECEIVER) else " The £20 dice gift hasn't been rolled yet.")
 
     def ordinal(n):
         suf = "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
