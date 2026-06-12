@@ -1,8 +1,8 @@
-match_id,team,minute,type,scorer,scorer_age,disallowed
-1,Mexico,9,open,Julián Quiñones,29y 79d,
-1,Mexico,67,open,Raúl Jiménez,35y 37d,
-2,South Korea,67,open,Hwang In-beom,29y 264d,
-2,South Korea,80,open,Oh Hyeon-gyu,25y 60d,
-2,Czechia,59,open,Ladislav Krejčí,27y 52d,
-3,Bosnia & Herzegovina,21,open,Jovo Lukić,27y 195d,
-3,Canada,78,open,Cyle Larin,31y 55d,
+match_id,team,minute,type,scorer,scorer_age,disallowed,dob
+1,Mexico,9,open,Julián Quiñones,29y 79d,,1997-03-24
+1,Mexico,67,open,Raúl Jiménez,35y 37d,,1991-05-05
+2,South Korea,67,open,Hwang In-beom,29y 264d,,1996-09-20
+2,South Korea,80,open,Oh Hyeon-gyu,25y 60d,,2001-04-12
+2,Czechia,59,open,Ladislav Krejčí,27y 52d,,1999-04-20
+3,Bosnia & Herzegovina,21,open,Jovo Lukić,27y 195d,,1998-11-28
+3,Canada,78,open,Cyle Larin,31y 55d,,1995-04-17

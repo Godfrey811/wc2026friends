@@ -173,7 +173,7 @@ def load(data_dir: str, name: str) -> list[dict]:
 
 TEMPLATE_HEADERS = {
     "matches.csv": ["match_id", "stage", "team_a", "team_b", "team_a_sot", "team_b_sot"],
-    "goals.csv": ["match_id", "team", "minute", "type", "scorer", "scorer_age", "disallowed"],
+    "goals.csv": ["match_id", "team", "minute", "type", "scorer", "scorer_age", "disallowed", "dob"],
     "cards.csv": ["match_id", "team", "minute", "color", "dice", "player"],
     "subs.csv": ["match_id", "team", "minute"],
     "own_goals.csv": ["match_id", "team", "minute"],
@@ -481,10 +481,38 @@ def score(data_dir: str) -> dict:
         "match_scores": match_scores,
         "cards_total": dict(cards_total),
         "raw": {"goals": goals, "cards": cards, "subs": subs, "own_goals": own_goals},
+        "match_label": {m["match_id"]: f'{m["team_a"]} v {m["team_b"]}' for m in matches},
     }
 
 
 # --- output ------------------------------------------------------------------
+
+GOAL_LOG_COLS = ["Match", "Team", "Owner", "Scorer", "Born", "Age", "Min", "Type", "Letters", "Disallowed"]
+CARD_LOG_COLS = ["Match", "Team", "Owner", "Player", "Min", "Card", "Dice"]
+
+
+def match_logs(result):
+    """Enriched per-event logs: (goal rows, card rows) as lists matching GOAL/CARD_LOG_COLS."""
+    owner, ml, raw = result["owner"], result["match_label"], result["raw"]
+
+    def mkey(e):
+        return (e.get("match_id", ""), parse_minute(e.get("minute", "")) or 999)
+
+    goals = []
+    for g in sorted(raw["goals"], key=mkey):
+        t = g["team"]
+        goals.append([ml.get(g["match_id"], g["match_id"]), t, owner.get(t, ""),
+                      g.get("scorer", ""), g.get("dob", ""), g.get("scorer_age", ""),
+                      g.get("minute", ""), g.get("type", ""), name_letters(g.get("scorer", "")),
+                      "yes" if truthy(g.get("disallowed", "")) else ""])
+    cards = []
+    for c in sorted(raw["cards"], key=mkey):
+        t = c["team"]
+        cards.append([ml.get(c["match_id"], c["match_id"]), t, owner.get(t, ""),
+                      c.get("player", ""), c.get("minute", ""), c.get("color", ""),
+                      c.get("dice", "")])
+    return goals, cards
+
 
 CATEGORY_ORDER = [
     "in_game", "prime", "progression", "early_exit", "fewest_goals", "fewest_cards",
@@ -565,6 +593,13 @@ def write_outputs(result: dict, out_dir: str) -> None:
         w.writerow(["position", "owner", "total"])
         for i, (o, total) in enumerate(standings, 1):
             w.writerow([i, o or "(undrafted)", round(total, 2)])
+
+    # Reference sheets: every goal / every card with the details (viewable on GitHub).
+    goal_rows, card_rows = match_logs(result)
+    with open(os.path.join(out_dir, "goals_log.csv"), "w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh); w.writerow(GOAL_LOG_COLS); w.writerows(goal_rows)
+    with open(os.path.join(out_dir, "cards_log.csv"), "w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh); w.writerow(CARD_LOG_COLS); w.writerows(card_rows)
 
 
 def print_standings(result: dict) -> None:
@@ -859,6 +894,14 @@ def write_html(result: dict, out_dir: str) -> None:
 
     notes_html = "".join(f"<li>{n}</li>" for n in NOTES) or "<li>(none yet)</li>"
 
+    glog, clog = match_logs(result)
+    goal_log_head = "".join(f"<th>{c}</th>" for c in GOAL_LOG_COLS)
+    goal_log_rows = "\n".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in glog) \
+        or f'<tr><td colspan="{len(GOAL_LOG_COLS)}">no goals yet</td></tr>'
+    card_log_head = "".join(f"<th>{c}</th>" for c in CARD_LOG_COLS)
+    card_log_rows = "\n".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in clog) \
+        or f'<tr><td colspan="{len(CARD_LOG_COLS)}">no cards yet</td></tr>'
+
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WC 2026 Friends Pool</title>
@@ -901,6 +944,7 @@ def write_html(result: dict, out_dir: str) -> None:
 <a href="#tab-stats">📊 Stats</a>
 <a href="#tab-breakdown">🧮 Full breakdown</a>
 <a href="#tab-categories">🗂️ By category</a>
+<a href="#tab-log">📋 Match log</a>
 <a href="#tab-notes">📝 Notes</a>
 </nav>
 
@@ -988,6 +1032,19 @@ Ranked prizes (quickest goal/yellow, youngest/oldest, etc.) show the players cur
 <div class="catgrid">
 {cat_cards}
 </div>
+</section>
+
+<section class="tab" id="tab-log">
+<h2>📋 Match log - every goal</h2>
+<p class="sub">Every goal so far with scorer, birth date, age, minute, type and name length. <a href="goals_log.csv">goals_log.csv</a></p>
+<div class="scroll"><table class="tt sortable"><tr>{goal_log_head}</tr>
+{goal_log_rows}
+</table></div>
+<h2>📋 Match log - every card</h2>
+<p class="sub">Every yellow/red so far with player, minute and (for reds) the dice roll. <a href="cards_log.csv">cards_log.csv</a></p>
+<div class="scroll"><table class="tt sortable"><tr>{card_log_head}</tr>
+{card_log_rows}
+</table></div>
 </section>
 
 <section class="tab" id="tab-notes">
