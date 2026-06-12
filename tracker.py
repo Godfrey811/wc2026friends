@@ -131,6 +131,12 @@ def truthy(raw: str) -> bool:
     return (raw or "").strip().lower() in {"1", "y", "yes", "true"}
 
 
+def name_letters(s):
+    """Count LETTERS in a name (spaces/hyphens/punctuation excluded, accents count).
+    'Julián Quiñones' -> 14, 'Hwang In-beom' -> 11."""
+    return sum(c.isalpha() for c in (s or ""))
+
+
 def is_prime(n: int) -> bool:
     if n < 2:
         return False
@@ -336,7 +342,7 @@ def score(data_dir: str) -> dict:
                 raw = (r.get(key) or "").strip()
                 if not raw:
                     continue
-                v = _age_days(raw) if key == "scorer_age" else len(raw)
+                v = _age_days(raw) if key == "scorer_age" else name_letters(raw)
             if v is None:
                 continue
             if team not in out:
@@ -810,8 +816,8 @@ def write_html(result: dict, out_dir: str) -> None:
         gs = _tg(t)
         if not gs:
             return ""
-        g = (max if longest else min)(gs, key=lambda g: len(g["scorer"]))
-        return f"{len(g['scorer'])} letters - {g['scorer']} ({abbr(t)})"
+        g = (max if longest else min)(gs, key=lambda g: name_letters(g["scorer"]))
+        return f"{name_letters(g['scorer'])} letters - {g['scorer']} ({abbr(t)})"
     def d_long(t):  return _name_pick(t, True)
     def d_short(t): return _name_pick(t, False)
 
