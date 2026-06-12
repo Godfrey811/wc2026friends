@@ -105,6 +105,14 @@ def abbr(team):
     return TEAM_ABBR.get(team, (team or "")[:3].upper())
 
 
+# Free-form notes / ideas for the pool (shown on the Notes tab; edit/add freely).
+NOTES = [
+    "Everyone has a team each.",
+    "Next time: best AI image of you with your team - most points for the best one.",
+    "Best outward show of support for your team.",
+]
+
+
 # --- small helpers -----------------------------------------------------------
 
 def parse_minute(raw: str) -> int | None:
@@ -843,6 +851,8 @@ def write_html(result: dict, out_dir: str) -> None:
     for (_short, full, desc, fn, key) in grid_cols:
         cat_cards += _cat_card(full, desc, key, fn)
 
+    notes_html = "".join(f"<li>{n}</li>" for n in NOTES) or "<li>(none yet)</li>"
+
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WC 2026 Friends Pool</title>
@@ -885,6 +895,7 @@ def write_html(result: dict, out_dir: str) -> None:
 <a href="#tab-stats">📊 Stats</a>
 <a href="#tab-breakdown">🧮 Full breakdown</a>
 <a href="#tab-categories">🗂️ By category</a>
+<a href="#tab-notes">📝 Notes</a>
 </nav>
 
 <section class="tab" id="tab-leaderboard">
@@ -971,6 +982,12 @@ Ranked prizes (quickest goal/yellow, youngest/oldest, etc.) show the players cur
 <div class="catgrid">
 {cat_cards}
 </div>
+</section>
+
+<section class="tab" id="tab-notes">
+<h2>📝 Notes &amp; ideas</h2>
+<p class="sub">Bits to remember and ideas for next time.</p>
+<ul class="notes">{notes_html}</ul>
 </section>
 
 <p class="sub"><a href="standings.csv">standings.csv</a> · <a href="team_breakdown.csv">team_breakdown.csv</a> · <a href="rules.pdf">rules.pdf</a> · <a href="mini-rules.pdf">mini-rules.pdf</a></p>
