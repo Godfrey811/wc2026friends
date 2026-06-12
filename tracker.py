@@ -405,6 +405,16 @@ def score(data_dir: str) -> dict:
         i = j
     early_exit.sort(key=lambda x: (-x[4], x[3], x[0]))
 
+    # ---- played-match scores (for the fixtures table: mark/colour completed games) ----
+    match_scores = {}
+    for m in matches:
+        a, b = m["team_a"], m["team_b"]
+        gm = goals_by_match.get(m["match_id"], [])
+        def _scored(team):
+            return sum(1 for g in gm if g["team"] == team
+                       and not truthy(g.get("disallowed", "")) and g.get("type") != "shootout")
+        match_scores[frozenset((a, b))] = {a: _scored(a), b: _scored(b)}
+
     # ---- totals ----
     team_totals = {t: sum(pts[t].values()) for t in teams}
     owner_totals = defaultdict(float)
@@ -421,6 +431,7 @@ def score(data_dir: str) -> dict:
         "owner_totals": dict(owner_totals),
         "fixtures": fixtures,
         "early_exit": early_exit,
+        "match_scores": match_scores,
     }
 
 
@@ -649,16 +660,23 @@ def write_html(result: dict, out_dir: str) -> None:
     def matchcell(t):
         o = owner.get((t or "").strip(), "")
         return f"{t} <span class='o'>({o})</span>" if o else f"{t}"
+    mscores = result.get("match_scores", {})
     fx_rows = ""
     for r in sorted((r for r in fixtures
                      if (r.get("home") or "").strip() and (r.get("away") or "").strip()),
                     key=fx_key):
+        home, away = r["home"].strip(), r["away"].strip()
         sg = ((r.get("stage") or "").strip() + " " + (r.get("group") or "").strip()).strip() or "-"
-        fx_rows += (f"<tr><td>{(r.get('date') or '').strip() or '-'}</td>"
+        sc = mscores.get(frozenset((home, away)))
+        if sc is not None:                       # played -> show score, colour the row
+            mid = f"{matchcell(home)} <b>{sc.get(home, 0)}-{sc.get(away, 0)}</b> {matchcell(away)}"
+            tr = '<tr class="done">'
+        else:
+            mid = f"{matchcell(home)} <span class='r'>v</span> {matchcell(away)}"
+            tr = "<tr>"
+        fx_rows += (f"{tr}<td>{(r.get('date') or '').strip() or '-'}</td>"
                     f"<td>{(r.get('kickoff') or '').strip() or '-'}</td>"
-                    f"<td>{sg}</td>"
-                    f"<td>{matchcell(r['home'].strip())} <span class='r'>v</span> "
-                    f"{matchcell(r['away'].strip())}</td>"
+                    f"<td>{sg}</td><td>{mid}</td>"
                     f"<td>{(r.get('venue') or '').strip() or '-'}</td></tr>\n")
     fx_rows = fx_rows or ('<tr><td colspan="5">no fixtures loaded yet - '
                           'add rows to data/fixtures.csv</td></tr>')
@@ -699,6 +717,7 @@ def write_html(result: dict, out_dir: str) -> None:
  nav.tabs a{{padding:.35rem .75rem;border-radius:6px;text-decoration:none;color:#2563eb;font-weight:600;font-size:.95rem}}
  nav.tabs a:hover{{background:#eef2ff}} nav.tabs a.active{{background:#2563eb;color:#fff}}
  section.tab[hidden]{{display:none}} .legend{{color:#555;font-size:.9rem;margin:.2rem 0 1.5rem}}
+ table.fx tr.done td{{background:#e6f6ec}} table.fx tr.done td:first-child{{box-shadow:inset 3px 0 #16a34a}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
@@ -731,7 +750,7 @@ def write_html(result: dict, out_dir: str) -> None:
 
 <section class="tab" id="tab-fixtures">
 <h2>📅 Fixtures</h2>
-<p class="sub">All 104 matches - who plays whom, and when (your players' teams in green; knockout slots show the bracket code until teams are known). Kickoffs are <b>UK time (BST)</b> - late US games roll into the early hours of the next UK day, and the date shown is the UK date. Click a header to sort - by date, kickoff, stage or venue.</p>
+<p class="sub">All 104 matches - who plays whom, and when (your players' teams in green; knockout slots show the bracket code until teams are known). Kickoffs are <b>UK time (BST)</b> - late US games roll into the early hours of the next UK day, and the date shown is the UK date. <b>Played games are shaded green with the score.</b> Click a header to sort - by date, kickoff, stage or venue.</p>
 <div class="scroll"><table class="fx sortable"><tr><th>Date</th><th>Kickoff</th><th>Stage</th><th>Match</th><th>Venue</th></tr>
 {fx_rows}
 </table></div>
