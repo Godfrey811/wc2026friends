@@ -690,19 +690,22 @@ def write_html(result: dict, out_dir: str) -> None:
         raw = sum(detail[t].get(k, 0) for k in _ingame_pts)
         return round(pts[t].get("in_game", 0.0) - raw, 2)
 
-    grid_cols = []   # (short, full, desc, value_fn)
+    grid_cols = []   # (short, full, desc, num_fn) where num_fn(team) -> number
     for k in _ingame_pts:
         grid_cols.append((_gd_short[k], DETAIL_LABELS[k],
                           "In-game component (raw, before the 90:00+ / free-kick multipliers).",
-                          lambda t, k=k: f"{round(detail[t].get(k, 0), 2):g}"))
+                          lambda t, k=k: detail[t].get(k, 0)))
     grid_cols.append(("90'+/FK x", "90:00+ & free-kick multiplier",
                       "Effect of the 90:00+ x-1 flip and opponent free-kick doubling on this game's in-game total.",
-                      lambda t: f"{_effect(t):g}"))
+                      _effect))
     for c in CATEGORY_ORDER:
         if c == "in_game":
             continue
         grid_cols.append((CAT_SHORT.get(c, c), CAT_LABELS[c], CAT_DESC.get(c, ""),
-                          lambda t, c=c: f"{round(pts[t].get(c, 0), 2):g}"))
+                          lambda t, c=c: pts[t].get(c, 0)))
+
+    def _cell(x):
+        return f"{round(x, 2):g}"
 
     grid_head = ('<th title="The team">Team</th><th title="Who drafted it">Owner</th>'
                  + "".join(f'<th title="{full} - {desc}">{short}</th>'
@@ -710,9 +713,25 @@ def write_html(result: dict, out_dir: str) -> None:
                  + '<th title="Sum of every column">Total</th>')
     grid_rows = "\n".join(
         f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td>"
-        + "".join(f"<td>{fn(t)}</td>" for (_s, _f, _d, fn) in grid_cols)
+        + "".join(f"<td>{_cell(fn(t))}</td>" for (_s, _f, _d, fn) in grid_cols)
         + f"<td><b>{round(tt[t], 2):g}</b></td></tr>"
         for t in sorted(teams, key=lambda t: tt[t], reverse=True))
+
+    # Same breakdown, aggregated BY PLAYER (sum each owner's three teams per column).
+    owner_teams_grid = defaultdict(list)
+    for t in teams:
+        if owner.get(t, ""):
+            owner_teams_grid[owner[t]].append(t)
+    pgrid_head = ('<th title="The player">Player</th>'
+                  + "".join(f'<th title="{full} - {desc}">{short}</th>'
+                            for (short, full, desc, _fn) in grid_cols)
+                  + '<th title="Player total (all three teams)">Total</th>')
+    pgrid_rows = "\n".join(
+        f"<tr><td>{o}</td>"
+        + "".join(f"<td>{_cell(sum(fn(t) for t in owner_teams_grid[o]))}</td>"
+                  for (_s, _f, _d, fn) in grid_cols)
+        + f"<td><b>{round(result['owner_totals'].get(o, 0), 2):g}</b></td></tr>"
+        for o in sorted(owner_teams_grid, key=lambda o: -result['owner_totals'].get(o, 0)))
 
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -749,7 +768,8 @@ def write_html(result: dict, out_dir: str) -> None:
 <a href="#tab-leaderboard">🏆 Leaderboard</a>
 <a href="#tab-players">👥 Player teams</a>
 <a href="#tab-fixtures">📅 Fixtures</a>
-<a href="#tab-stats">📊 Stats &amp; breakdown</a>
+<a href="#tab-stats">📊 Stats</a>
+<a href="#tab-breakdown">🧮 Full breakdown</a>
 </nav>
 
 <section class="tab" id="tab-leaderboard">
@@ -811,11 +831,20 @@ are eliminated - nobody scores here until teams actually start going out.</p>
 {prime_rows}
 </table>
 
-<h2>Full breakdown - every team, every points source</h2>
+</section>
+
+<section class="tab" id="tab-breakdown">
+<h2>Full breakdown - by team</h2>
 <p class="sub">In-game points are split into their parts - <b>Goals · Pens · S.O. pens · VAR · 23'/67' · 0-SOT · Clean sheet · Red dice</b>,
 plus a <b>90'+/FK x</b> column for the 90:00+ flip and free-kick doubling - then the ranked prizes and bonuses. Every column adds up to <b>Total</b>.</p>
 <div class="scroll wide"><table class="num grid sortable"><tr>{grid_head}</tr>
 {grid_rows}
+</table></div>
+
+<h2>Full breakdown - by player</h2>
+<p class="sub">The same columns, but each player's <b>three teams added together</b>. Sorted by total.</p>
+<div class="scroll wide"><table class="num grid sortable"><tr>{pgrid_head}</tr>
+{pgrid_rows}
 </table></div>
 <p class="sub"><b>Hover</b> any column header for its full scoring rule, and <b>click</b> a header to sort by it.</p>
 </section>
