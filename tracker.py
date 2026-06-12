@@ -560,11 +560,11 @@ def write_html(result: dict, out_dir: str) -> None:
         return f"{n}{suf}"
     team_rank = {t: 1 + sum(1 for o in teams if tt[o] > tt[t]) for t in teams}
 
-    # All teams, alphabetical, with current points rank out of 48
+    # All teams, ordered by points (highest first), with current points rank out of 48
     team_rows = "\n".join(
         f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td><td>{round(tt[t], 2):g}</td>"
         f"<td>{ordinal(team_rank[t])}</td></tr>"
-        for t in sorted(teams))
+        for t in sorted(teams, key=lambda t: (-tt[t], t)))
 
     # By player: their three teams (by pot) + each team's rank out of 48
     pot_of = {t: i for i, pl in enumerate([POT1, POT2, POT3], 1) for t in pl}
@@ -644,15 +644,6 @@ def write_html(result: dict, out_dir: str) -> None:
         for (o, et, stg, od, p) in ee) \
         or '<tr><td colspan="4">settles as teams are knocked out</td></tr>'
 
-    # Goal-points breakdown (in_game sub-components) for teams that have any.
-    gd_teams = [t for t in teams if any(detail[t].get(k) for k in DETAIL_ORDER)]
-    gd_rows = "\n".join(
-        "<tr><td>" + teamlabel(t) + "</td>" +
-        "".join(f"<td>{round(detail[t].get(k, 0), 2):g}</td>" for k in DETAIL_ORDER) + "</tr>"
-        for t in sorted(gd_teams, key=lambda t: pts[t].get("in_game", 0.0), reverse=True)) \
-        or f'<tr><td colspan="{len(DETAIL_ORDER) + 1}">no goals yet</td></tr>'
-    gd_head = "<th>Team</th>" + "".join(f"<th>{DETAIL_LABELS[k]}</th>" for k in DETAIL_ORDER)
-
     # Fixtures: who plays whom on which day (display only; owners annotated).
     fixtures = result.get("fixtures", [])
     def fx_key(r):
@@ -681,15 +672,41 @@ def write_html(result: dict, out_dir: str) -> None:
     fx_rows = fx_rows or ('<tr><td colspan="5">no fixtures loaded yet - '
                           'add rows to data/fixtures.csv</td></tr>')
 
-    # Full team x category grid (full labels + descriptions as hover tooltips).
+    # Full team x category grid. In-game is SPLIT into its components (so you can see
+    # goal/FK/red-card/23'-67'/90:00+ points separately) instead of one lumped column.
+    # Each column: (short header, full title, tooltip, value-fn). Columns sum to Total.
+    _ingame_pts = ("goal_open", "goal_pen", "goal_shootout", "var",
+                   "bonus_2367", "bonus_0sot", "clean_sheet", "red_dice")
+    _gd_short = {"goal_open": "Goals", "goal_pen": "Pens", "goal_shootout": "S.O. pens",
+                 "var": "VAR", "bonus_2367": "23'/67'", "bonus_0sot": "0-SOT",
+                 "clean_sheet": "Clean sheet", "red_dice": "Red dice"}
+
+    def _effect(t):   # 90:00+ x-1 and opponent free-kick doubling: final in-game minus raw parts
+        raw = sum(detail[t].get(k, 0) for k in _ingame_pts)
+        return round(pts[t].get("in_game", 0.0) - raw, 2)
+
+    grid_cols = []   # (short, full, desc, value_fn)
+    for k in _ingame_pts:
+        grid_cols.append((_gd_short[k], DETAIL_LABELS[k],
+                          "In-game component (raw, before the 90:00+ / free-kick multipliers).",
+                          lambda t, k=k: f"{round(detail[t].get(k, 0), 2):g}"))
+    grid_cols.append(("90'+/FK x", "90:00+ & free-kick multiplier",
+                      "Effect of the 90:00+ x-1 flip and opponent free-kick doubling on this game's in-game total.",
+                      lambda t: f"{_effect(t):g}"))
+    for c in CATEGORY_ORDER:
+        if c == "in_game":
+            continue
+        grid_cols.append((CAT_SHORT.get(c, c), CAT_LABELS[c], CAT_DESC.get(c, ""),
+                          lambda t, c=c: f"{round(pts[t].get(c, 0), 2):g}"))
+
     grid_head = ('<th title="The team">Team</th><th title="Who drafted it">Owner</th>'
-                 + "".join(f'<th title="{CAT_LABELS[c]} - {CAT_DESC[c]}">{CAT_LABELS[c]}</th>'
-                           for c in CATEGORY_ORDER)
-                 + '<th title="Sum of every category">Total</th>')
+                 + "".join(f'<th title="{full} - {desc}">{short}</th>'
+                           for (short, full, desc, _fn) in grid_cols)
+                 + '<th title="Sum of every column">Total</th>')
     grid_rows = "\n".join(
-        f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td>" +
-        "".join(f"<td>{round(pts[t].get(c, 0), 2):g}</td>" for c in CATEGORY_ORDER) +
-        f"<td><b>{round(tt[t], 2):g}</b></td></tr>"
+        f"<tr><td>{t}</td><td>{owner.get(t, '') or '-'}</td>"
+        + "".join(f"<td>{fn(t)}</td>" for (_s, _f, _d, fn) in grid_cols)
+        + f"<td><b>{round(tt[t], 2):g}</b></td></tr>"
         for t in sorted(teams, key=lambda t: tt[t], reverse=True))
 
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -702,9 +719,9 @@ def write_html(result: dict, out_dir: str) -> None:
  th,td{{text-align:left;padding:.4rem .6rem;border-bottom:1px solid #e3e6ea}}
  th{{background:#fafbfc}} a{{color:#2563eb}} .o{{color:#16a34a;font-size:.85rem}}
  .lb td:last-child,.lb th:last-child,.tt td:last-child,.tt th:last-child{{text-align:right}}
- .scroll{{overflow-x:auto}} .grid{{font-size:.78rem}}
- .grid td,.grid th{{padding:.25rem .35rem}} .grid td{{white-space:nowrap;text-align:center}}
- .grid th{{white-space:normal;vertical-align:bottom;line-height:1.15}}
+ .scroll{{overflow-x:auto}} .grid{{font-size:.9rem}}
+ .grid td,.grid th{{padding:.3rem .4rem}} .grid td{{white-space:nowrap;text-align:center}}
+ .grid th{{white-space:normal;vertical-align:bottom;line-height:1.12;max-width:5.5em}}
  .grid td:first-child,.grid th:first-child{{text-align:left}}
  .num td:not(:first-child),.num th:not(:first-child){{text-align:right}}
  .r{{color:#888;font-size:.85rem}} .pl td:nth-child(2){{text-align:right}}
@@ -757,7 +774,7 @@ def write_html(result: dict, out_dir: str) -> None:
 </section>
 
 <section class="tab" id="tab-stats">
-<h2>All teams (A-Z)</h2>
+<h2>All teams (by points)</h2>
 <table class="tt sortable"><tr><th>Team</th><th>Owner</th><th>Points</th><th>Rank</th></tr>
 {team_rows}
 </table>
@@ -778,15 +795,6 @@ are eliminated - nobody scores here until teams actually start going out.</p>
 {ee_rows}
 </table>
 
-<h2>Goal-points breakdown</h2>
-<p class="sub">Where each team's in-game points come from (raw, before the 90:00+ multiply (&times;-1) &amp; opponent free-kick doubling).
-So you can see who's banked the most from goals and who's bled the most from pens / VAR. The 90:00+ multiply and
-free-kick doubling only ever touch these in-game points - never the ranked prizes (fastest / youngest /
-fewest etc.) or the prime penalty.</p>
-<div class="scroll wide"><table class="num grid sortable"><tr>{gd_head}</tr>
-{gd_rows}
-</table></div>
-
 <h2>🔢 Prime watch</h2>
 <p class="sub"><b>{n_on}</b> of {n_total} teams are on a <b>prime</b> number of goals right now
 (<b>{n_off}</b> are not). Each prime team is a <b>-3</b> hit to its owner.</p>
@@ -798,7 +806,9 @@ fewest etc.) or the prime penalty.</p>
 {prime_rows}
 </table>
 
-<h2>Full breakdown - every team, every category</h2>
+<h2>Full breakdown - every team, every points source</h2>
+<p class="sub">In-game points are split into their parts - <b>Goals · Pens · S.O. pens · VAR · 23'/67' · 0-SOT · Clean sheet · Red dice</b>,
+plus a <b>90'+/FK x</b> column for the 90:00+ flip and free-kick doubling - then the ranked prizes and bonuses. Every column adds up to <b>Total</b>.</p>
 <div class="scroll wide"><table class="num grid sortable"><tr>{grid_head}</tr>
 {grid_rows}
 </table></div>
