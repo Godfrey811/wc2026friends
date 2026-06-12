@@ -86,6 +86,24 @@ NEG_DIST = [-10, -8, -5, -3, -2, -1]
 
 GOAL_POINTS = {"open": 0.5, "freekick": 0.0, "penalty": -1.5, "shootout": -0.5}
 
+# Short team codes (FIFA-style) for the detail labels.
+TEAM_ABBR = {
+    "Spain": "ESP", "France": "FRA", "England": "ENG", "Portugal": "POR", "Argentina": "ARG",
+    "Brazil": "BRA", "Germany": "GER", "Netherlands": "NED", "Norway": "NOR", "Belgium": "BEL",
+    "Colombia": "COL", "Morocco": "MAR", "Mexico": "MEX", "USA": "USA", "Switzerland": "SUI",
+    "Turkey": "TUR", "Japan": "JPN", "Uruguay": "URU", "Croatia": "CRO", "Ecuador": "ECU",
+    "Senegal": "SEN", "Austria": "AUT", "Ivory Coast": "CIV", "Canada": "CAN", "Sweden": "SWE",
+    "Paraguay": "PAR", "Scotland": "SCO", "South Korea": "KOR", "Egypt": "EGY", "Algeria": "ALG",
+    "Czechia": "CZE", "Bosnia & Herzegovina": "BIH", "Australia": "AUS", "Ghana": "GHA",
+    "South Africa": "RSA", "Panama": "PAN", "DR Congo": "COD", "Saudi Arabia": "KSA",
+    "Tunisia": "TUN", "Uzbekistan": "UZB", "New Zealand": "NZL", "Cape Verde": "CPV",
+    "Jordan": "JOR", "Iraq": "IRQ", "Haiti": "HAI", "Qatar": "QAT", "Curaçao": "CUW", "Iran": "IRN",
+}
+
+
+def abbr(team):
+    return TEAM_ABBR.get(team, (team or "")[:3].upper())
+
 
 # --- small helpers -----------------------------------------------------------
 
@@ -764,20 +782,20 @@ def write_html(result: dict, out_dir: str) -> None:
         return min(rows, key=lambda mr: mr[0])[1] if rows else None
 
     def d_qgoal(t):
-        r = _minrow(_tg(t), "minute"); return f"{r['scorer']} {r['minute']}'" if r else ""
+        r = _minrow(_tg(t), "minute"); return f"{r['minute']}' - {r['scorer']} ({abbr(t)})" if r else ""
     def d_qyel(t):
         r = _minrow([c for c in rcards if c["team"] == t and c.get("color") == "yellow"], "minute")
-        return f"{r.get('player') or '?'} {r['minute']}'" if r else ""
+        return f"{r['minute']}' - {r.get('player') or '?'} ({abbr(t)})" if r else ""
     def d_fsub(t):
-        r = _minrow([s for s in rsubs if s["team"] == t], "minute"); return f"{r['minute']}'" if r else ""
+        r = _minrow([s for s in rsubs if s["team"] == t], "minute"); return f"{r['minute']}' ({abbr(t)})" if r else ""
     def d_fog(t):
-        r = _minrow([o for o in rog if o["team"] == t], "minute"); return f"{r['minute']}'" if r else ""
+        r = _minrow([o for o in rog if o["team"] == t], "minute"); return f"{r['minute']}' ({abbr(t)})" if r else ""
     def _age_pick(t, oldest):
         gs = [g for g in _tg(t) if (g.get("scorer_age") or "").strip()]
         if not gs:
             return ""
         g = (max if oldest else min)(gs, key=lambda g: _age_days(g["scorer_age"]) or (-1 if oldest else 1e9))
-        return f"{g['scorer']} ({g['scorer_age']})"
+        return f"{g['scorer_age']} - {g['scorer']} ({abbr(t)})"
     def d_young(t): return _age_pick(t, False)
     def d_old(t):   return _age_pick(t, True)
     def _name_pick(t, longest):
@@ -785,16 +803,16 @@ def write_html(result: dict, out_dir: str) -> None:
         if not gs:
             return ""
         g = (max if longest else min)(gs, key=lambda g: len(g["scorer"]))
-        return f"{g['scorer']} ({len(g['scorer'])} letters)"
+        return f"{len(g['scorer'])} letters - {g['scorer']} ({abbr(t)})"
     def d_long(t):  return _name_pick(t, True)
     def d_short(t): return _name_pick(t, False)
 
     CAT_DETAIL = {"quickest_goal": d_qgoal, "quickest_yellow": d_qyel, "fastest_sub": d_fsub,
                   "fastest_own_goal": d_fog, "youngest_scorer": d_young, "oldest_scorer": d_old,
                   "longest_name": d_long, "shortest_name": d_short,
-                  "prime": lambda t: f"{gfor.get(t, 0)} goals",
-                  "fewest_goals": lambda t: f"{gfor.get(t, 0)} goals",
-                  "fewest_cards": lambda t: f"{ctot.get(t, 0):g} cards"}
+                  "prime": lambda t: f"{gfor.get(t, 0)} goals ({abbr(t)})",
+                  "fewest_goals": lambda t: f"{gfor.get(t, 0)} goals ({abbr(t)})",
+                  "fewest_cards": lambda t: f"{ctot.get(t, 0):g} cards ({abbr(t)})"}
 
     # By-category tab: one mini by-player leaderboard per category (with the why).
     def _cat_card(title, desc, key, num_fn):
@@ -807,7 +825,7 @@ def write_html(result: dict, out_dir: str) -> None:
             det = ""
             if dfn:
                 tms = [t for t in owner_teams_grid[o] if round(pts[t].get(key, 0), 2) != 0]
-                det = "; ".join(f"{t} - {dfn(t)}" for t in tms if dfn(t))
+                det = "; ".join(dfn(t) for t in tms if dfn(t))
             rows.append((o, v, det))
         rows.sort(key=lambda r: (-abs(r[1]), r[0]))
         if any(r[2] for r in rows):
