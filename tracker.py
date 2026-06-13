@@ -167,7 +167,7 @@ TEMPLATE_HEADERS = {
     "matches.csv": ["match_id", "stage", "team_a", "team_b", "team_a_sot", "team_b_sot"],
     "goals.csv": ["match_id", "team", "minute", "type", "scorer", "scorer_age", "disallowed", "dob"],
     "cards.csv": ["match_id", "team", "minute", "color", "dice", "player"],
-    "subs.csv": ["match_id", "team", "minute"],
+    "subs.csv": ["match_id", "team", "minute", "off", "on"],
     "own_goals.csv": ["match_id", "team", "minute", "player", "scorer_age", "dob"],
     "progression.csv": ["team", "stage", "flip", "out"],
     "fixtures.csv": ["date", "kickoff", "stage", "group", "home", "away", "venue"],
@@ -517,10 +517,11 @@ def score(data_dir: str) -> dict:
 
 GOAL_LOG_COLS = ["Match", "Team", "Owner", "Scorer", "Born", "Age", "Min", "Type", "Letters", "Disallowed"]
 CARD_LOG_COLS = ["Match", "Team", "Owner", "Player", "Min", "Card", "Dice"]
+SUB_LOG_COLS = ["Match", "Team", "Owner", "Min", "On", "Off"]
 
 
 def match_logs(result):
-    """Enriched per-event logs: (goal rows, card rows) as lists matching GOAL/CARD_LOG_COLS."""
+    """Enriched per-event logs: (goal rows, card rows, sub rows) matching GOAL/CARD/SUB_LOG_COLS."""
     owner, ml, raw = result["owner"], result["match_label"], result["raw"]
     mt = result.get("match_teams", {})
 
@@ -548,7 +549,12 @@ def match_logs(result):
         cards.append([ml.get(c["match_id"], c["match_id"]), t, owner.get(t, ""),
                       c.get("player", ""), c.get("minute", ""), c.get("color", ""),
                       c.get("dice", "")])
-    return goals, cards
+    subs = []
+    for s in sorted(raw.get("subs", []), key=mkey):
+        t = s["team"]
+        subs.append([ml.get(s["match_id"], s["match_id"]), t, owner.get(t, ""),
+                     s.get("minute", ""), s.get("on", ""), s.get("off", "")])
+    return goals, cards, subs
 
 
 CATEGORY_ORDER = [
@@ -633,11 +639,13 @@ def write_outputs(result: dict, out_dir: str) -> None:
             w.writerow([i, o or "(undrafted)", round(total, 2)])
 
     # Reference sheets: every goal / every card with the details (viewable on GitHub).
-    goal_rows, card_rows = match_logs(result)
+    goal_rows, card_rows, sub_rows = match_logs(result)
     with open(os.path.join(out_dir, "goals_log.csv"), "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh); w.writerow(GOAL_LOG_COLS); w.writerows(goal_rows)
     with open(os.path.join(out_dir, "cards_log.csv"), "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh); w.writerow(CARD_LOG_COLS); w.writerows(card_rows)
+    with open(os.path.join(out_dir, "subs_log.csv"), "w", newline="", encoding="utf-8") as fh:
+        w = csv.writer(fh); w.writerow(SUB_LOG_COLS); w.writerows(sub_rows)
 
 
 def print_standings(result: dict) -> None:
@@ -939,13 +947,16 @@ def write_html(result: dict, out_dir: str) -> None:
     for (_short, full, desc, fn, key) in grid_cols:
         cat_cards += _cat_card(full, desc, key, fn)
 
-    glog, clog = match_logs(result)
+    glog, clog, slog = match_logs(result)
     goal_log_head = "".join(f"<th>{c}</th>" for c in GOAL_LOG_COLS)
     goal_log_rows = "\n".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in glog) \
         or f'<tr><td colspan="{len(GOAL_LOG_COLS)}">no goals yet</td></tr>'
     card_log_head = "".join(f"<th>{c}</th>" for c in CARD_LOG_COLS)
     card_log_rows = "\n".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in clog) \
         or f'<tr><td colspan="{len(CARD_LOG_COLS)}">no cards yet</td></tr>'
+    sub_log_head = "".join(f"<th>{c}</th>" for c in SUB_LOG_COLS)
+    sub_log_rows = "\n".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in slog) \
+        or f'<tr><td colspan="{len(SUB_LOG_COLS)}">no subs yet</td></tr>'
 
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1088,6 +1099,11 @@ Ranked prizes (quickest goal/yellow, youngest/oldest, etc.) show the players cur
 <p class="sub">Every yellow/red so far with player, minute and (for reds) the dice roll. <a href="cards_log.csv">cards_log.csv</a></p>
 <div class="scroll"><table class="tt sortable"><tr>{card_log_head}</tr>
 {card_log_rows}
+</table></div>
+<h2>📋 Match log - every substitution</h2>
+<p class="sub">Every substitution so far: minute, who came on and who came off. Earliest sub per team feeds the fastest-sub prize. <a href="subs_log.csv">subs_log.csv</a></p>
+<div class="scroll"><table class="tt sortable"><tr>{sub_log_head}</tr>
+{sub_log_rows}
 </table></div>
 </section>
 

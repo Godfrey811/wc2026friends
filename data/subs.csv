@@ -1,9 +1,48 @@
-match_id,team,minute
-1,Mexico,66
-1,South Africa,61
-2,South Korea,62
-2,Czechia,63
-3,Canada,61
-3,Bosnia & Herzegovina,62
-4,USA,46
-4,Paraguay,46
+match_id,team,minute,off,on
+1,Mexico,66,Álvaro Fidalgo,Gilberto Mora
+1,Mexico,66,Brian Gutiérrez,Luis Chávez
+1,Mexico,76,Érik Lira,Edson Álvarez
+1,Mexico,76,Raúl Jiménez,Armando González
+1,Mexico,79,Julián Quiñones,Alexis Vega
+1,South Africa,56,Lyle Foster,Thalente Mbatha
+1,South Africa,61,Jayden Adams,Themba Zwane
+1,South Africa,76,Aubrey Modiba,Oswin Appollis
+1,South Africa,76,Iqraam Rayners,Evidence Makgopa
+2,South Korea,62,Lee Jae-sung,Hwang Hee-chan
+2,South Korea,69,Son Heung-min,Eom Ji-sung
+2,South Korea,69,Lee Tae-seok,Oh Hyeon-gyu
+2,South Korea,84,Hwang In-beom,Kim Jin-gyu
+2,South Korea,84,Paik Seung-ho,Park Jin-seob
+2,Czechia,63,Lukáš Provod,Adam Hložek
+2,Czechia,63,Patrik Schick,Michal Sadílek
+2,Czechia,63,Pavel Šulc,Tomáš Chorý
+2,Czechia,84,Alexandr Sojka,Mojmír Chytil
+3,Canada,61,Tajon Buchanan,Ali Ahmed
+3,Canada,61,Liam Millar,Promise David
+3,Canada,61,Jonathan David,Jacob Shaffelburg
+3,Canada,76,Tani Oluwaseyi,Cyle Larin
+3,Canada,90+1,Stephen Eustáquio,Jonathan Osorio
+3,Bosnia & Herzegovina,62,Ivan Bašić,Armin Gigović
+3,Bosnia & Herzegovina,62,Jovo Lukić,Samed Baždar
+3,Bosnia & Herzegovina,74,Esmir Bajraktarević,Ivan Šunjić
+3,Bosnia & Herzegovina,74,Amar Memić,Kerim Alajbegović
+3,Bosnia & Herzegovina,83,Sead Kolašinac,Dženis Burnić
+4,USA,46,Christian Pulisic,Sebastian Berhalter
+4,USA,72,Sergiño Dest,Timothy Weah
+4,USA,72,Folarin Balogun,Ricardo Pepi
+4,USA,82,Malik Tillman,Giovanni Reyna
+4,Paraguay,46,Damián Bobadilla,Maurício Prado
+4,Paraguay,62,Antonio Sanabria,Álex Arce
+4,Paraguay,79,Juan José Cáceres,Gustavo Velázquez
+4,Paraguay,79,Diego Gómez,Ramón Sosa
+4,Paraguay,79,Miguel Almirón,Kaku
+5,Qatar,60,Ayoub Al-Oui,Ahmed Fathy
+5,Qatar,60,Jassem Gaber,Karim Boudiaf
+5,Qatar,60,Yusuf Abdurisag,Ahmed Alaaeldin
+5,Qatar,78,Assim Madibo,Mohamed Manai
+5,Qatar,88,Edmilson Junior,Hassan Al-Haydos
+5,Switzerland,65,Michel Aebischer,Johan Manzambi
+5,Switzerland,65,Dan Ndoye,Fabian Rieder
+5,Switzerland,79,Rubén Vargas,Zeki Amdouni
+5,Switzerland,89,Remo Freuler,Miro Muheim
+5,Switzerland,89,Ricardo Rodriguez,Ardon Jashari
