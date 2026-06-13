@@ -1,13 +1,19 @@
 match_id,team,minute,color,dice,player
-1,South Africa,17,yellow,,Mokoena
 1,Mexico,23,yellow,,Brian Gutiérrez
-1,South Africa,49,red,,Sithole
-1,South Africa,52,red,,Zwane
-1,Mexico,90,red,,César Montes
+1,South Africa,17,yellow,,Teboho Mokoena
+1,South Africa,74,yellow,,Nkosinathi Sibisi
+1,South Africa,49,red,,Sphephelo Sithole
+1,South Africa,84,red,,Themba Zwane
+1,Mexico,90+2,red,,César Montes
 2,South Korea,90+6,yellow,,Lee Gi-hyuk
 3,Canada,11,yellow,,Alistair Johnston
-3,Canada,53,yellow,,Luc De Fougerolles
-3,Bosnia & Herzegovina,45,yellow,,Ermedin Demirović
+3,Canada,53,yellow,,Luc de Fougerolles
+3,Bosnia & Herzegovina,44,yellow,,Ermedin Demirović
 3,Bosnia & Herzegovina,45+1,yellow,,Jovo Lukić
 3,Bosnia & Herzegovina,90+3,yellow,,Nikola Katić
-4,Paraguay,90+3,yellow,,Alonso
+4,USA,59,yellow,,Tyler Adams
+4,Paraguay,9,yellow,,Juan José Cáceres
+4,Paraguay,53,yellow,,Miguel Almirón
+4,Paraguay,79,yellow,,Diego Gómez
+4,Paraguay,88,yellow,,Álex Arce
+4,Paraguay,90+3,yellow,,Júnior Alonso
