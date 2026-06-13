@@ -874,8 +874,17 @@ def write_html(result: dict, out_dir: str) -> None:
         r = _minrow([s for s in rsubs if s["team"] == t], "minute"); return f"{r['minute']}' ({abbr(t)})" if r else ""
     def d_fog(t):
         r = _minrow([o for o in rog if o["team"] == t], "minute"); return f"{r['minute']}' ({abbr(t)})" if r else ""
+    def _name_age_pool(t):
+        # Scored goals + own-goalers (credited to their OWN team) -- matches the
+        # name_age_pool used for scoring, so the displayed name/age is the one that
+        # actually earned the points (e.g. an own-goaler can be the longest name).
+        pool = list(_tg(t))
+        for o in rog:
+            if o["team"] == t and (o.get("player") or "").strip():
+                pool.append({"scorer": o["player"], "scorer_age": o.get("scorer_age", "")})
+        return pool
     def _age_pick(t, oldest):
-        gs = [g for g in _tg(t) if (g.get("scorer_age") or "").strip()]
+        gs = [g for g in _name_age_pool(t) if (g.get("scorer_age") or "").strip()]
         if not gs:
             return ""
         g = (max if oldest else min)(gs, key=lambda g: _age_days(g["scorer_age"]) or (-1 if oldest else 1e9))
@@ -883,7 +892,7 @@ def write_html(result: dict, out_dir: str) -> None:
     def d_young(t): return _age_pick(t, False)
     def d_old(t):   return _age_pick(t, True)
     def _name_pick(t, longest):
-        gs = _tg(t)
+        gs = _name_age_pool(t)
         if not gs:
             return ""
         g = (max if longest else min)(gs, key=lambda g: name_letters(g["scorer"]))
