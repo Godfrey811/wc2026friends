@@ -481,9 +481,12 @@ def score(data_dir: str) -> dict:
     for m in matches:
         a, b = m["team_a"], m["team_b"]
         gm = goals_by_match.get(m["match_id"], [])
-        def _scored(team):
-            return sum(1 for g in gm if g["team"] == team
-                       and not truthy(g.get("disallowed", "")) and g.get("type") != "shootout")
+        ogm = [o for o in own_goals if o["match_id"] == m["match_id"]]
+        def _scored(team, gm=gm, ogm=ogm):
+            scored = sum(1 for g in gm if g["team"] == team
+                         and not truthy(g.get("disallowed", "")) and g.get("type") != "shootout")
+            scored += sum(1 for o in ogm if o["team"] != team)  # opponent's OG counts for us
+            return scored
         match_scores[frozenset((a, b))] = {a: _scored(a), b: _scored(b)}
 
     # ---- totals ----
