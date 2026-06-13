@@ -168,7 +168,7 @@ TEMPLATE_HEADERS = {
     "goals.csv": ["match_id", "team", "minute", "type", "scorer", "scorer_age", "disallowed", "dob"],
     "cards.csv": ["match_id", "team", "minute", "color", "dice", "player"],
     "subs.csv": ["match_id", "team", "minute"],
-    "own_goals.csv": ["match_id", "team", "minute"],
+    "own_goals.csv": ["match_id", "team", "minute", "player", "scorer_age", "dob"],
     "progression.csv": ["team", "stage", "flip", "out"],
     "fixtures.csv": ["date", "kickoff", "stage", "group", "home", "away", "venue"],
 }
@@ -220,6 +220,9 @@ def score(data_dir: str) -> dict:
     cards_by_match: dict[str, list] = defaultdict(list)
     for c in cards:
         cards_by_match[c["match_id"]].append(c)
+    own_goals_by_match: dict[str, list] = defaultdict(list)
+    for o in own_goals:
+        own_goals_by_match[o["match_id"]].append(o)
 
     # category buckets, keyed by team
     pts = defaultdict(lambda: defaultdict(float))     # team -> category -> points
@@ -283,7 +286,9 @@ def score(data_dir: str) -> dict:
                 if c["team"] == team and (c.get("color") == "red") and (c.get("dice") or "").strip():
                     d = int(c["dice"])
                     reddice += (d / 2) if d % 2 == 1 else -(d / 2)
-            p += b2367 + b0sot + cs + reddice
+            # own goal by the opponent counts +0.5 for this team (part of in-game, so it flips too)
+            og_for = 0.5 * sum(1 for o in own_goals_by_match.get(mid, []) if o["team"] == opp)
+            p += b2367 + b0sot + cs + reddice + og_for
             if ninety % 2 == 1:
                 p = -p  # 90'+ flip (pairs cancel)
             opp_fk = sum(1 for g in og if g.get("type") == "freekick" and not truthy(g.get("disallowed", "")))
@@ -298,6 +303,7 @@ def score(data_dir: str) -> dict:
             detail[team]["bonus_0sot"] += b0sot
             detail[team]["clean_sheet"] += cs
             detail[team]["red_dice"] += reddice
+            detail[team]["og_for"] += og_for
             detail[team]["freekick_goals"] += fk_scored
 
     # ---- prime number of goals (excl. shootouts & disallowed) ----
@@ -345,16 +351,20 @@ def score(data_dir: str) -> dict:
 
     yellows = [c for c in cards if c.get("color") == "yellow"]
     scored_goals = [g for g in goals if not truthy(g.get("disallowed", "")) and g.get("type") != "shootout"]
+    # Own-goalers count as goalscorers for the age/name prizes, credited to THEIR OWN team.
+    og_scorers = [{"team": o["team"], "scorer": o.get("player", ""), "scorer_age": o.get("scorer_age", "")}
+                  for o in own_goals if (o.get("player") or "").strip()]
+    name_age_pool = scored_goals + og_scorers
 
     metrics = {
         "quickest_goal": (extreme(scored_goals, "minute", "min", minute_key="minute"), POS_DIST, "min"),
         "quickest_yellow": (extreme(yellows, "minute", "min", minute_key="minute"), POS_DIST, "min"),
         "fastest_sub": (extreme(subs, "minute", "min", minute_key="minute"), POS_DIST, "min"),
         "fastest_own_goal": (extreme(own_goals, "minute", "min", minute_key="minute"), POS_DIST, "min"),
-        "youngest_scorer": (extreme(scored_goals, "scorer_age", "min"), POS_DIST, "min"),
-        "oldest_scorer": (extreme(scored_goals, "scorer_age", "max"), NEG_DIST, "max"),
-        "longest_name": (extreme(scored_goals, "scorer", "max"), POS_DIST, "max"),
-        "shortest_name": (extreme(scored_goals, "scorer", "min"), NEG_DIST, "min"),
+        "youngest_scorer": (extreme(name_age_pool, "scorer_age", "min"), POS_DIST, "min"),
+        "oldest_scorer": (extreme(name_age_pool, "scorer_age", "max"), NEG_DIST, "max"),
+        "longest_name": (extreme(name_age_pool, "scorer", "max"), POS_DIST, "max"),
+        "shortest_name": (extreme(name_age_pool, "scorer", "min"), NEG_DIST, "min"),
     }
 
     for cat, (values, dist, better) in metrics.items():
@@ -474,6 +484,7 @@ def score(data_dir: str) -> dict:
         "cards_total": dict(cards_total),
         "raw": {"goals": goals, "cards": cards, "subs": subs, "own_goals": own_goals},
         "match_label": {m["match_id"]: f'{m["team_a"]} v {m["team_b"]}' for m in matches},
+        "match_teams": {m["match_id"]: (m["team_a"], m["team_b"]) for m in matches},
     }
 
 
@@ -486,12 +497,21 @@ CARD_LOG_COLS = ["Match", "Team", "Owner", "Player", "Min", "Card", "Dice"]
 def match_logs(result):
     """Enriched per-event logs: (goal rows, card rows) as lists matching GOAL/CARD_LOG_COLS."""
     owner, ml, raw = result["owner"], result["match_label"], result["raw"]
+    mt = result.get("match_teams", {})
 
     def mkey(e):
         return (e.get("match_id", ""), parse_minute(e.get("minute", "")) or 999)
 
+    # real goals + own goals (an OG counts for the OTHER team in the match)
+    log_goals = list(raw["goals"])
+    for o in raw.get("own_goals", []):
+        a, b = mt.get(o["match_id"], ("", ""))
+        benef = b if o["team"] == a else a            # team the OG counted for
+        log_goals.append({"match_id": o["match_id"], "team": benef, "minute": o.get("minute", ""),
+                          "type": "own goal", "scorer": o.get("player", ""),
+                          "scorer_age": o.get("scorer_age", ""), "dob": o.get("dob", ""), "disallowed": ""})
     goals = []
-    for g in sorted(raw["goals"], key=mkey):
+    for g in sorted(log_goals, key=mkey):
         t = g["team"]
         goals.append([ml.get(g["match_id"], g["match_id"]), t, owner.get(t, ""),
                       g.get("scorer", ""), g.get("dob", ""), g.get("scorer_age", ""),
@@ -564,6 +584,7 @@ DETAIL_LABELS = {
     "goal_open": "Open goals (+)", "goal_pen": "Pens (-)", "goal_shootout": "Shootout pens (-)",
     "var": "VAR ruled out (-)", "bonus_2367": "23'/67' bonus (+)", "bonus_0sot": "0 shots-on-target (+)",
     "clean_sheet": "Clean sheet vs (-)", "red_dice": "Red-card dice", "freekick_goals": "Free-kick goals",
+    "og_for": "Own goal for (+)",
 }
 
 
@@ -755,10 +776,10 @@ def write_html(result: dict, out_dir: str) -> None:
     # goal/FK/red-card/23'-67'/90:00+ points separately) instead of one lumped column.
     # Each column: (short header, full title, tooltip, value-fn). Columns sum to Total.
     _ingame_pts = ("goal_open", "goal_pen", "goal_shootout", "var",
-                   "bonus_2367", "bonus_0sot", "clean_sheet", "red_dice")
+                   "bonus_2367", "bonus_0sot", "clean_sheet", "red_dice", "og_for")
     _gd_short = {"goal_open": "Goals", "goal_pen": "Pens", "goal_shootout": "S.O. pens",
                  "var": "VAR", "bonus_2367": "23'/67'", "bonus_0sot": "0-SOT",
-                 "clean_sheet": "Clean sheet", "red_dice": "Red dice"}
+                 "clean_sheet": "Clean sheet", "red_dice": "Red dice", "og_for": "OG for"}
 
     def _effect(t):   # 90:00+ x-1 and opponent free-kick doubling: final in-game minus raw parts
         raw = sum(detail[t].get(k, 0) for k in _ingame_pts)

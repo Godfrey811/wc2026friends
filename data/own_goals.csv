@@ -1,2 +1,2 @@
-match_id,team,minute
-4,Paraguay,7
+match_id,team,minute,player,scorer_age,dob
+4,Paraguay,7,Damián Bobadilla,24y 336d,2001-07-11
