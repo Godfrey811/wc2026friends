@@ -327,9 +327,20 @@ def score(data_dir: str) -> dict:
         pts[team]["progression"] += val
 
     # ---- ranked categories ----
+    def _recency(r, minute_key):
+        """A sortable stamp for WHEN an event happened: later match, later minute
+        => bigger. Used so metric TIES break toward the LATEST scorer/event."""
+        try:
+            mid = int(str(r.get("match_id", "0")).strip() or 0)
+        except ValueError:
+            mid = 0
+        return mid * 1000 + (parse_minute(r.get(minute_key, "")) or 0)
+
     def extreme(rows, key, agg, minute_key=None):
-        """min/max of `key` per team over rows (skipping disallowed goals)."""
-        out: dict[str, float] = {}
+        """{team: (value, recency)} for min/max of `key` per team (skipping
+        disallowed goals). recency = the LATEST event that achieves the team's
+        extreme value, so ties between teams break toward the latest scorer."""
+        out: dict[str, tuple] = {}
         for r in rows:
             if r.get("type") == "shootout" or truthy(r.get("disallowed", "")):
                 continue
@@ -343,16 +354,22 @@ def score(data_dir: str) -> dict:
                 v = _age_days(raw) if key == "scorer_age" else name_letters(raw)
             if v is None:
                 continue
+            rec = _recency(r, minute_key or "minute")
             if team not in out:
-                out[team] = v
-            else:
-                out[team] = (min if agg == "min" else max)(out[team], v)
+                out[team] = (v, rec)
+                continue
+            cur_v, cur_rec = out[team]
+            if v == cur_v:
+                out[team] = (cur_v, max(cur_rec, rec))   # same extreme -> keep latest
+            elif (min if agg == "min" else max)(cur_v, v) == v:
+                out[team] = (v, rec)                     # new extreme -> its recency
         return out
 
     yellows = [c for c in cards if c.get("color") == "yellow"]
     scored_goals = [g for g in goals if not truthy(g.get("disallowed", "")) and g.get("type") != "shootout"]
     # Own-goalers count as goalscorers for the age/name prizes, credited to THEIR OWN team.
-    og_scorers = [{"team": o["team"], "scorer": o.get("player", ""), "scorer_age": o.get("scorer_age", "")}
+    og_scorers = [{"team": o["team"], "scorer": o.get("player", ""), "scorer_age": o.get("scorer_age", ""),
+                   "match_id": o.get("match_id", ""), "minute": o.get("minute", "")}
                   for o in own_goals if (o.get("player") or "").strip()]
     name_age_pool = scored_goals + og_scorers
 
@@ -368,7 +385,12 @@ def score(data_dir: str) -> dict:
     }
 
     for cat, (values, dist, better) in metrics.items():
-        ranked = sorted(values.items(), key=lambda kv: kv[1], reverse=(better == "max"))
+        # Primary: the metric value (better-first). Tie-break: LATEST event wins
+        # the higher rank (recency descending) -- "whoever is latest takes the lead".
+        if better == "max":
+            ranked = sorted(values.items(), key=lambda kv: (kv[1][0], kv[1][1]), reverse=True)
+        else:
+            ranked = sorted(values.items(), key=lambda kv: (kv[1][0], -kv[1][1]))
         used_owners = set()
         idx = 0
         for team, _v in ranked:
