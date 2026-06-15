@@ -494,6 +494,10 @@ def score(data_dir: str) -> dict:
     for t in teams:
         owner_totals[owner.get(t, "")] += team_totals[t]
 
+    # match -> date (from fixtures, matched on the team pair) for the match log
+    _fx_date = {frozenset((fx.get("home", ""), fx.get("away", ""))): fx.get("date", "") for fx in fixtures}
+    match_dates = {m["match_id"]: _fx_date.get(frozenset((m["team_a"], m["team_b"])), "") for m in matches}
+
     return {
         "owner": owner,
         "teams": teams,
@@ -509,23 +513,42 @@ def score(data_dir: str) -> dict:
         "raw": {"goals": goals, "cards": cards, "subs": subs, "own_goals": own_goals},
         "match_label": {m["match_id"]: f'{m["team_a"]} v {m["team_b"]}' for m in matches},
         "match_teams": {m["match_id"]: (m["team_a"], m["team_b"]) for m in matches},
+        "match_dates": match_dates,
     }
 
 
 # --- output ------------------------------------------------------------------
 
-GOAL_LOG_COLS = ["Match", "Team", "Owner", "Scorer", "Born", "Age", "Min", "Type", "Letters", "Disallowed"]
-CARD_LOG_COLS = ["Match", "Team", "Owner", "Player", "Min", "Card", "Dice"]
-SUB_LOG_COLS = ["Match", "Team", "Owner", "Min", "On", "Off"]
+GOAL_LOG_COLS = ["Date", "Match", "Team", "Owner", "Scorer", "Born", "Age", "Min", "Type", "Letters", "Disallowed"]
+CARD_LOG_COLS = ["Date", "Match", "Team", "Owner", "Player", "Min", "Card", "Dice"]
+SUB_LOG_COLS = ["Date", "Match", "Team", "Owner", "Min", "On", "Off"]
+
+
+def _fmt_date(iso):
+    """'2026-06-11' -> '11 Jun'. Leaves anything unparseable as-is."""
+    from datetime import date
+    try:
+        return date.fromisoformat(iso).strftime("%-d %b")
+    except (ValueError, TypeError):
+        return iso or ""
 
 
 def match_logs(result):
-    """Enriched per-event logs: (goal rows, card rows, sub rows) matching GOAL/CARD/SUB_LOG_COLS."""
+    """Enriched per-event logs: (goal rows, card rows, sub rows) matching GOAL/CARD/SUB_LOG_COLS.
+    Rows are ordered chronologically (by match number, then minute)."""
     owner, ml, raw = result["owner"], result["match_label"], result["raw"]
     mt = result.get("match_teams", {})
+    md = result.get("match_dates", {})
 
-    def mkey(e):
-        return (e.get("match_id", ""), parse_minute(e.get("minute", "")) or 999)
+    def mkey(e):                              # numeric match id so 2 sorts before 10, not after 1
+        try:
+            mi = int(e.get("match_id") or 0)
+        except ValueError:
+            mi = 0
+        return (mi, parse_minute(e.get("minute", "")) or 999)
+
+    def _dt(e):
+        return _fmt_date(md.get(e.get("match_id", ""), ""))
 
     # real goals + own goals (an OG counts for the OTHER team in the match)
     log_goals = list(raw["goals"])
@@ -538,20 +561,20 @@ def match_logs(result):
     goals = []
     for g in sorted(log_goals, key=mkey):
         t = g["team"]
-        goals.append([ml.get(g["match_id"], g["match_id"]), t, owner.get(t, ""),
+        goals.append([_dt(g), ml.get(g["match_id"], g["match_id"]), t, owner.get(t, ""),
                       g.get("scorer", ""), g.get("dob", ""), g.get("scorer_age", ""),
                       g.get("minute", ""), g.get("type", ""), name_letters(g.get("scorer", "")),
                       "yes" if truthy(g.get("disallowed", "")) else ""])
     cards = []
     for c in sorted(raw["cards"], key=mkey):
         t = c["team"]
-        cards.append([ml.get(c["match_id"], c["match_id"]), t, owner.get(t, ""),
+        cards.append([_dt(c), ml.get(c["match_id"], c["match_id"]), t, owner.get(t, ""),
                       c.get("player", ""), c.get("minute", ""), c.get("color", ""),
                       c.get("dice", "")])
     subs = []
     for s in sorted(raw.get("subs", []), key=mkey):
         t = s["team"]
-        subs.append([ml.get(s["match_id"], s["match_id"]), t, owner.get(t, ""),
+        subs.append([_dt(s), ml.get(s["match_id"], s["match_id"]), t, owner.get(t, ""),
                      s.get("minute", ""), s.get("on", ""), s.get("off", "")])
     return goals, cards, subs
 
