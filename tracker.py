@@ -619,7 +619,7 @@ CAT_SHORT = {
 
 CAT_DESC = {
     "in_game": "In-game points: goals (open +0.5, pen -1.5, shootout -0.5, free-kick 0), VAR -1, "
-               "a goal/concede in the 23rd or 67th min +4, 0 shots on target +4, clean sheet against you -1, "
+               "a goal/concede in the 23rd or 67th min +4, 0 shots on target +4, no goals scored in a game -1, "
                "red-card dice - then the injury-time multiply (a 90+X goal = x -1) and opponent free-kick doubling (x2) are applied (both together = x -2).",
     "prime": "-3 while the team is on a PRIME number of (non-shootout) goals.",
     "progression": "Points for the round a team is knocked out in: R32 +1, R16 +2, QF +3, SF +5, "
@@ -649,7 +649,7 @@ DETAIL_ORDER = ["goal_open", "goal_pen", "goal_shootout", "var",
 DETAIL_LABELS = {
     "goal_open": "Open goals (+)", "goal_pen": "Pens (-)", "goal_shootout": "Shootout pens (-)",
     "var": "VAR ruled out (-)", "bonus_2367": "23'/67' bonus (+)", "bonus_0sot": "0 shots-on-target (+)",
-    "clean_sheet": "Clean sheet vs (-)", "red_dice": "Red-card dice", "freekick_goals": "Free-kick goals",
+    "clean_sheet": "No goals scored in a game (-)", "red_dice": "Red-card dice", "freekick_goals": "Free-kick goals",
     "og_for": "Own goal for (+)",
 }
 
@@ -847,7 +847,7 @@ def write_html(result: dict, out_dir: str) -> None:
                    "bonus_2367", "bonus_0sot", "clean_sheet", "red_dice", "og_for")
     _gd_short = {"goal_open": "Goals", "goal_pen": "Pens", "goal_shootout": "S.O. pens",
                  "var": "VAR", "bonus_2367": "23'/67'", "bonus_0sot": "0-SOT",
-                 "clean_sheet": "Clean sheet", "red_dice": "Red dice", "og_for": "OG for"}
+                 "clean_sheet": "No goals scored", "red_dice": "Red dice", "og_for": "OG for"}
 
     def _effect(t):   # 90:00+ x-1 and opponent free-kick doubling: final in-game minus raw parts
         raw = sum(detail[t].get(k, 0) for k in _ingame_pts)
@@ -953,6 +953,10 @@ def write_html(result: dict, out_dir: str) -> None:
                   "fewest_goals": lambda t: f"{gfor.get(t, 0)} goals ({abbr(t)})",
                   "fewest_cards": lambda t: f"{ctot.get(t, 0):g} cards ({abbr(t)})"}
 
+    # These in-game components show a per-team contribution breakdown (amount + team)
+    # so you can see which teams gave each player their open-goal/pen/no-goals/OG/90:00 points.
+    TEAM_BREAKDOWN_KEYS = {"goal_open", "goal_pen", "clean_sheet", "og_for", "effect"}
+
     # By-category tab: one mini by-player leaderboard per category (with the why).
     def _cat_card(title, desc, key, num_fn):
         dfn = CAT_DETAIL.get(key)
@@ -961,10 +965,13 @@ def write_html(result: dict, out_dir: str) -> None:
             v = sum(num_fn(t) for t in owner_teams_grid[o])
             if round(v, 2) == 0:
                 continue
-            det = ""
+            tms = [t for t in owner_teams_grid[o] if round(num_fn(t), 2) != 0]
             if dfn:
-                tms = [t for t in owner_teams_grid[o] if round(pts[t].get(key, 0), 2) != 0]
                 det = "; ".join(dfn(t) for t in tms if dfn(t))
+            elif key in TEAM_BREAKDOWN_KEYS:                       # contributing teams + how much each
+                det = ", ".join(f"{round(num_fn(t), 2):+g} ({abbr(t)})" for t in tms)
+            else:
+                det = ""
             rows.append((o, v, det))
         rows.sort(key=lambda r: (-abs(r[1]), r[0]))
         if any(r[2] for r in rows):
@@ -1101,7 +1108,7 @@ are eliminated - nobody scores here until teams actually start going out.</p>
 
 <section class="tab" id="tab-breakdown">
 <h2>Full breakdown - by team</h2>
-<p class="sub">In-game points are split into their parts - <b>Goals · Pens · S.O. pens · VAR · 23'/67' · 0-SOT · Clean sheet · Red dice</b>,
+<p class="sub">In-game points are split into their parts - <b>Goals · Pens · S.O. pens · VAR · 23'/67' · 0-SOT · No goals scored · Red dice</b>,
 plus a <b>90'+/FK x</b> column for the 90:00+ flip and free-kick doubling - then the ranked prizes and bonuses. Every column adds up to <b>Total</b>.</p>
 <div class="scroll wide"><table class="num grid sortable"><tr>{grid_head}</tr>
 {grid_rows}
