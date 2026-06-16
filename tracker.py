@@ -281,6 +281,10 @@ def score(data_dir: str) -> dict:
             b0sot = 4.0 if sot.get(team) == 0 else 0.0
             # own goal by the opponent counts +0.5 for this team (part of in-game, so it flips too)
             og_for = 0.5 * sum(1 for o in own_goals_by_match.get(mid, []) if o["team"] == opp)
+            # an own goal in our favour in injury time (90+X) is a late goal FOR us, so it
+            # counts toward the 90:00 flip just like one of our own injury-time goals.
+            ninety += sum(1 for o in own_goals_by_match.get(mid, [])
+                          if o["team"] == opp and (o.get("minute") or "").replace(" ", "").startswith("90+"))
             # clean sheet against = -1 only if the team put NO goal on the board. An own
             # goal in their favour counts as a goal for them, so it cancels the penalty.
             cs = -1.0 if (scored == 0 and og_for == 0) else 0.0
