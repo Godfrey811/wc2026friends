@@ -279,14 +279,16 @@ def score(data_dir: str) -> dict:
 
             b2367 = 4.0 if (hit_2367(tg) or hit_2367(og)) else 0.0   # capped at +4 per game
             b0sot = 4.0 if sot.get(team) == 0 else 0.0
-            cs = -1.0 if scored == 0 else 0.0                        # opposition clean sheet
+            # own goal by the opponent counts +0.5 for this team (part of in-game, so it flips too)
+            og_for = 0.5 * sum(1 for o in own_goals_by_match.get(mid, []) if o["team"] == opp)
+            # clean sheet against = -1 only if the team put NO goal on the board. An own
+            # goal in their favour counts as a goal for them, so it cancels the penalty.
+            cs = -1.0 if (scored == 0 and og_for == 0) else 0.0
             reddice = 0.0
             for c in cards_by_match.get(mid, []):
                 if c["team"] == team and (c.get("color") == "red") and (c.get("dice") or "").strip():
                     d = int(c["dice"])
                     reddice += (d / 2) if d % 2 == 1 else -(d / 2)
-            # own goal by the opponent counts +0.5 for this team (part of in-game, so it flips too)
-            og_for = 0.5 * sum(1 for o in own_goals_by_match.get(mid, []) if o["team"] == opp)
             p += b2367 + b0sot + cs + reddice + og_for
             if ninety % 2 == 1:
                 p = -p  # 90'+ flip (pairs cancel)
@@ -306,11 +308,17 @@ def score(data_dir: str) -> dict:
             detail[team]["freekick_goals"] += fk_scored
 
     # ---- prime number of goals (excl. shootouts & disallowed) ----
+    # goals_for = every goal that ADDS to a team's tally: its own scored goals PLUS
+    # own goals scored in its favour (so prime / fewest-goals count the full scoreline).
     goals_for = defaultdict(int)
     for g in goals:
         if truthy(g.get("disallowed", "")) or g.get("type") == "shootout":
             continue
         goals_for[g["team"]] += 1
+    for m in matches:
+        a, b = m["team_a"], m["team_b"]
+        for o in own_goals_by_match.get(m["match_id"], []):
+            goals_for[b if o["team"] == a else a] += 1   # OG counts for the benefiting team
     for team in teams:
         if is_prime(goals_for[team]):
             pts[team]["prime"] += -3.0
