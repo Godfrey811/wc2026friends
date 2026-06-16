@@ -42,3 +42,7 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 16,Iran,32,open,Ramin Rezaeian,36y 86d,,1990-03-21
 16,New Zealand,54,open,Elijah Just,26y 45d,,2000-05-01
 16,Iran,64,open,Mohammad Mohebi,27y 177d,,1998-12-20
+17,France,66,open,Kylian Mbappé,27y 178d,,1998-12-20
+17,France,82,open,Bradley Barcola,23y 287d,,2002-09-02
+17,France,90+6,open,Kylian Mbappé,27y 178d,,1998-12-20
+17,Senegal,90+5,open,Ibrahim Mbaye,18y 143d,,2008-01-24
