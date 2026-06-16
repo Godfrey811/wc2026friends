@@ -550,13 +550,14 @@ def match_logs(result):
     def _dt(e):
         return _fmt_date(md.get(e.get("match_id", ""), ""))
 
-    # real goals + own goals (an OG counts for the OTHER team in the match)
+    # real goals + own goals. The OG is logged under the OWN-GOALER's own team/owner
+    # (who "owns" that player), not the team that benefited - with a note of who it counted for.
     log_goals = list(raw["goals"])
     for o in raw.get("own_goals", []):
         a, b = mt.get(o["match_id"], ("", ""))
         benef = b if o["team"] == a else a            # team the OG counted for
-        log_goals.append({"match_id": o["match_id"], "team": benef, "minute": o.get("minute", ""),
-                          "type": "own goal", "scorer": o.get("player", ""),
+        log_goals.append({"match_id": o["match_id"], "team": o["team"], "minute": o.get("minute", ""),
+                          "type": f"own goal (for {benef})", "scorer": o.get("player", ""),
                           "scorer_age": o.get("scorer_age", ""), "dob": o.get("dob", ""), "disallowed": ""})
     goals = []
     for g in sorted(log_goals, key=mkey):
