@@ -50,3 +50,6 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 18,Norway,29,open,Erling Haaland,25y 330d,,2000-07-21
 18,Norway,43,open,Erling Haaland,25y 330d,,2000-07-21
 18,Norway,76,open,Leo Østigård,26y 200d,,1999-11-28
+19,Argentina,17,open,Lionel Messi,38y 358d,,1987-06-24
+19,Argentina,60,open,Lionel Messi,38y 358d,,1987-06-24
+19,Argentina,76,open,Lionel Messi,38y 358d,,1987-06-24
