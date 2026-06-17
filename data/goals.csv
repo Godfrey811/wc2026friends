@@ -54,3 +54,6 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 19,Argentina,60,open,Lionel Messi,38y 358d,,1987-06-24
 19,Argentina,76,open,Lionel Messi,38y 358d,,1987-06-24
 19,Algeria,8,open,Farès Chaïbi,,yes,
+20,Austria,21,open,Romano Schmid,26y 141d,,2000-01-27
+20,Austria,67,open,Marko Arnautović,,yes,
+20,Jordan,50,open,Ali Olwan,26y 83d,,2000-03-26
