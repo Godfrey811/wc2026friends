@@ -833,25 +833,59 @@ CHART_JS = r"""<script>
              + '): ' + ord(PROG.ranks[s.name][i]) + ', ' + PROG.totals[s.name][i] + ' pts'; }
   });
 
-  // Chart 2 - points held by the prize places over time.
-  var keys = Object.keys(PROG.slots).map(Number).sort(function(a,b){ return a-b; });
-  var lastSlot = Math.max.apply(null, keys);
-  var meta = {1:{e:'👑',t:'1st'}, 4:{e:'😈',t:'4th'}, 7:{e:'😇',t:'7th'}};
-  var scol = {1:'#d4a017', 4:'#dc2626', 7:'#16a34a'};
-  var all = []; keys.forEach(function(p){ PROG.slots[p].forEach(function(x){ all.push(x.pts); }); });
-  var lo = Math.floor(Math.min.apply(null, all)), hi = Math.ceil(Math.max.apply(null, all));
-  var pad = Math.max(1, Math.round((hi - lo) * 0.08)); lo -= pad; hi += pad;
-  var sticks = []; for (var i = 0; i <= 5; i++) sticks.push(Math.round((lo + i*(hi-lo)/5) * 10) / 10);
-  build('slotChart', 'slotLegend', {
-    yMin:lo, yMax:hi, yInvert:false, yTicks:sticks,
-    series: keys.map(function(p){
-      var m = meta[p] || {e:'💩', t:ord(p) + (p === lastSlot ? ' (last)' : '')};
-      return {key:'s'+p, name:m.e+' '+m.t, color:scol[p] || '#6b7280', _p:p,
-              ys: PROG.slots[p].map(function(x){ return x.pts; })};
-    }),
-    tip: function(s, i){ var tm = PROG.times[i], x = PROG.slots[s._p][i];
-      return s.name + ' - after M' + tm.m + ': ' + (x.owner || '-') + ' (' + x.pts + ' pts)'; }
-  });
+  // Chart 2 - who HOLDS each prize place over time (holders timeline). One lane per
+  // place; coloured segments named with the player who held it (colours shared with
+  // the rank chart above). A new segment starts whenever the place changes hands.
+  function colorOf(p){ return p ? color(PROG.players.indexOf(p), N) : '#9ca3af'; }
+  (function lanes(){
+    var svg = document.getElementById('slotChart'); if (!svg) return;
+    var vb = svg.getAttribute('viewBox').split(' ').map(Number), W = vb[2], H = vb[3];
+    var L = 64, Rm = 14, TOPm = 12, BOTm = 30, plotW = W - L - Rm;
+    var keys = Object.keys(PROG.slots).map(Number).sort(function(a,b){ return a-b; });
+    var lastSlot = Math.max.apply(null, keys);
+    var meta = {1:{e:'👑',t:'1st'}, 4:{e:'😈',t:'4th'}, 7:{e:'😇',t:'7th'}};
+    var nL = keys.length, gap = 8, laneH = (H - TOPm - BOTm - gap*(nL-1)) / nL;
+    function xi(i){ return T <= 1 ? L + plotW/2 : L + i*plotW/(T-1); }
+    function edgeL(i){ return i===0 ? xi(0) : (xi(i-1)+xi(i))/2; }
+    function edgeR(i){ return i===T-1 ? xi(T-1) : (xi(i)+xi(i+1))/2; }
+
+    var step = T <= 28 ? 1 : Math.ceil(T/20);
+    PROG.times.forEach(function(tm, i){
+      if (i % step) return;
+      el('text', {x:xi(i), y:H-BOTm+20, 'text-anchor':'middle', 'font-size':10, fill:'#888'}, svg)
+        .textContent = 'M' + tm.m;
+    });
+    el('text', {x:L+plotW/2, y:H-4, 'text-anchor':'middle', 'font-size':11, fill:'#555'}, svg)
+      .textContent = 'Match number  (hover a block for who held the place and their points)';
+
+    keys.forEach(function(p, li){
+      var m = meta[p] || {e:'💩', t:ord(p) + (p===lastSlot ? ' (last)' : '')};
+      var y0 = TOPm + li*(laneH+gap), arr = PROG.slots[p];
+      el('text', {x:L-8, y:y0+laneH/2+4, 'text-anchor':'end', 'font-size':12, 'font-weight':700, fill:'#333'}, svg)
+        .textContent = m.e + ' ' + m.t;
+      el('rect', {x:L, y:y0, width:plotW, height:laneH, rx:5, fill:'#f7f8fa'}, svg);
+      var a = 0;
+      for (var i = 1; i <= T; i++){
+        if (i === T || arr[i].owner !== arr[a].owner){
+          var b = i-1, owner = arr[a].owner || '-', col = colorOf(arr[a].owner);
+          var x1 = edgeL(a), w = Math.max(1, edgeR(b) - x1);
+          var g = el('g', {'class':'lane-seg'}, svg);
+          el('rect', {x:x1, y:y0+3, width:w, height:laneH-6, rx:5,
+                      fill:col, 'fill-opacity':0.20, stroke:col, 'stroke-opacity':0.6}, g);
+          el('rect', {x:x1, y:y0+3, width:3, height:laneH-6, fill:col}, g);
+          if (w > 32){
+            var label = owner, maxch = Math.floor(w / 7.2);
+            if (label.length > maxch) label = label.slice(0, Math.max(1, maxch-1)) + '…';
+            el('text', {x:x1+w/2, y:y0+laneH/2+4, 'text-anchor':'middle', 'font-size':11,
+                        fill:'#1a1a1a', 'class':'lane-lab'}, g).textContent = label;
+          }
+          el('title', {}, g).textContent = m.e + ' ' + m.t + ': ' + owner + '  (M' + PROG.times[a].m +
+            (b>a ? '–M' + PROG.times[b].m : '') + ', ' + arr[b].pts + ' pts by M' + PROG.times[b].m + ')';
+          a = i;
+        }
+      }
+    });
+  })();
 })();
 </script>"""
 
@@ -1202,6 +1236,8 @@ def write_html(result: dict, out_dir: str) -> None:
  .clegend .chip.on{{background:#2563eb;color:#fff;border-color:#2563eb}}
  .clegend .chip .sw{{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}}
  .chart .pl-dot{{cursor:pointer}}
+ .chart .lane-seg{{cursor:pointer}} .chart .lane-lab{{pointer-events:none;font-weight:600}}
+ .chart .lane-seg:hover rect{{fill-opacity:.38}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
@@ -1235,12 +1271,11 @@ exact place and points on that matchday.</p>
 <div class="chartwrap"><div class="scroll"><svg id="rankChart" class="chart" viewBox="0 0 900 470" preserveAspectRatio="xMidYMid meet" role="img"></svg></div>
 <div id="rankLegend" class="clegend"></div></div>
 
-<h2 style="margin-top:2.2rem">🎖️ The prize positions over time</h2>
-<p class="sub">The <b>points held by each prize place</b> as the tournament unfolds - 👑 1st (wins the shirt),
-😈 4th &amp; 😇 7th (the £20 dice gift), 💩 last. Hover a point to see <b>who</b> occupied that place after each match.
-Click a label to isolate it.</p>
-<div class="chartwrap"><div class="scroll"><svg id="slotChart" class="chart" viewBox="0 0 900 430" preserveAspectRatio="xMidYMid meet" role="img"></svg></div>
-<div id="slotLegend" class="clegend"></div></div>
+<h2 style="margin-top:2.2rem">🎖️ Who holds each prize place</h2>
+<p class="sub">A lane for each prize place - 👑 1st (wins the shirt), 😈 4th &amp; 😇 7th (the £20 dice gift),
+💩 last - showing <b>which player held it after every match</b>. A new coloured block starts whenever the place
+changes hands (colours match the rank chart above). Hover a block for the player, their run of matches and points.</p>
+<div class="chartwrap"><div class="scroll"><svg id="slotChart" class="chart" viewBox="0 0 900 270" preserveAspectRatio="xMidYMid meet" role="img"></svg></div></div>
 </section>
 
 <section class="tab" id="tab-players">
