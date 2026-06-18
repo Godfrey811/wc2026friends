@@ -201,7 +201,11 @@ def init_templates(data_dir: str) -> None:
 
 # --- the engine --------------------------------------------------------------
 
-def score(data_dir: str) -> dict:
+def score(data_dir: str, upto: int | None = None) -> dict:
+    """Score the pool. If `upto` is given, only matches with match_id <= upto are
+    counted (used to replay the standings match-by-match for the trends charts).
+    Progression/early-exit are tournament-level and left as-is (zero during the
+    group stage, so the cumulative group-stage replay is exact)."""
     draft = load(data_dir, "draft.csv")
     owner = {r["team"]: (r.get("owner") or "").strip() for r in draft}
     teams = [r["team"] for r in draft]
@@ -213,6 +217,16 @@ def score(data_dir: str) -> dict:
     own_goals = load(data_dir, "own_goals.csv")
     progression = load(data_dir, "progression.csv")
     fixtures = load(data_dir, "fixtures.csv")
+
+    if upto is not None:
+        def _keep(r):
+            mid = str(r.get("match_id", "")).strip()
+            return (not mid.isdigit()) or int(mid) <= upto
+        matches = [m for m in matches if _keep(m)]
+        goals = [g for g in goals if _keep(g)]
+        cards = [c for c in cards if _keep(c)]
+        subs = [s for s in subs if _keep(s)]
+        own_goals = [o for o in own_goals if _keep(o)]
 
     goals_by_match: dict[str, list] = defaultdict(list)
     for g in goals:
@@ -529,6 +543,47 @@ def score(data_dir: str) -> dict:
     }
 
 
+def standings_progression(data_dir: str, full: dict | None = None) -> dict:
+    """Replay the owner standings after each played match (cumulative), for the
+    'over time' trend charts. Returns:
+        {"players": [owner...],                       # all drafted owners
+         "times":   [{"m": int, "date": "11 Jun", "label": "A v B"}...],
+         "ranks":   {owner: [rank_after_m1, ...]},    # 1 = top
+         "totals":  {owner: [pts_after_m1, ...]},
+         "slots":   {pos: [{"owner": o, "pts": p}...]}}  # who/how-many at 1/4/7/last
+    Only matches that actually carry event rows are treated as 'played'."""
+    if full is None:
+        full = score(data_dir)
+    matches = load(data_dir, "matches.csv")
+    mids = sorted({int(m["match_id"]) for m in matches
+                   if str(m.get("match_id", "")).strip().isdigit()})
+    md, ml = full.get("match_dates", {}), full.get("match_label", {})
+    owners = sorted({o for o in full["owner"].values() if o})
+
+    times, ranks, totals = [], {o: [] for o in owners}, {o: [] for o in owners}
+    rankings = []   # the ordered owner list after each match
+    for k in mids:
+        r = score(data_dir, upto=k)
+        tot = {o: round(r["owner_totals"].get(o, 0.0), 2) for o in owners}
+        order = sorted(owners, key=lambda o: (-tot[o], o))
+        pos = {o: i + 1 for i, o in enumerate(order)}
+        times.append({"m": k, "date": _fmt_date(md.get(str(k), "")),
+                      "label": ml.get(str(k), str(k))})
+        rankings.append(order)
+        for o in owners:
+            ranks[o].append(pos[o])
+            totals[o].append(tot[o])
+
+    last = len(owners)
+    slot_positions = [p for p in (1, 4, 7, last) if 1 <= p <= last]
+    slots = {}
+    for p in slot_positions:
+        slots[p] = [{"owner": order[p - 1], "pts": round(totals[order[p - 1]][i], 2)}
+                    for i, order in enumerate(rankings)]
+    return {"players": owners, "times": times, "ranks": ranks,
+            "totals": totals, "slots": slots}
+
+
 # --- output ------------------------------------------------------------------
 
 GOAL_LOG_COLS = ["Date", "Match", "Team", "Owner", "Scorer", "Born", "Age", "Min", "Type", "Letters", "Disallowed"]
@@ -690,6 +745,115 @@ def print_standings(result: dict) -> None:
     for i, (o, total) in enumerate(standings, 1):
         print(f"  {i:>2}. {o or '(undrafted)':<18} {total:>7.2f}")
     print()
+
+
+CHART_JS = r"""<script>
+(function(){
+  if (typeof PROG === 'undefined' || !PROG.times || !PROG.times.length) return;
+  var NS = 'http://www.w3.org/2000/svg';
+  var T = PROG.times.length, N = PROG.players.length;
+  function el(tag, attrs, parent){
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function color(i, n){ return 'hsl(' + ((i * 360 / n + 12) % 360).toFixed(0) + ',62%,46%)'; }
+  function ord(n){ var s=['th','st','nd','rd'], v=n%100; return n + (s[(v-20)%10] || s[v] || s[0]); }
+
+  function build(svgId, legendId, cfg){
+    var svg = document.getElementById(svgId); if (!svg) return;
+    var vb = svg.getAttribute('viewBox').split(' ').map(Number), W = vb[2], H = vb[3];
+    var L = 46, Rm = 16, TOPm = 18, BOTm = 44, plotW = W - L - Rm, plotH = H - TOPm - BOTm;
+    function xi(i){ return T <= 1 ? L + plotW / 2 : L + i * plotW / (T - 1); }
+    function yv(v){ var f = (v - cfg.yMin) / ((cfg.yMax - cfg.yMin) || 1);
+                    return cfg.yInvert ? TOPm + f * plotH : TOPm + (1 - f) * plotH; }
+    cfg.yTicks.forEach(function(t){
+      var y = yv(t);
+      el('line', {x1:L, y1:y, x2:W-Rm, y2:y, stroke:'#eef0f3', 'stroke-width':1}, svg);
+      el('text', {x:L-6, y:y+3, 'text-anchor':'end', 'font-size':10, fill:'#888'}, svg)
+        .textContent = cfg.yfmt ? cfg.yfmt(t) : t;
+    });
+    var step = T <= 28 ? 1 : Math.ceil(T / 20);
+    PROG.times.forEach(function(tm, i){
+      if (i % step) return;
+      el('text', {x:xi(i), y:H-BOTm+16, 'text-anchor':'middle', 'font-size':10, fill:'#888'}, svg)
+        .textContent = 'M' + tm.m;
+    });
+    el('text', {x:L+plotW/2, y:H-6, 'text-anchor':'middle', 'font-size':11, fill:'#555'}, svg)
+      .textContent = 'Match number  (hover a point for the game)';
+
+    var sel = new Set(), groups = {};
+    cfg.series.forEach(function(s){
+      var g = el('g', {'data-key':s.key, 'stroke-linejoin':'round'}, svg);
+      groups[s.key] = g;
+      el('polyline', {points: s.ys.map(function(v,i){ return xi(i)+','+yv(v); }).join(' '),
+                      fill:'none', stroke:s.color, 'stroke-width':2, 'stroke-opacity':0.9,
+                      'class':'pl-line'}, g);
+      s.ys.forEach(function(v, i){
+        var c = el('circle', {cx:xi(i), cy:yv(v), r:3, fill:s.color, 'class':'pl-dot'}, g);
+        el('title', {}, c).textContent = cfg.tip(s, i);
+      });
+    });
+    function restyle(){
+      cfg.series.forEach(function(s){
+        var g = groups[s.key], hot = sel.has(s.key), on = sel.size === 0 || hot;
+        g.style.opacity = on ? 1 : 0.09;
+        g.querySelector('.pl-line').setAttribute('stroke-width', hot ? 3.4 : 2);
+        g.querySelectorAll('.pl-dot').forEach(function(d){
+          d.setAttribute('r', hot ? 3.7 : (sel.size ? 2 : 3));
+        });
+        if (hot) svg.appendChild(g);   // bring highlighted lines to the front
+      });
+    }
+    var leg = document.getElementById(legendId); leg.innerHTML = '';
+    cfg.series.forEach(function(s){
+      var b = document.createElement('button');
+      b.className = 'chip'; b.setAttribute('data-key', s.key);
+      b.innerHTML = '<span class="sw" style="background:' + s.color + '"></span>' + s.name;
+      b.addEventListener('click', function(){
+        if (sel.has(s.key)) sel.delete(s.key); else sel.add(s.key);
+        b.classList.toggle('on', sel.has(s.key)); restyle();
+      });
+      leg.appendChild(b);
+    });
+    restyle();
+  }
+
+  // Chart 1 - leaderboard place over time (1 = top). Legend ordered by current place.
+  var players = PROG.players.slice().sort(function(a,b){ return PROG.ranks[a][T-1] - PROG.ranks[b][T-1]; });
+  var rankTicks = []; for (var r = 1; r <= N; r++) rankTicks.push(r);
+  build('rankChart', 'rankLegend', {
+    yMin:1, yMax:N, yInvert:true, yTicks:rankTicks,
+    series: players.map(function(p){
+      return {key:p, name:p, color:color(PROG.players.indexOf(p), N), ys:PROG.ranks[p]};
+    }),
+    tip: function(s, i){ var tm = PROG.times[i];
+      return s.name + ' - after M' + tm.m + ' (' + tm.label + (tm.date ? ', ' + tm.date : '')
+             + '): ' + ord(PROG.ranks[s.name][i]) + ', ' + PROG.totals[s.name][i] + ' pts'; }
+  });
+
+  // Chart 2 - points held by the prize places over time.
+  var keys = Object.keys(PROG.slots).map(Number).sort(function(a,b){ return a-b; });
+  var lastSlot = Math.max.apply(null, keys);
+  var meta = {1:{e:'👑',t:'1st'}, 4:{e:'😈',t:'4th'}, 7:{e:'😇',t:'7th'}};
+  var scol = {1:'#d4a017', 4:'#dc2626', 7:'#16a34a'};
+  var all = []; keys.forEach(function(p){ PROG.slots[p].forEach(function(x){ all.push(x.pts); }); });
+  var lo = Math.floor(Math.min.apply(null, all)), hi = Math.ceil(Math.max.apply(null, all));
+  var pad = Math.max(1, Math.round((hi - lo) * 0.08)); lo -= pad; hi += pad;
+  var sticks = []; for (var i = 0; i <= 5; i++) sticks.push(Math.round((lo + i*(hi-lo)/5) * 10) / 10);
+  build('slotChart', 'slotLegend', {
+    yMin:lo, yMax:hi, yInvert:false, yTicks:sticks,
+    series: keys.map(function(p){
+      var m = meta[p] || {e:'💩', t:ord(p) + (p === lastSlot ? ' (last)' : '')};
+      return {key:'s'+p, name:m.e+' '+m.t, color:scol[p] || '#6b7280', _p:p,
+              ys: PROG.slots[p].map(function(x){ return x.pts; })};
+    }),
+    tip: function(s, i){ var tm = PROG.times[i], x = PROG.slots[s._p][i];
+      return s.name + ' - after M' + tm.m + ': ' + (x.owner || '-') + ' (' + x.pts + ' pts)'; }
+  });
+})();
+</script>"""
 
 
 def write_html(result: dict, out_dir: str) -> None:
@@ -1030,6 +1194,14 @@ def write_html(result: dict, out_dir: str) -> None:
  .catcard table{{margin:.2rem 0 .6rem;font-size:.92rem}}
  .catcard td.det{{text-align:left;white-space:normal;font-size:.82rem;color:#444}}
  table.fx tr.done td{{background:#e6f6ec}} table.fx tr.done td:first-child{{box-shadow:inset 3px 0 #16a34a}}
+ .chart{{width:100%;height:auto;min-width:660px}} .chartwrap{{margin:.4rem 0 1rem}}
+ .clegend{{display:flex;flex-wrap:wrap;gap:.3rem;margin:.6rem 0 0}}
+ .clegend .chip{{display:inline-flex;align-items:center;gap:.35rem;cursor:pointer;border:1px solid #dde1e6;
+   background:#fff;border-radius:14px;padding:.18rem .55rem;font:inherit;font-size:.82rem;color:#333}}
+ .clegend .chip:hover{{background:#eef2ff;border-color:#c7d2fe}}
+ .clegend .chip.on{{background:#2563eb;color:#fff;border-color:#2563eb}}
+ .clegend .chip .sw{{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}}
+ .chart .pl-dot{{cursor:pointer}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
@@ -1037,6 +1209,7 @@ def write_html(result: dict, out_dir: str) -> None:
 
 <nav class="tabs">
 <a href="#tab-leaderboard">🏆 Leaderboard</a>
+<a href="#tab-trends">📈 Trends</a>
 <a href="#tab-players">👥 Player teams</a>
 <a href="#tab-fixtures">📅 Fixtures</a>
 <a href="#tab-stats">📊 Stats</a>
@@ -1052,6 +1225,22 @@ def write_html(result: dict, out_dir: str) -> None:
 </table>
 <p class="legend">👑 1st - wins a sports shirt of their choice (everyone chips in, up to £150) ·
 💩 last - buys seven other players dessert · 😈 pays the £20 dice gift · 😇 receives it.{dice_note}</p>
+</section>
+
+<section class="tab" id="tab-trends">
+<h2>📈 Position over time</h2>
+<p class="sub">Every player's <b>leaderboard place after each match</b> (1st at the top). <b>Click a name</b> in the
+legend to highlight just that player (click more to compare several; click again to release). Hover a point for the
+exact place and points on that matchday.</p>
+<div class="chartwrap"><div class="scroll"><svg id="rankChart" class="chart" viewBox="0 0 900 470" preserveAspectRatio="xMidYMid meet" role="img"></svg></div>
+<div id="rankLegend" class="clegend"></div></div>
+
+<h2 style="margin-top:2.2rem">🎖️ The prize positions over time</h2>
+<p class="sub">The <b>points held by each prize place</b> as the tournament unfolds - 👑 1st (wins the shirt),
+😈 4th &amp; 😇 7th (the £20 dice gift), 💩 last. Hover a point to see <b>who</b> occupied that place after each match.
+Click a label to isolate it.</p>
+<div class="chartwrap"><div class="scroll"><svg id="slotChart" class="chart" viewBox="0 0 900 430" preserveAspectRatio="xMidYMid meet" role="img"></svg></div>
+<div id="slotLegend" class="clegend"></div></div>
 </section>
 
 <section class="tab" id="tab-players">
@@ -1192,7 +1381,12 @@ document.querySelectorAll('table.sortable').forEach(function(tbl){
   show(location.hash ? location.hash.slice(1) : panels[0].id);
 })();
 </script>"""
-    html = html.replace("</body></html>", sort_js + tab_js + "\n</body></html>")
+    import json
+    prog = result.get("progression") or {"players": [], "times": [], "ranks": {},
+                                          "totals": {}, "slots": {}}
+    prog_js = ("<script>const PROG = " + json.dumps(prog, ensure_ascii=False)
+               + ";</script>" + CHART_JS)
+    html = html.replace("</body></html>", sort_js + tab_js + prog_js + "\n</body></html>")
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as fh:
         fh.write(html)
 
@@ -1213,6 +1407,7 @@ def main() -> None:
         return
 
     result = score(args.data)
+    result["progression"] = standings_progression(args.data, result)
     write_outputs(result, args.out)
     write_html(result, args.out)
     # copy the rules PDF alongside the site so it's downloadable from Pages
