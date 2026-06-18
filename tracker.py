@@ -551,7 +551,11 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
          "ranks":   {owner: [rank_after_m1, ...]},    # 1 = top
          "totals":  {owner: [pts_after_m1, ...]},
          "slots":   {pos: [{"owner": o, "pts": p}...]}}  # who/how-many at 1/4/7/last
-    Only matches that actually carry event rows are treated as 'played'."""
+    Only matches that actually carry event rows are treated as 'played'.
+
+    Also returns a per-player LEDGER: every match at which a player's points moved,
+    broken down by the category that moved (in-game, longest name, fastest sub, prime,
+    etc.) - so you can trace every point a player has ever gained or lost and why."""
     if full is None:
         full = score(data_dir)
     matches = load(data_dir, "matches.csv")
@@ -562,6 +566,8 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
 
     times, ranks, totals = [], {o: [] for o in owners}, {o: [] for o in owners}
     rankings = []   # the ordered owner list after each match
+    # per-owner, per-category cumulative total after each match (for the ledger)
+    cat_cum = {o: {c: [] for c in CATEGORY_ORDER} for o in owners}
     for k in mids:
         r = score(data_dir, upto=k)
         tot = {o: round(r["owner_totals"].get(o, 0.0), 2) for o in owners}
@@ -570,9 +576,18 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
         times.append({"m": k, "date": _fmt_date(md.get(str(k), "")),
                       "label": ml.get(str(k), str(k))})
         rankings.append(order)
+        oc = {o: {c: 0.0 for c in CATEGORY_ORDER} for o in owners}
+        for t in r["teams"]:
+            o = r["owner"].get(t, "")
+            if not o:
+                continue
+            for c in CATEGORY_ORDER:
+                oc[o][c] += r["pts"][t].get(c, 0.0)
         for o in owners:
             ranks[o].append(pos[o])
             totals[o].append(tot[o])
+            for c in CATEGORY_ORDER:
+                cat_cum[o][c].append(round(oc[o][c], 4))
 
     last = len(owners)
     slot_positions = [p for p in (1, 4, 7, last) if 1 <= p <= last]
@@ -580,8 +595,32 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
     for p in slot_positions:
         slots[p] = [{"owner": order[p - 1], "pts": round(totals[order[p - 1]][i], 2)}
                     for i, order in enumerate(rankings)]
-    return {"players": owners, "times": times, "ranks": ranks,
-            "totals": totals, "slots": slots}
+
+    # Ledger: for each owner, the matches where their total moved, with the per-category
+    # deltas at that match and the running total. A category delta can come from their own
+    # team playing (in-game) OR a tournament-wide re-rank (e.g. someone else taking the
+    # fastest-sub prize off them) - both are real point movements and both show here.
+    ledger = {}
+    for o in owners:
+        rows = []
+        for i in range(len(mids)):
+            deltas = {}
+            for c in CATEGORY_ORDER:
+                prev = cat_cum[o][c][i - 1] if i > 0 else 0.0
+                d = round(cat_cum[o][c][i] - prev, 2)
+                if d:
+                    deltas[c] = d
+            if not deltas:
+                continue
+            prev_tot = totals[o][i - 1] if i > 0 else 0.0
+            rows.append({"m": times[i]["m"], "date": times[i]["date"], "label": times[i]["label"],
+                         "deltas": deltas, "dtotal": round(totals[o][i] - prev_tot, 2),
+                         "total": totals[o][i]})
+        ledger[o] = rows
+
+    return {"players": owners, "times": times, "ranks": ranks, "totals": totals,
+            "slots": slots, "ledger": ledger,
+            "catLabels": {c: CAT_LABELS.get(c, c) for c in CATEGORY_ORDER}}
 
 
 # --- output ------------------------------------------------------------------
@@ -885,6 +924,46 @@ CHART_JS = r"""<script>
         }
       }
     });
+  })();
+
+  // Tab - per-player point-by-point ledger: every match where a player's points moved,
+  // broken down by the category that moved and with the running total.
+  (function ledgerTab(){
+    var pick = document.getElementById('ledgerPick'),
+        out = document.getElementById('ledgerOut'),
+        head = document.getElementById('ledgerHead');
+    if (!pick || !out || !PROG.ledger) return;
+    var order = PROG.players.slice().sort(function(a,b){ return PROG.ranks[a][T-1] - PROG.ranks[b][T-1]; });
+    order.forEach(function(o){
+      var op = document.createElement('option');
+      op.value = o;
+      op.textContent = ord(PROG.ranks[o][T-1]) + '   ' + o + '   (' + PROG.totals[o][T-1] + ' pts)';
+      pick.appendChild(op);
+    });
+    function esc(s){ return String(s).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+    function fmt(n){ return (n > 0 ? '+' : '') + (Math.round(n*100)/100); }
+    function render(o){
+      var rows = PROG.ledger[o] || [];
+      head.textContent = rows.length + ' point-movements · currently ' + ord(PROG.ranks[o][T-1]) +
+                         ' on ' + PROG.totals[o][T-1] + ' pts';
+      var h = '<table class="tt ledger"><tr><th>Match</th><th>What moved</th><th>&Delta;</th><th>Total</th></tr>';
+      if (!rows.length) h += '<tr><td colspan="4">no points yet</td></tr>';
+      rows.forEach(function(rw){
+        var cats = Object.keys(rw.deltas).sort(function(a,b){ return Math.abs(rw.deltas[b]) - Math.abs(rw.deltas[a]); });
+        var chips = cats.map(function(c){
+          var d = rw.deltas[c];
+          return '<span class="dchip ' + (d>0?'pos':'neg') + '">' + esc(PROG.catLabels[c]||c) + ' ' + fmt(d) + '</span>';
+        }).join(' ');
+        var dc = rw.dtotal > 0 ? 'pos' : (rw.dtotal < 0 ? 'neg' : '');
+        h += '<tr><td>M' + rw.m + ' · ' + esc(rw.date) + '<br><span class="r">' + esc(rw.label) + '</span></td>' +
+             '<td class="det">' + chips + '</td>' +
+             '<td class="' + dc + '">' + fmt(rw.dtotal) + '</td>' +
+             '<td><b>' + rw.total + '</b></td></tr>';
+      });
+      out.innerHTML = h + '</table>';
+    }
+    pick.addEventListener('change', function(){ render(pick.value); });
+    render(order[0]);
   })();
 })();
 </script>"""
@@ -1238,6 +1317,12 @@ def write_html(result: dict, out_dir: str) -> None:
  .chart .pl-dot{{cursor:pointer}}
  .chart .lane-seg{{cursor:pointer}} .chart .lane-lab{{pointer-events:none;font-weight:600}}
  .chart .lane-seg:hover rect{{fill-opacity:.38}}
+ select{{font:inherit;padding:.2rem .4rem;border:1px solid #dde1e6;border-radius:6px}}
+ .dchip{{display:inline-block;border-radius:10px;padding:.05rem .42rem;font-size:.82rem;margin:.06rem .12rem .06rem 0;white-space:nowrap}}
+ .dchip.pos{{background:#e6f6ec;color:#137a37}} .dchip.neg{{background:#fde8e8;color:#b42318}}
+ table.ledger td.det{{text-align:left;white-space:normal;line-height:1.85}}
+ table.ledger td:nth-child(3),table.ledger th:nth-child(3){{text-align:right}}
+ table.ledger td.pos{{color:#137a37;font-weight:700}} table.ledger td.neg{{color:#b42318;font-weight:700}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
@@ -1246,6 +1331,7 @@ def write_html(result: dict, out_dir: str) -> None:
 <nav class="tabs">
 <a href="#tab-leaderboard">🏆 Leaderboard</a>
 <a href="#tab-trends">📈 Trends</a>
+<a href="#tab-ledger">📒 Point log</a>
 <a href="#tab-players">👥 Player teams</a>
 <a href="#tab-fixtures">📅 Fixtures</a>
 <a href="#tab-stats">📊 Stats</a>
@@ -1276,6 +1362,17 @@ exact place and points on that matchday.</p>
 💩 last - showing <b>which player held it after every match</b>. A new coloured block starts whenever the place
 changes hands (colours match the rank chart above). Hover a block for the player, their run of matches and points.</p>
 <div class="chartwrap"><div class="scroll"><svg id="slotChart" class="chart" viewBox="0 0 900 270" preserveAspectRatio="xMidYMid meet" role="img"></svg></div></div>
+</section>
+
+<section class="tab" id="tab-ledger">
+<h2>📒 Point-by-point log</h2>
+<p class="sub">Pick a player to see <b>every point they've ever gained or lost</b>, match by match, and exactly which
+category moved - in-game goals/bonuses, prime, longest/shortest name, fastest sub, youngest/oldest scorer, fewest
+goals/cards, progression, early-exit. A change can come from <b>their own team playing</b> or from a
+<b>tournament-wide re-rank</b> (e.g. someone else taking the fastest-sub prize off them) - both are real movements
+and both show here.</p>
+<p class="sub"><label>Player: <select id="ledgerPick"></select></label> &nbsp;<span id="ledgerHead" class="r"></span></p>
+<div id="ledgerOut" class="scroll"></div>
 </section>
 
 <section class="tab" id="tab-players">
