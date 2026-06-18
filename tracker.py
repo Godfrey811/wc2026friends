@@ -296,7 +296,7 @@ def score(data_dir: str, upto: int | None = None) -> dict:
             # own goal by the opponent counts +0.5 for this team (part of in-game, so it flips too)
             og_for = 0.5 * sum(1 for o in own_goals_by_match.get(mid, []) if o["team"] == opp)
             # an own goal in our favour in injury time (90+X) is a late goal FOR us, so it
-            # counts toward the 90:00 flip just like one of our own injury-time goals.
+            # counts toward the 90+X full-time injury-time flip just like one of our own injury-time goals.
             ninety += sum(1 for o in own_goals_by_match.get(mid, [])
                           if o["team"] == opp and (o.get("minute") or "").replace(" ", "").startswith("90+"))
             # clean sheet against = -1 only if the team put NO goal on the board. An own
@@ -675,11 +675,11 @@ CAT_SHORT = {
 CAT_DESC = {
     "in_game": "In-game points: goals (open +0.5, pen -1.5, shootout -0.5, free-kick 0), VAR -1, "
                "a goal/concede in the 23rd or 67th min +4, 0 shots on target +4, no goals scored in a game -1, "
-               "red-card dice - then the injury-time multiply (a 90+X goal = x -1) and opponent free-kick doubling (x2) are applied (both together = x -2).",
+               "red-card dice - then the full-time injury-time multiply (only a 90+X goal - the added time at the end of the 90, not a plain 90 and not extra time - = x -1) and opponent free-kick doubling (x2) are applied (both together = x -2).",
     "prime": "-3 while the team is on a PRIME number of (non-shootout) goals.",
     "progression": "Points for the round a team is knocked out in: R32 +1, R16 +2, QF +3, SF +5, "
                    "runner-up +8, winner +10; the 3rd-place playoff winner is -5 overall "
-                   "(multiplied by -1 if an injury-time 90+X goal loses their elimination game).",
+                   "(multiplied by -1 if a full-time injury-time 90+X goal loses their elimination game).",
     "early_exit": "Owner-level: players ranked by when their LAST team is knocked out - "
                   "earliest all-out scores most (1st 5, 2nd 4, 3rd/4th 3, 5th/6th 2, 7th/8th 1, "
                   "rest 0). Players out at the same stage tie and split the summed points for the "
@@ -1005,7 +1005,7 @@ def write_html(result: dict, out_dir: str) -> None:
                           'add rows to data/fixtures.csv</td></tr>')
 
     # Full team x category grid. In-game is SPLIT into its components (so you can see
-    # goal/FK/red-card/23'-67'/90:00+ points separately) instead of one lumped column.
+    # goal/FK/red-card/23'-67'/90+X points separately) instead of one lumped column.
     # Each column: (short header, full title, tooltip, value-fn). Columns sum to Total.
     _ingame_pts = ("goal_open", "goal_pen", "goal_shootout", "var",
                    "bonus_2367", "bonus_0sot", "clean_sheet", "red_dice", "og_for")
@@ -1013,17 +1013,17 @@ def write_html(result: dict, out_dir: str) -> None:
                  "var": "VAR", "bonus_2367": "23'/67'", "bonus_0sot": "0-SOT",
                  "clean_sheet": "No goals scored", "red_dice": "Red dice", "og_for": "OG for"}
 
-    def _effect(t):   # 90:00+ x-1 and opponent free-kick doubling: final in-game minus raw parts
+    def _effect(t):   # 90+X full-time injury-time x-1 and opponent free-kick doubling: final in-game minus raw parts
         raw = sum(detail[t].get(k, 0) for k in _ingame_pts)
         return round(pts[t].get("in_game", 0.0) - raw, 2)
 
     grid_cols = []   # (short, full, desc, num_fn, key) where num_fn(team) -> number
     for k in _ingame_pts:
         grid_cols.append((_gd_short[k], DETAIL_LABELS[k],
-                          "In-game component (raw, before the 90:00+ / free-kick multipliers).",
+                          "In-game component (raw, before the 90+X injury-time / free-kick multipliers).",
                           lambda t, k=k: detail[t].get(k, 0), k))
-    grid_cols.append(("90'+/FK x", "90:00+ & free-kick multiplier",
-                      "Effect of the 90:00+ x-1 flip and opponent free-kick doubling on this game's in-game total.",
+    grid_cols.append(("90+X/FK x", "Full-time injury-time (90+X) & free-kick multiplier",
+                      "Effect of the full-time injury-time (90+X only - not a plain 90, not extra time) x-1 flip and opponent free-kick doubling on this game's in-game total.",
                       _effect, "effect"))
     for c in CATEGORY_ORDER:
         if c == "in_game":
@@ -1118,7 +1118,7 @@ def write_html(result: dict, out_dir: str) -> None:
                   "fewest_cards": lambda t: f"{ctot.get(t, 0):g} cards ({abbr(t)})"}
 
     # These in-game components show a per-team contribution breakdown (amount + team)
-    # so you can see which teams gave each player their open-goal/pen/no-goals/OG/90:00 points.
+    # so you can see which teams gave each player their open-goal/pen/no-goals/OG/90+X points.
     TEAM_BREAKDOWN_KEYS = {"goal_open", "goal_pen", "clean_sheet", "og_for", "effect"}
 
     # By-category tab: one mini by-player leaderboard per category (with the why).
@@ -1298,7 +1298,7 @@ are eliminated - nobody scores here until teams actually start going out.</p>
 <section class="tab" id="tab-breakdown">
 <h2>Full breakdown - by team</h2>
 <p class="sub">In-game points are split into their parts - <b>Goals · Pens · S.O. pens · VAR · 23'/67' · 0-SOT · No goals scored · Red dice</b>,
-plus a <b>90'+/FK x</b> column for the 90:00+ flip and free-kick doubling - then the ranked prizes and bonuses. Every column adds up to <b>Total</b>.</p>
+plus a <b>90+X/FK x</b> column for the full-time injury-time (90+X) flip and free-kick doubling - then the ranked prizes and bonuses. Every column adds up to <b>Total</b>.</p>
 <div class="scroll wide"><table class="num grid sortable"><tr>{grid_head}</tr>
 {grid_rows}
 </table></div>

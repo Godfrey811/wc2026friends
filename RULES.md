@@ -18,15 +18,15 @@ Everyone drafts teams from three odds-tiered pots. Your teams earn (and lose) po
 
 > _A free-kick goal still counts toward your team's total-goals tally (so it can still trigger the prime -3 and the fewest-goals award) — it just earns you nothing directly._
 
-## The 90'+ rule
+## The full-time injury-time (90+X) rule
 
-- A goal from 90:00 onwards - the 90th minute and ALL of its injury/stoppage time (recorded as 90 or 90+X) - multiplies that team's IN-GAME points for that game by -1 - i.e. the goals, the 23'/67' bonus, the 0-shots-on-target bonus, the clean-sheet, and the red-card dice from that game.
-- 90:00 ONWARDS, INJURY TIME ONLY - this is NOT extra time. A goal in extra time (91-120, e.g. 105 or 120) does NOT count for this rule.
+- Only a goal scored in FULL-TIME INJURY TIME - the added/stoppage time at the end of the 90 (recorded as 90+X, e.g. 90+2 or 90+9) - multiplies that team's IN-GAME points for that game by -1 - i.e. the goals, the 23'/67' bonus, the 0-shots-on-target bonus, the clean-sheet, and the red-card dice from that game.
+- FULL-TIME INJURY TIME ONLY (90+X). A goal on the 90th minute itself (a plain '90', before stoppage) does NOT count - it has to be 90+X. And this is NOT extra time: a goal in extra time (91-120, e.g. 105 or 120) does NOT count for this rule.
 - It hits ONLY that game's in-game total. It does NOT touch the tournament-long ranked prizes (quickest goal, quickest yellow, fastest sub, fastest own goal, youngest/oldest scorer, longest/shortest name, fewest goals, fewest cards) or the prime-goals penalty - this multiply never touches those.
-- Each one MULTIPLIES the game's in-game total by -1, so they STACK: an ODD number of 90:00+ goals leaves it negative, an EVEN number cancels back to positive. 1 or 3 such goals = negative; 2 or 4 = unchanged. Worked example: say a team's in-game total for the match is +6. One 90:00+ goal multiplies it to -6; a second multiplies it back to +6; a THIRD makes it -6 again.
+- Each one MULTIPLIES the game's in-game total by -1, so they STACK: an ODD number of 90+X goals leaves it negative, an EVEN number cancels back to positive. 1 or 3 such goals = negative; 2 or 4 = unchanged. Worked example: say a team's in-game total for the match is +6. One 90+X goal multiplies it to -6; a second multiplies it back to +6; a THIRD makes it -6 again.
 - This multiply (x -1) applies in ANY game (win or lose), and it covers EVERY in-game point including the RED-CARD DICE from that game - nothing in-game is exempt.
-- Multipliers on the same game COMBINE. A free-kick goal doubles the opponent's in-game total (x2), so a team hit by BOTH an opponent free-kick AND a 90:00+ goal ends up at x -2 for that game (x2 then x -1).
-- Progression points are only multiplied by -1 in your ELIMINATION game. Winning teams bank no progression at that moment, so a champion's Winner points are always safe - but a runner-up who scores a 90:00+ goal in the final they lose has their +8 multiplied to -8.
+- Multipliers on the same game COMBINE. A free-kick goal doubles the opponent's in-game total (x2), so a team hit by BOTH an opponent free-kick AND a 90+X full-time injury-time goal ends up at x -2 for that game (x2 then x -1).
+- Progression points are only multiplied by -1 in your ELIMINATION game. Winning teams bank no progression at that moment, so a champion's Winner points are always safe - but a runner-up who scores a 90+X full-time injury-time goal in the final they lose has their +8 multiplied to -8.
 
 ## Red card — roll the dice
 
