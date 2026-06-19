@@ -1466,6 +1466,23 @@ def write_html(result: dict, out_dir: str) -> None:
     _emit("open", "🥅 Open-play goals", "Open-play goals — +0.5 each.",
           [_row(g, f"{g.get('scorer') or '?'} {g.get('minute','')}'", "+0.5")
            for g in sorted((g for g in _g if _good(g) and (g.get('type') or 'open') == 'open'), key=_evkey)])
+    # substitutions (who came OFF) — earliest first; a team's earliest feeds the fastest-sub prize
+    _sub_min = {}
+    for s in _s:
+        m = parse_minute(s.get("minute", ""))
+        if m is not None and (s["team"] not in _sub_min or m < _sub_min[s["team"]]):
+            _sub_min[s["team"]] = m
+    def _subkey(s):
+        return (parse_minute(s.get("minute", "")) if parse_minute(s.get("minute", "")) is not None else 999,
+                _evkey(s)[0])
+    def _subpts(s):
+        m = parse_minute(s.get("minute", ""))
+        return "⏱️ team's earliest — feeds fastest-sub +10/8/5/3/2/1" if (m is not None and m == _sub_min.get(s["team"])) else ""
+    _emit("subs", "🔁 Substitutions (who came off)",
+          "Every substitution, earliest first. A team's EARLIEST sub feeds the fastest-substitution prize "
+          "(10/8/5/3/2/1). Shows who was subbed OFF.",
+          [_row(s, f"{s.get('off') or '?'} off {s.get('minute','')}'", _subpts(s))
+           for s in sorted(_s, key=_subkey)])
     EVENTS = [e for e in EVENTS if e["rows"]]
 
     # Fixtures: who plays whom on which day (display only; owners annotated).
