@@ -767,10 +767,13 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
                     s = "(lost the prize - no longer in the top 6)"
                 if s:
                     why[c] = s
+            few_after = round(cat_cum[o]["fewest_goals"][i] + cat_cum[o]["fewest_cards"][i], 2)
+            few_before = round(cat_cum[o]["fewest_goals"][i - 1] + cat_cum[o]["fewest_cards"][i - 1], 2) if i > 0 else 0.0
             rows.append({"m": times[i]["m"], "date": times[i]["date"], "label": times[i]["label"],
                          "deltas": deltas, "details": why, "dtotal": round(totals[o][i] - prev_tot, 2),
                          "total": totals[o][i], "rfrom": rfrom, "rto": rto,
-                         "by": [p for _, p in by], "over": [p for _, p in over]})
+                         "by": [p for _, p in by], "over": [p for _, p in over],
+                         "fewBefore": few_before, "fewAfter": few_after})
         ledger[o] = rows
 
     return {"players": owners, "times": times, "ranks": ranks, "totals": totals,
@@ -1110,21 +1113,41 @@ CHART_JS = r"""<script>
         return '<span class="' + (up ? 'pos' : 'neg') + '">' + ord(rw.rfrom) + ' &rarr; ' + ord(rw.rto) +
                ' ' + (up ? '▲' : '▼') + '</span>' + who;
       }
-      var h = '<table class="tt ledger"><tr><th>Match</th><th>What moved</th><th>&Delta;</th><th>Total</th><th>Position</th></tr>';
-      if (!rows.length) h += '<tr><td colspan="5">no points yet</td></tr>';
+      // Fewest goals/cards nudge nearly every match, so they get their own column instead
+      // of cluttering 'What moved'.
+      var FEW = {fewest_goals:1, fewest_cards:1};
+      var h = '<table class="tt ledger"><tr><th>Match</th><th>What moved</th>' +
+              '<th class="num-cell" title="Fewest-goals + fewest-cards shared awards - these shift a little almost every match">Fewest G/C</th>' +
+              '<th class="num-cell">&Delta;</th><th class="num-cell">Total</th><th class="pos-cell">Position</th></tr>';
+      if (!rows.length) h += '<tr><td colspan="6">no points yet</td></tr>';
       rows.forEach(function(rw){
-        var cats = Object.keys(rw.deltas).sort(function(a,b){ return Math.abs(rw.deltas[b]) - Math.abs(rw.deltas[a]); });
+        var cats = Object.keys(rw.deltas).filter(function(c){ return !FEW[c]; })
+                     .sort(function(a,b){ return Math.abs(rw.deltas[b]) - Math.abs(rw.deltas[a]); });
         var chips = cats.map(function(c){
           var d = rw.deltas[c], why = (rw.details && rw.details[c]) || '';
           var tip = esc((PROG.catLabels[c]||c) + (why ? ' — ' + why : ''));
           return '<span class="dchip ' + (d>0?'pos':'neg') + (why?' has-why':'') + '" title="' + tip + '">' +
                  esc(PROG.catLabels[c]||c) + ' ' + fmt(d) + '</span>';
-        }).join(' ') || '<span class="r">position change only</span>';
+        }).join(' ') || '<span class="r">—</span>';
+        var few = (rw.deltas.fewest_goals||0) + (rw.deltas.fewest_cards||0);
+        var fp = [];
+        ['fewest_goals','fewest_cards'].forEach(function(c){
+          if (rw.deltas[c] !== undefined){
+            var w = (rw.details && rw.details[c]) ? (' — ' + rw.details[c]) : '';
+            fp.push((PROG.catLabels[c]||c) + ' ' + fmt(rw.deltas[c]) + w);
+          }
+        });
+        var fcls = few > 0.0049 ? 'pos' : (few < -0.0049 ? 'neg' : '');
+        var ba = '<br><span class="r">' + rw.fewBefore + '&rarr;' + rw.fewAfter + '</span>';
+        var fewCell = few ? ('<span class="' + fcls + (fp.length?' has-why':'') + '"' +
+                             (fp.length ? ' title="' + esc(fp.join(' · ')) + '"' : '') + '>' + fmt(few) + '</span>' + ba)
+                          : '<span class="r">' + rw.fewAfter + '</span>';
         var dc = rw.dtotal > 0 ? 'pos' : (rw.dtotal < 0 ? 'neg' : '');
         h += '<tr><td>M' + rw.m + ' · ' + esc(rw.date) + '<br><span class="r">' + esc(rw.label) + '</span></td>' +
              '<td class="det">' + chips + '</td>' +
-             '<td class="' + dc + '">' + fmt(rw.dtotal) + '</td>' +
-             '<td><b>' + rw.total + '</b></td>' +
+             '<td class="num-cell">' + fewCell + '</td>' +
+             '<td class="num-cell ' + dc + '">' + fmt(rw.dtotal) + '</td>' +
+             '<td class="num-cell"><b>' + rw.total + '</b></td>' +
              '<td class="pos-cell">' + posCell(rw) + '</td></tr>';
       });
       out.innerHTML = h + '</table>';
@@ -1435,11 +1458,10 @@ def write_html(result: dict, out_dir: str) -> None:
  .dchip.pos{{background:#e6f6ec;color:#137a37}} .dchip.neg{{background:#fde8e8;color:#b42318}}
  .dchip.has-why{{cursor:help;text-decoration:underline dotted rgba(0,0,0,.35);text-underline-offset:2px}}
  table.ledger td.det{{text-align:left;white-space:normal;line-height:1.85}}
- table.ledger td:nth-child(3),table.ledger th:nth-child(3),
- table.ledger td:nth-child(4),table.ledger th:nth-child(4){{text-align:right;white-space:nowrap}}
- table.ledger td.pos-cell,table.ledger th:nth-child(5){{text-align:left;white-space:normal}}
- table.ledger td.pos,table.ledger .pos{{color:#137a37;font-weight:700}}
- table.ledger td.neg,table.ledger .neg{{color:#b42318;font-weight:700}}
+ table.ledger td.num-cell,table.ledger th.num-cell{{text-align:right;white-space:nowrap;vertical-align:top}}
+ table.ledger td.pos-cell,table.ledger th.pos-cell{{text-align:left;white-space:normal}}
+ table.ledger .pos{{color:#137a37;font-weight:700}} table.ledger .neg{{color:#b42318;font-weight:700}}
+ .has-why{{cursor:help;text-decoration:underline dotted rgba(0,0,0,.35);text-underline-offset:2px}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
