@@ -634,6 +634,14 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
     cat_cum = {o: {c: [] for c in CATEGORY_ORDER} for o in owners}
     details_at = {o: [] for o in owners}
     mteams_all = full.get("match_teams", {})
+    # for the in-game composition tooltip: track each team's cumulative in-game parts so
+    # we can show what a match's in-game delta is made of (goals/pens/bonuses + the multiplier).
+    prev_det, prev_ig = {}, {}
+    IGCOMPS = ("goal_open", "goal_pen", "goal_shootout", "var", "bonus_2367",
+               "bonus_0sot", "clean_sheet", "red_dice", "og_for")
+    IGLAB = {"goal_open": "Open goals", "goal_pen": "Pens", "goal_shootout": "Shootout pens",
+             "var": "VAR ruled out", "bonus_2367": "23'/67' bonus", "bonus_0sot": "0-SOT bonus",
+             "clean_sheet": "No goals scored", "red_dice": "Red-card dice", "og_for": "OG in favour"}
     for k in mids:
         r = score(data_dir, upto=k)
         tot = {o: round(r["owner_totals"].get(o, 0.0), 2) for o in owners}
@@ -655,11 +663,27 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
         mk = str(k)
         mteams = mteams_all.get(mk) or mteams_all.get(k) or ()
 
+        # match-k in-game composition per team: delta of each raw part + the multiplier effect
+        comp_k = {}
+        for t in r["teams"]:
+            cur = {c: round(r["detail"][t].get(c, 0.0), 4) for c in IGCOMPS}
+            cig = round(r["pts"][t].get("in_game", 0.0), 4)
+            pv = prev_det.get(t, {})
+            dcomp = {c: round(cur[c] - pv.get(c, 0.0), 2) for c in IGCOMPS}
+            d_ig = round(cig - prev_ig.get(t, 0.0), 2)
+            d_eff = round(d_ig - sum(dcomp.values()), 2)   # 90+X flip / free-kick doubling effect
+            comp_k[t] = (dcomp, d_eff, d_ig)
+            prev_det[t], prev_ig[t] = cur, cig
+
         def ingame_detail(o):
             parts = []
             for t in mteams:
                 if r["owner"].get(t, "") != o:
                     continue
+                dcomp, d_eff, d_ig = comp_k.get(t, ({}, 0.0, 0.0))
+                bits = [f"{IGLAB[c]} {dcomp[c]:+g}" for c in IGCOMPS if dcomp.get(c)]
+                if d_eff:
+                    bits.append(f"90+X/free-kick x {d_eff:+g}")
                 ev = []
                 for g in r["raw"]["goals"]:
                     if g["match_id"] != mk or g["team"] != t:
@@ -669,10 +693,12 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
                            {"penalty": " pen", "freekick": " FK", "shootout": " SO"}.get(ty, ""))
                     ev.append(f"{g.get('scorer', '?')} {g.get('minute', '')}'{tag}")
                 for og in r["raw"]["own_goals"]:        # opponent OG counted for this team
-                    if og["match_id"] == mk and og["team"] != t and t in mteams:
+                    if og["match_id"] == mk and og["team"] != t:
                         ev.append(f"OG {og.get('player', '?')} {og.get('minute', '')}'")
-                parts.append(f"{abbr(t)}: " + (", ".join(ev) if ev else "no goals (bonus/clean-sheet effect)"))
-            return "; ".join(parts)
+                head = f"{abbr(t)} {d_ig:+g}"
+                body = "; ".join(bits) if bits else "no in-game points"
+                parts.append(f"{head} = {body}" + (("  [" + ", ".join(ev) + "]") if ev else ""))
+            return " | ".join(parts)
 
         for o in owners:
             ranks[o].append(pos[o])
@@ -711,8 +737,25 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
                 d = round(cat_cum[o][c][i] - prev, 2)
                 if d:
                     deltas[c] = d
-            if not deltas:
+            rfrom = ranks[o][i - 1] if i > 0 else None
+            rto = ranks[o][i]
+            rank_moved = rfrom is not None and rfrom != rto
+            if not deltas and not rank_moved:
                 continue
+            # who swapped places with o this match: 'by' = those who overtook o (were
+            # below, now above); 'over' = those o overtook (were above, now below).
+            by, over = [], []
+            if i > 0:
+                of_, ot_ = ranks[o][i - 1], ranks[o][i]
+                for p in owners:
+                    if p == o:
+                        continue
+                    pf, pt = ranks[p][i - 1], ranks[p][i]
+                    if pf > of_ and pt < ot_:
+                        by.append((pt, p))
+                    elif pf < of_ and pt > ot_:
+                        over.append((pt, p))
+                by.sort(); over.sort()
             prev_tot = totals[o][i - 1] if i > 0 else 0.0
             det = details_at[o][i]
             # who's responsible per moved category (own detail now; "(lost the prize)"
@@ -726,7 +769,8 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
                     why[c] = s
             rows.append({"m": times[i]["m"], "date": times[i]["date"], "label": times[i]["label"],
                          "deltas": deltas, "details": why, "dtotal": round(totals[o][i] - prev_tot, 2),
-                         "total": totals[o][i]})
+                         "total": totals[o][i], "rfrom": rfrom, "rto": rto,
+                         "by": [p for _, p in by], "over": [p for _, p in over]})
         ledger[o] = rows
 
     return {"players": owners, "times": times, "ranks": ranks, "totals": totals,
@@ -1055,10 +1099,19 @@ CHART_JS = r"""<script>
     function fmt(n){ return (n > 0 ? '+' : '') + (Math.round(n*100)/100); }
     function render(o){
       var rows = PROG.ledger[o] || [];
-      head.textContent = rows.length + ' point-movements · currently ' + ord(PROG.ranks[o][T-1]) +
-                         ' on ' + PROG.totals[o][T-1] + ' pts';
-      var h = '<table class="tt ledger"><tr><th>Match</th><th>What moved</th><th>&Delta;</th><th>Total</th></tr>';
-      if (!rows.length) h += '<tr><td colspan="4">no points yet</td></tr>';
+      head.textContent = rows.length + ' changes (points and/or position) · currently ' +
+                         ord(PROG.ranks[o][T-1]) + ' on ' + PROG.totals[o][T-1] + ' pts';
+      function posCell(rw){
+        if (rw.rfrom == null) return '<span class="r">' + ord(rw.rto) + ' (start)</span>';
+        if (rw.rto === rw.rfrom) return '<span class="r">' + ord(rw.rto) + ' =</span>';
+        var up = rw.rto < rw.rfrom, names = up ? rw.over : rw.by;
+        var who = (names && names.length)
+          ? '<br><span class="r">' + (up ? 'overtook ' : 'overtaken by ') + names.map(esc).join(', ') + '</span>' : '';
+        return '<span class="' + (up ? 'pos' : 'neg') + '">' + ord(rw.rfrom) + ' &rarr; ' + ord(rw.rto) +
+               ' ' + (up ? '▲' : '▼') + '</span>' + who;
+      }
+      var h = '<table class="tt ledger"><tr><th>Match</th><th>What moved</th><th>&Delta;</th><th>Total</th><th>Position</th></tr>';
+      if (!rows.length) h += '<tr><td colspan="5">no points yet</td></tr>';
       rows.forEach(function(rw){
         var cats = Object.keys(rw.deltas).sort(function(a,b){ return Math.abs(rw.deltas[b]) - Math.abs(rw.deltas[a]); });
         var chips = cats.map(function(c){
@@ -1066,12 +1119,13 @@ CHART_JS = r"""<script>
           var tip = esc((PROG.catLabels[c]||c) + (why ? ' — ' + why : ''));
           return '<span class="dchip ' + (d>0?'pos':'neg') + (why?' has-why':'') + '" title="' + tip + '">' +
                  esc(PROG.catLabels[c]||c) + ' ' + fmt(d) + '</span>';
-        }).join(' ');
+        }).join(' ') || '<span class="r">position change only</span>';
         var dc = rw.dtotal > 0 ? 'pos' : (rw.dtotal < 0 ? 'neg' : '');
         h += '<tr><td>M' + rw.m + ' · ' + esc(rw.date) + '<br><span class="r">' + esc(rw.label) + '</span></td>' +
              '<td class="det">' + chips + '</td>' +
              '<td class="' + dc + '">' + fmt(rw.dtotal) + '</td>' +
-             '<td><b>' + rw.total + '</b></td></tr>';
+             '<td><b>' + rw.total + '</b></td>' +
+             '<td class="pos-cell">' + posCell(rw) + '</td></tr>';
       });
       out.innerHTML = h + '</table>';
     }
@@ -1381,8 +1435,11 @@ def write_html(result: dict, out_dir: str) -> None:
  .dchip.pos{{background:#e6f6ec;color:#137a37}} .dchip.neg{{background:#fde8e8;color:#b42318}}
  .dchip.has-why{{cursor:help;text-decoration:underline dotted rgba(0,0,0,.35);text-underline-offset:2px}}
  table.ledger td.det{{text-align:left;white-space:normal;line-height:1.85}}
- table.ledger td:nth-child(3),table.ledger th:nth-child(3){{text-align:right}}
- table.ledger td.pos{{color:#137a37;font-weight:700}} table.ledger td.neg{{color:#b42318;font-weight:700}}
+ table.ledger td:nth-child(3),table.ledger th:nth-child(3),
+ table.ledger td:nth-child(4),table.ledger th:nth-child(4){{text-align:right;white-space:nowrap}}
+ table.ledger td.pos-cell,table.ledger th:nth-child(5){{text-align:left;white-space:normal}}
+ table.ledger td.pos,table.ledger .pos{{color:#137a37;font-weight:700}}
+ table.ledger td.neg,table.ledger .neg{{color:#b42318;font-weight:700}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
@@ -1430,7 +1487,9 @@ changes hands (colours match the rank chart above). Hover a block for the player
 category moved - in-game goals/bonuses, prime, longest/shortest name, fastest sub, youngest/oldest scorer, fewest
 goals/cards, progression, early-exit. A change can come from <b>their own team playing</b> or from a
 <b>tournament-wide re-rank</b> (e.g. someone else taking the fastest-sub prize off them) - both are real movements
-and both show here.</p>
+and both show here. <b>Hover a chip</b> to see who's responsible (the scorer/sub/card behind it - and for in-game points,
+what they're made of). The <b>Position</b> column shows the leaderboard place that match (from &rarr; to) and who
+overtook them or who they overtook.</p>
 <p class="sub"><label>Player: <select id="ledgerPick"></select></label> &nbsp;<span id="ledgerHead" class="r"></span></p>
 <div id="ledgerOut" class="scroll"></div>
 </section>
