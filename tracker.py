@@ -543,6 +543,69 @@ def score(data_dir: str, upto: int | None = None) -> dict:
     }
 
 
+def cat_detail_fns(result: dict) -> dict:
+    """Per-category 'who earned it' extractors: {category: fn(team) -> str}.
+    Returns the qualifying scorer / sub / card detail a team holds in each ranked or
+    own category, e.g. oldest_scorer -> '37y 59d - Marko Arnautović (AUT)'. Shared by
+    the By-category tab and the per-match replay so the ledger can name who's responsible."""
+    _raw = result.get("raw", {})
+    rgoals, rcards, rsubs, rog = (_raw.get("goals", []), _raw.get("cards", []),
+                                  _raw.get("subs", []), _raw.get("own_goals", []))
+    gfor, ctot = result.get("goals_for", {}), result.get("cards_total", {})
+
+    def _tg(t):   # a team's countable goals (open/pen/freekick, not disallowed/shootout)
+        return [g for g in rgoals if g["team"] == t
+                and not truthy(g.get("disallowed", "")) and g.get("type") != "shootout"]
+
+    def _minrow(rows, key):
+        rows = [(parse_minute(r.get(key, "")), r) for r in rows]
+        rows = [(m, r) for m, r in rows if m is not None]
+        return min(rows, key=lambda mr: mr[0])[1] if rows else None
+
+    def d_qgoal(t):
+        r = _minrow(_tg(t), "minute"); return f"{r['minute']}' - {r['scorer']} ({abbr(t)})" if r else ""
+    def d_qyel(t):
+        r = _minrow([c for c in rcards if c["team"] == t and c.get("color") == "yellow"], "minute")
+        return f"{r['minute']}' - {r.get('player') or '?'} ({abbr(t)})" if r else ""
+    def d_fsub(t):
+        r = _minrow([s for s in rsubs if s["team"] == t], "minute")
+        return (f"{r['minute']}' {r.get('on','')}{(' for ' + r.get('off','')) if r.get('off') else ''} ({abbr(t)})"
+                if r else "")
+    def d_fog(t):
+        r = _minrow([o for o in rog if o["team"] == t], "minute")
+        return f"{r['minute']}' - {r.get('player') or '?'} ({abbr(t)})" if r else ""
+
+    def _name_age_pool(t):
+        pool = list(_tg(t))
+        for o in rog:
+            if o["team"] == t and (o.get("player") or "").strip():
+                pool.append({"scorer": o["player"], "scorer_age": o.get("scorer_age", "")})
+        return pool
+    def _age_pick(t, oldest):
+        gs = [g for g in _name_age_pool(t) if (g.get("scorer_age") or "").strip()]
+        if not gs:
+            return ""
+        g = (max if oldest else min)(gs, key=lambda g: _age_days(g["scorer_age"]) or (-1 if oldest else 1e9))
+        return f"{g['scorer_age']} - {g['scorer']} ({abbr(t)})"
+    def d_young(t): return _age_pick(t, False)
+    def d_old(t):   return _age_pick(t, True)
+    def _name_pick(t, longest):
+        gs = _name_age_pool(t)
+        if not gs:
+            return ""
+        g = (max if longest else min)(gs, key=lambda g: name_letters(g["scorer"]))
+        return f"{name_letters(g['scorer'])} letters - {g['scorer']} ({abbr(t)})"
+    def d_long(t):  return _name_pick(t, True)
+    def d_short(t): return _name_pick(t, False)
+
+    return {"quickest_goal": d_qgoal, "quickest_yellow": d_qyel, "fastest_sub": d_fsub,
+            "fastest_own_goal": d_fog, "youngest_scorer": d_young, "oldest_scorer": d_old,
+            "longest_name": d_long, "shortest_name": d_short,
+            "prime": lambda t: f"{gfor.get(t, 0)} goals ({abbr(t)})",
+            "fewest_goals": lambda t: f"{gfor.get(t, 0)} goals ({abbr(t)})",
+            "fewest_cards": lambda t: f"{ctot.get(t, 0):g} cards ({abbr(t)})"}
+
+
 def standings_progression(data_dir: str, full: dict | None = None) -> dict:
     """Replay the owner standings after each played match (cumulative), for the
     'over time' trend charts. Returns:
@@ -566,8 +629,11 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
 
     times, ranks, totals = [], {o: [] for o in owners}, {o: [] for o in owners}
     rankings = []   # the ordered owner list after each match
-    # per-owner, per-category cumulative total after each match (for the ledger)
+    # per-owner, per-category cumulative total after each match (for the ledger), plus
+    # the 'who earned it' detail per owner/category/match (only non-empty stored).
     cat_cum = {o: {c: [] for c in CATEGORY_ORDER} for o in owners}
+    details_at = {o: [] for o in owners}
+    mteams_all = full.get("match_teams", {})
     for k in mids:
         r = score(data_dir, upto=k)
         tot = {o: round(r["owner_totals"].get(o, 0.0), 2) for o in owners}
@@ -577,17 +643,52 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
                       "label": ml.get(str(k), str(k))})
         rankings.append(order)
         oc = {o: {c: 0.0 for c in CATEGORY_ORDER} for o in owners}
+        oteams = {o: [] for o in owners}
         for t in r["teams"]:
             o = r["owner"].get(t, "")
             if not o:
                 continue
+            oteams[o].append(t)
             for c in CATEGORY_ORDER:
                 oc[o][c] += r["pts"][t].get(c, 0.0)
+        dfns = cat_detail_fns(r)
+        mk = str(k)
+        mteams = mteams_all.get(mk) or mteams_all.get(k) or ()
+
+        def ingame_detail(o):
+            parts = []
+            for t in mteams:
+                if r["owner"].get(t, "") != o:
+                    continue
+                ev = []
+                for g in r["raw"]["goals"]:
+                    if g["match_id"] != mk or g["team"] != t:
+                        continue
+                    ty = (g.get("type") or "open").strip()
+                    tag = (" disallowed" if truthy(g.get("disallowed", "")) else
+                           {"penalty": " pen", "freekick": " FK", "shootout": " SO"}.get(ty, ""))
+                    ev.append(f"{g.get('scorer', '?')} {g.get('minute', '')}'{tag}")
+                for og in r["raw"]["own_goals"]:        # opponent OG counted for this team
+                    if og["match_id"] == mk and og["team"] != t and t in mteams:
+                        ev.append(f"OG {og.get('player', '?')} {og.get('minute', '')}'")
+                parts.append(f"{abbr(t)}: " + (", ".join(ev) if ev else "no goals (bonus/clean-sheet effect)"))
+            return "; ".join(parts)
+
         for o in owners:
             ranks[o].append(pos[o])
             totals[o].append(tot[o])
             for c in CATEGORY_ORDER:
                 cat_cum[o][c].append(round(oc[o][c], 4))
+            det = {}
+            ig = ingame_detail(o)
+            if ig:
+                det["in_game"] = ig
+            for c, fn in dfns.items():
+                hold = [fn(t) for t in oteams[o] if round(r["pts"][t].get(c, 0.0), 2) != 0]
+                hold = [s for s in hold if s]
+                if hold:
+                    det[c] = "; ".join(hold)
+            details_at[o].append(det)
 
     last = len(owners)
     slot_positions = [p for p in (1, 4, 7, last) if 1 <= p <= last]
@@ -613,8 +714,18 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
             if not deltas:
                 continue
             prev_tot = totals[o][i - 1] if i > 0 else 0.0
+            det = details_at[o][i]
+            # who's responsible per moved category (own detail now; "(lost the prize)"
+            # when a negative move dropped them out of a ranked top-6 entirely).
+            why = {}
+            for c, d in deltas.items():
+                s = det.get(c, "")
+                if not s and d < 0 and c not in ("in_game", "progression", "early_exit"):
+                    s = "(lost the prize - no longer in the top 6)"
+                if s:
+                    why[c] = s
             rows.append({"m": times[i]["m"], "date": times[i]["date"], "label": times[i]["label"],
-                         "deltas": deltas, "dtotal": round(totals[o][i] - prev_tot, 2),
+                         "deltas": deltas, "details": why, "dtotal": round(totals[o][i] - prev_tot, 2),
                          "total": totals[o][i]})
         ledger[o] = rows
 
@@ -951,8 +1062,10 @@ CHART_JS = r"""<script>
       rows.forEach(function(rw){
         var cats = Object.keys(rw.deltas).sort(function(a,b){ return Math.abs(rw.deltas[b]) - Math.abs(rw.deltas[a]); });
         var chips = cats.map(function(c){
-          var d = rw.deltas[c];
-          return '<span class="dchip ' + (d>0?'pos':'neg') + '">' + esc(PROG.catLabels[c]||c) + ' ' + fmt(d) + '</span>';
+          var d = rw.deltas[c], why = (rw.details && rw.details[c]) || '';
+          var tip = esc((PROG.catLabels[c]||c) + (why ? ' — ' + why : ''));
+          return '<span class="dchip ' + (d>0?'pos':'neg') + (why?' has-why':'') + '" title="' + tip + '">' +
+                 esc(PROG.catLabels[c]||c) + ' ' + fmt(d) + '</span>';
         }).join(' ');
         var dc = rw.dtotal > 0 ? 'pos' : (rw.dtotal < 0 ? 'neg' : '');
         h += '<tr><td>M' + rw.m + ' · ' + esc(rw.date) + '<br><span class="r">' + esc(rw.label) + '</span></td>' +
@@ -1174,61 +1287,7 @@ def write_html(result: dict, out_dir: str) -> None:
         for o in sorted(owner_teams_grid, key=lambda o: -result['owner_totals'].get(o, 0)))
 
     # ---- per-category DETAIL extractors (which team/scorer/minute earned the points) ----
-    _raw = result.get("raw", {})
-    rgoals, rcards, rsubs, rog = (_raw.get("goals", []), _raw.get("cards", []),
-                                  _raw.get("subs", []), _raw.get("own_goals", []))
-    gfor, ctot = result["goals_for"], result.get("cards_total", {})
-
-    def _tg(t):   # a team's countable goals (open/pen/freekick, not disallowed/shootout)
-        return [g for g in rgoals if g["team"] == t
-                and not truthy(g.get("disallowed", "")) and g.get("type") != "shootout"]
-
-    def _minrow(rows, key):
-        rows = [(parse_minute(r.get(key, "")), r) for r in rows]
-        rows = [(m, r) for m, r in rows if m is not None]
-        return min(rows, key=lambda mr: mr[0])[1] if rows else None
-
-    def d_qgoal(t):
-        r = _minrow(_tg(t), "minute"); return f"{r['minute']}' - {r['scorer']} ({abbr(t)})" if r else ""
-    def d_qyel(t):
-        r = _minrow([c for c in rcards if c["team"] == t and c.get("color") == "yellow"], "minute")
-        return f"{r['minute']}' - {r.get('player') or '?'} ({abbr(t)})" if r else ""
-    def d_fsub(t):
-        r = _minrow([s for s in rsubs if s["team"] == t], "minute"); return f"{r['minute']}' ({abbr(t)})" if r else ""
-    def d_fog(t):
-        r = _minrow([o for o in rog if o["team"] == t], "minute"); return f"{r['minute']}' ({abbr(t)})" if r else ""
-    def _name_age_pool(t):
-        # Scored goals + own-goalers (credited to their OWN team) -- matches the
-        # name_age_pool used for scoring, so the displayed name/age is the one that
-        # actually earned the points (e.g. an own-goaler can be the longest name).
-        pool = list(_tg(t))
-        for o in rog:
-            if o["team"] == t and (o.get("player") or "").strip():
-                pool.append({"scorer": o["player"], "scorer_age": o.get("scorer_age", "")})
-        return pool
-    def _age_pick(t, oldest):
-        gs = [g for g in _name_age_pool(t) if (g.get("scorer_age") or "").strip()]
-        if not gs:
-            return ""
-        g = (max if oldest else min)(gs, key=lambda g: _age_days(g["scorer_age"]) or (-1 if oldest else 1e9))
-        return f"{g['scorer_age']} - {g['scorer']} ({abbr(t)})"
-    def d_young(t): return _age_pick(t, False)
-    def d_old(t):   return _age_pick(t, True)
-    def _name_pick(t, longest):
-        gs = _name_age_pool(t)
-        if not gs:
-            return ""
-        g = (max if longest else min)(gs, key=lambda g: name_letters(g["scorer"]))
-        return f"{name_letters(g['scorer'])} letters - {g['scorer']} ({abbr(t)})"
-    def d_long(t):  return _name_pick(t, True)
-    def d_short(t): return _name_pick(t, False)
-
-    CAT_DETAIL = {"quickest_goal": d_qgoal, "quickest_yellow": d_qyel, "fastest_sub": d_fsub,
-                  "fastest_own_goal": d_fog, "youngest_scorer": d_young, "oldest_scorer": d_old,
-                  "longest_name": d_long, "shortest_name": d_short,
-                  "prime": lambda t: f"{gfor.get(t, 0)} goals ({abbr(t)})",
-                  "fewest_goals": lambda t: f"{gfor.get(t, 0)} goals ({abbr(t)})",
-                  "fewest_cards": lambda t: f"{ctot.get(t, 0):g} cards ({abbr(t)})"}
+    CAT_DETAIL = cat_detail_fns(result)
 
     # These in-game components show a per-team contribution breakdown (amount + team)
     # so you can see which teams gave each player their open-goal/pen/no-goals/OG/90+X points.
@@ -1320,6 +1379,7 @@ def write_html(result: dict, out_dir: str) -> None:
  select{{font:inherit;padding:.2rem .4rem;border:1px solid #dde1e6;border-radius:6px}}
  .dchip{{display:inline-block;border-radius:10px;padding:.05rem .42rem;font-size:.82rem;margin:.06rem .12rem .06rem 0;white-space:nowrap}}
  .dchip.pos{{background:#e6f6ec;color:#137a37}} .dchip.neg{{background:#fde8e8;color:#b42318}}
+ .dchip.has-why{{cursor:help;text-decoration:underline dotted rgba(0,0,0,.35);text-underline-offset:2px}}
  table.ledger td.det{{text-align:left;white-space:normal;line-height:1.85}}
  table.ledger td:nth-child(3),table.ledger th:nth-child(3){{text-align:right}}
  table.ledger td.pos{{color:#137a37;font-weight:700}} table.ledger td.neg{{color:#b42318;font-weight:700}}
