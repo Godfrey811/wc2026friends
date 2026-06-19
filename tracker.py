@@ -569,8 +569,7 @@ def cat_detail_fns(result: dict) -> dict:
         return f"{r['minute']}' - {r.get('player') or '?'} ({abbr(t)})" if r else ""
     def d_fsub(t):
         r = _minrow([s for s in rsubs if s["team"] == t], "minute")
-        return (f"{r['minute']}' {r.get('on','')}{(' for ' + r.get('off','')) if r.get('off') else ''} ({abbr(t)})"
-                if r else "")
+        return f"{r['minute']}' {r.get('off') or '?'} off ({abbr(t)})" if r else ""
     def d_fog(t):
         r = _minrow([o for o in rog if o["team"] == t], "minute")
         return f"{r['minute']}' - {r.get('player') or '?'} ({abbr(t)})" if r else ""
@@ -642,6 +641,9 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
     IGLAB = {"goal_open": "Open goals", "goal_pen": "Pens", "goal_shootout": "Shootout pens",
              "var": "VAR ruled out", "bonus_2367": "23'/67' bonus", "bonus_0sot": "0-SOT bonus",
              "clean_sheet": "No goals scored", "red_dice": "Red-card dice", "og_for": "OG in favour"}
+    # the NEW headline event from each match in every ranked category — i.e. what overtook
+    # whoever got pushed down that match (shown only on the player who lost points).
+    newlead_at = []
     for k in mids:
         r = score(data_dir, upto=k)
         tot = {o: round(r["owner_totals"].get(o, 0.0), 2) for o in owners}
@@ -674,6 +676,46 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
             d_eff = round(d_ig - sum(dcomp.values()), 2)   # 90+X flip / free-kick doubling effect
             comp_k[t] = (dcomp, d_eff, d_ig)
             prev_det[t], prev_ig[t] = cur, cig
+
+        # NEW headline event from THIS match per ranked category (what overtook anyone
+        # pushed down this match). Subs show only who was subbed OFF (per request).
+        def _ex(rows, keyfn, want_max):
+            cand = [(keyfn(x), x) for x in rows]
+            cand = [(v, x) for v, x in cand if v is not None]
+            return (max if want_max else min)(cand, key=lambda vx: vx[0])[1] if cand else None
+        mkg = [g for g in r["raw"]["goals"] if g["match_id"] == mk
+               and not truthy(g.get("disallowed", "")) and (g.get("type") or "open") != "shootout"]
+        mky = [c for c in r["raw"]["cards"] if c["match_id"] == mk and c.get("color") == "yellow"]
+        mks = [s for s in r["raw"]["subs"] if s["match_id"] == mk]
+        mko = [o for o in r["raw"]["own_goals"] if o["match_id"] == mk]
+        pool = list(mkg) + [{"scorer": o.get("player", ""), "scorer_age": o.get("scorer_age", ""),
+                             "team": o["team"]} for o in mko if (o.get("player") or "").strip()]
+        gmin = lambda x: parse_minute(x.get("minute", ""))
+        gage = lambda x: _age_days(x.get("scorer_age", "")) if (x.get("scorer_age") or "").strip() else None
+        gname = lambda x: name_letters(x.get("scorer", "")) if (x.get("scorer") or "").strip() else None
+        newlead = {}
+        for cat, rows, kf, mx in (("quickest_goal", mkg, gmin, False),
+                                  ("quickest_yellow", mky, gmin, False),
+                                  ("fastest_sub", mks, gmin, False),
+                                  ("fastest_own_goal", mko, gmin, False),
+                                  ("youngest_scorer", pool, gage, False),
+                                  ("oldest_scorer", pool, gage, True),
+                                  ("longest_name", pool, gname, True),
+                                  ("shortest_name", pool, gname, False)):
+            x = _ex(rows, kf, mx)
+            if not x:
+                continue
+            if cat == "fastest_sub":
+                newlead[cat] = f"{x.get('minute', '')}' {x.get('off', '?')} off ({abbr(x['team'])})"
+            elif cat in ("quickest_yellow", "fastest_own_goal"):
+                newlead[cat] = f"{x.get('minute', '')}' - {x.get('player', '?')} ({abbr(x['team'])})"
+            elif cat == "quickest_goal":
+                newlead[cat] = f"{x.get('minute', '')}' - {x.get('scorer', '?')} ({abbr(x['team'])})"
+            elif cat in ("youngest_scorer", "oldest_scorer"):
+                newlead[cat] = f"{x.get('scorer_age', '')} - {x.get('scorer', '?')} ({abbr(x['team'])})"
+            else:
+                newlead[cat] = f"{name_letters(x.get('scorer', ''))} letters - {x.get('scorer', '?')} ({abbr(x['team'])})"
+        newlead_at.append(newlead)
 
         def ingame_detail(o):
             parts = []
@@ -758,22 +800,33 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
                 by.sort(); over.sort()
             prev_tot = totals[o][i - 1] if i > 0 else 0.0
             det = details_at[o][i]
-            # who's responsible per moved category (own detail now; "(lost the prize)"
-            # when a negative move dropped them out of a ranked top-6 entirely).
+            # who's responsible per moved category. On a DROP in a ranked prize, show BOTH
+            # the player's own entry AND what overtook it (the new event from this match).
+            RANKED = ("quickest_goal", "quickest_yellow", "fastest_sub", "fastest_own_goal",
+                      "youngest_scorer", "oldest_scorer", "longest_name", "shortest_name")
             why = {}
             for c, d in deltas.items():
                 s = det.get(c, "")
-                if not s and d < 0 and c not in ("in_game", "progression", "early_exit"):
+                if c in RANKED and d < 0:
+                    nl = newlead_at[i].get(c)
+                    ov = ("overtaken by " + nl) if nl else "overtaken by a later/better entry"
+                    s = (f"your entry: {s} · {ov}" if s else f"{ov} — you dropped out of the top 6")
+                elif not s and d < 0 and c not in ("in_game", "progression", "early_exit"):
                     s = "(lost the prize - no longer in the top 6)"
                 if s:
                     why[c] = s
-            few_after = round(cat_cum[o]["fewest_goals"][i] + cat_cum[o]["fewest_cards"][i], 2)
-            few_before = round(cat_cum[o]["fewest_goals"][i - 1] + cat_cum[o]["fewest_cards"][i - 1], 2) if i > 0 else 0.0
+            few_cum = lambda j: cat_cum[o]["fewest_goals"][j] + cat_cum[o]["fewest_cards"][j]
+            few_after = round(few_cum(i), 2)
+            few_before = round(few_cum(i - 1), 2) if i > 0 else 0.0
+            # delta = difference of the DISPLAYED rounded endpoints, so the column is always
+            # self-consistent (delta == after - before) and never double-rounds to e.g.
+            # 0.91 while showing 0 -> 0.9.
+            few_delta = round(few_after - few_before, 2)
             rows.append({"m": times[i]["m"], "date": times[i]["date"], "label": times[i]["label"],
                          "deltas": deltas, "details": why, "dtotal": round(totals[o][i] - prev_tot, 2),
                          "total": totals[o][i], "rfrom": rfrom, "rto": rto,
                          "by": [p for _, p in by], "over": [p for _, p in over],
-                         "fewBefore": few_before, "fewAfter": few_after})
+                         "fewBefore": few_before, "fewAfter": few_after, "fewDelta": few_delta})
         ledger[o] = rows
 
     return {"players": owners, "times": times, "ranks": ranks, "totals": totals,
@@ -1105,13 +1158,15 @@ CHART_JS = r"""<script>
       head.textContent = rows.length + ' changes (points and/or position) · currently ' +
                          ord(PROG.ranks[o][T-1]) + ' on ' + PROG.totals[o][T-1] + ' pts';
       function posCell(rw){
-        if (rw.rfrom == null) return '<span class="r">' + ord(rw.rto) + ' (start)</span>';
-        if (rw.rto === rw.rfrom) return '<span class="r">' + ord(rw.rto) + ' =</span>';
+        var ptsFrom = Math.round((rw.total - rw.dtotal) * 100) / 100;
+        var pts = '<br><span class="r">' + ptsFrom + '&rarr;' + rw.total + ' pts</span>';
+        if (rw.rfrom == null) return '<span class="r">' + ord(rw.rto) + ' (start)</span>' + pts;
+        if (rw.rto === rw.rfrom) return '<span class="r">' + ord(rw.rto) + ' =</span>' + pts;
         var up = rw.rto < rw.rfrom, names = up ? rw.over : rw.by;
         var who = (names && names.length)
           ? '<br><span class="r">' + (up ? 'overtook ' : 'overtaken by ') + names.map(esc).join(', ') + '</span>' : '';
         return '<span class="' + (up ? 'pos' : 'neg') + '">' + ord(rw.rfrom) + ' &rarr; ' + ord(rw.rto) +
-               ' ' + (up ? '▲' : '▼') + '</span>' + who;
+               ' ' + (up ? '▲' : '▼') + '</span>' + who + pts;
       }
       // Fewest goals/cards nudge nearly every match, so they get their own column instead
       // of cluttering 'What moved'.
@@ -1129,13 +1184,11 @@ CHART_JS = r"""<script>
           return '<span class="dchip ' + (d>0?'pos':'neg') + (why?' has-why':'') + '" title="' + tip + '">' +
                  esc(PROG.catLabels[c]||c) + ' ' + fmt(d) + '</span>';
         }).join(' ') || '<span class="r">—</span>';
-        var few = (rw.deltas.fewest_goals||0) + (rw.deltas.fewest_cards||0);
+        var few = rw.fewDelta || 0;
         var fp = [];
         ['fewest_goals','fewest_cards'].forEach(function(c){
-          if (rw.deltas[c] !== undefined){
-            var w = (rw.details && rw.details[c]) ? (' — ' + rw.details[c]) : '';
-            fp.push((PROG.catLabels[c]||c) + ' ' + fmt(rw.deltas[c]) + w);
-          }
+          if (rw.deltas[c] !== undefined && rw.details && rw.details[c])
+            fp.push((PROG.catLabels[c]||c) + ': ' + rw.details[c]);
         });
         var fcls = few > 0.0049 ? 'pos' : (few < -0.0049 ? 'neg' : '');
         var ba = '<br><span class="r">' + rw.fewBefore + '&rarr;' + rw.fewAfter + '</span>';
