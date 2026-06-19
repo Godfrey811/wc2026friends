@@ -815,18 +815,18 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
                     s = "(lost the prize - no longer in the top 6)"
                 if s:
                     why[c] = s
-            few_cum = lambda j: cat_cum[o]["fewest_goals"][j] + cat_cum[o]["fewest_cards"][j]
-            few_after = round(few_cum(i), 2)
-            few_before = round(few_cum(i - 1), 2) if i > 0 else 0.0
-            # delta = difference of the DISPLAYED rounded endpoints, so the column is always
-            # self-consistent (delta == after - before) and never double-rounds to e.g.
-            # 0.91 while showing 0 -> 0.9.
-            few_delta = round(few_after - few_before, 2)
+            # Fewest goals and fewest cards each as [before, after, delta] with the delta
+            # taken from the DISPLAYED rounded endpoints (so delta == after - before exactly,
+            # no double-rounding to e.g. 0.91 while showing 0 -> 0.9).
+            def _few(cat):
+                a = round(cat_cum[o][cat][i], 2)
+                b = round(cat_cum[o][cat][i - 1], 2) if i > 0 else 0.0
+                return [b, a, round(a - b, 2)]
             rows.append({"m": times[i]["m"], "date": times[i]["date"], "label": times[i]["label"],
                          "deltas": deltas, "details": why, "dtotal": round(totals[o][i] - prev_tot, 2),
                          "total": totals[o][i], "rfrom": rfrom, "rto": rto,
                          "by": [p for _, p in by], "over": [p for _, p in over],
-                         "fewBefore": few_before, "fewAfter": few_after, "fewDelta": few_delta})
+                         "fg": _few("fewest_goals"), "fc": _few("fewest_cards")})
         ledger[o] = rows
 
     return {"players": owners, "times": times, "ranks": ranks, "totals": totals,
@@ -1168,13 +1168,21 @@ CHART_JS = r"""<script>
         return '<span class="' + (up ? 'pos' : 'neg') + '">' + ord(rw.rfrom) + ' &rarr; ' + ord(rw.rto) +
                ' ' + (up ? '▲' : '▼') + '</span>' + who + pts;
       }
-      // Fewest goals/cards nudge nearly every match, so they get their own column instead
+      // Fewest goals/cards nudge nearly every match, so they get their own columns instead
       // of cluttering 'What moved'.
       var FEW = {fewest_goals:1, fewest_cards:1};
+      function fewCell(arr, why){
+        var b = arr[0], a = arr[1], d = arr[2];
+        if (!d) return '<span class="r">' + a + '</span>';
+        return '<span class="' + (d>0?'pos':'neg') + (why?' has-why':'') + '"' +
+               (why ? ' title="' + esc(why) + '"' : '') + '>' + fmt(d) + '</span>' +
+               '<br><span class="r">' + b + '&rarr;' + a + '</span>';
+      }
       var h = '<table class="tt ledger"><tr><th>Match</th><th>What moved</th>' +
-              '<th class="num-cell" title="Fewest-goals + fewest-cards shared awards - these shift a little almost every match">Fewest G/C</th>' +
+              '<th class="num-cell" title="Fewest-goals shared award - shifts a little almost every match">Fewest goals</th>' +
+              '<th class="num-cell" title="Fewest-cards shared award">Fewest cards</th>' +
               '<th class="num-cell">&Delta;</th><th class="num-cell">Total</th><th class="pos-cell">Position</th></tr>';
-      if (!rows.length) h += '<tr><td colspan="6">no points yet</td></tr>';
+      if (!rows.length) h += '<tr><td colspan="7">no points yet</td></tr>';
       rows.forEach(function(rw){
         var cats = Object.keys(rw.deltas).filter(function(c){ return !FEW[c]; })
                      .sort(function(a,b){ return Math.abs(rw.deltas[b]) - Math.abs(rw.deltas[a]); });
@@ -1184,21 +1192,11 @@ CHART_JS = r"""<script>
           return '<span class="dchip ' + (d>0?'pos':'neg') + (why?' has-why':'') + '" title="' + tip + '">' +
                  esc(PROG.catLabels[c]||c) + ' ' + fmt(d) + '</span>';
         }).join(' ') || '<span class="r">—</span>';
-        var few = rw.fewDelta || 0;
-        var fp = [];
-        ['fewest_goals','fewest_cards'].forEach(function(c){
-          if (rw.deltas[c] !== undefined && rw.details && rw.details[c])
-            fp.push((PROG.catLabels[c]||c) + ': ' + rw.details[c]);
-        });
-        var fcls = few > 0.0049 ? 'pos' : (few < -0.0049 ? 'neg' : '');
-        var ba = '<br><span class="r">' + rw.fewBefore + '&rarr;' + rw.fewAfter + '</span>';
-        var fewCell = few ? ('<span class="' + fcls + (fp.length?' has-why':'') + '"' +
-                             (fp.length ? ' title="' + esc(fp.join(' · ')) + '"' : '') + '>' + fmt(few) + '</span>' + ba)
-                          : '<span class="r">' + rw.fewAfter + '</span>';
         var dc = rw.dtotal > 0 ? 'pos' : (rw.dtotal < 0 ? 'neg' : '');
         h += '<tr><td>M' + rw.m + ' · ' + esc(rw.date) + '<br><span class="r">' + esc(rw.label) + '</span></td>' +
              '<td class="det">' + chips + '</td>' +
-             '<td class="num-cell">' + fewCell + '</td>' +
+             '<td class="num-cell">' + fewCell(rw.fg, rw.details && rw.details.fewest_goals) + '</td>' +
+             '<td class="num-cell">' + fewCell(rw.fc, rw.details && rw.details.fewest_cards) + '</td>' +
              '<td class="num-cell ' + dc + '">' + fmt(rw.dtotal) + '</td>' +
              '<td class="num-cell"><b>' + rw.total + '</b></td>' +
              '<td class="pos-cell">' + posCell(rw) + '</td></tr>';
@@ -1207,6 +1205,35 @@ CHART_JS = r"""<script>
     }
     pick.addEventListener('change', function(){ render(pick.value); });
     render(order[0]);
+  })();
+
+  // Tab - By event: clickable element chips; lists every game that impacts the chosen element.
+  (function eventTab(){
+    if (typeof EV === 'undefined' || !EV.length) return;
+    var pickEl = document.getElementById('evPick'), out = document.getElementById('evOut'),
+        descEl = document.getElementById('evDesc');
+    if (!pickEl || !out) return;
+    function esc(s){ return String(s).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+    function render(key){
+      var e = EV.filter(function(x){ return x.key === key; })[0] || EV[0];
+      Array.prototype.forEach.call(pickEl.children, function(b){
+        b.classList.toggle('on', b.getAttribute('data-key') === e.key); });
+      if (descEl) descEl.innerHTML = '<b>' + e.rows.length + '</b> — ' + esc(e.desc);
+      var h = '<table class="tt"><tr><th>Match</th><th>Team</th><th>Owner</th><th>Event</th><th>Effect</th></tr>';
+      e.rows.forEach(function(r){
+        h += '<tr><td>' + esc(r.match) + '</td><td>' + esc(r.team) + '</td><td>' + esc(r.owner) +
+             '</td><td>' + esc(r.who) + '</td><td>' + esc(r.pts) + '</td></tr>';
+      });
+      out.innerHTML = h + (e.rows.length ? '' : '<tr><td colspan="5">none yet</td></tr>') + '</table>';
+    }
+    EV.forEach(function(e){
+      var b = document.createElement('button');
+      b.className = 'chip'; b.setAttribute('data-key', e.key);
+      b.innerHTML = esc(e.label) + ' <span class="r">(' + e.rows.length + ')</span>';
+      b.addEventListener('click', function(){ render(e.key); });
+      pickEl.appendChild(b);
+    });
+    render(EV[0].key);
   })();
 })();
 </script>"""
@@ -1331,6 +1358,115 @@ def write_html(result: dict, out_dir: str) -> None:
         f"<td>{('+' if p else '') + format(round(p, 2), 'g')}</td></tr>"
         for (o, et, stg, od, p) in ee) \
         or '<tr><td colspan="4">settles as teams are knocked out</td></tr>'
+
+    # Red-card dice: every red card needs the owner to roll a d6. Show which are DONE
+    # (with the roll and resulting points) and which are still PENDING, and who owes rolls.
+    _rc_ml, _rc_md = result["match_label"], result.get("match_dates", {})
+    def _rc_key(c):
+        try:
+            mi = int(c.get("match_id") or 0)
+        except ValueError:
+            mi = 0
+        return (mi, parse_minute(c.get("minute", "")) or 0)
+    reds = sorted((c for c in result["raw"]["cards"] if (c.get("color") or "").strip().lower() == "red"),
+                  key=_rc_key)
+    dice_done = dice_pending = 0
+    pending_owner: dict[str, int] = {}
+    dice_rows = ""
+    for c in reds:
+        t = c["team"]; o = owner.get(t, "") or "-"
+        mid = c.get("match_id", "")
+        when = _fmt_date(_rc_md.get(mid, ""))
+        dv = (c.get("dice") or "").strip()
+        if dv.isdigit():
+            d = int(dv); p = (d / 2) if d % 2 == 1 else -(d / 2)
+            status = f"🎲 rolled {d} → <b>{p:+g}</b>"
+            dice_done += 1
+        else:
+            status = '<b class="pend">⏳ PENDING</b>'
+            dice_pending += 1
+            if owner.get(t, ""):
+                pending_owner[o] = pending_owner.get(o, 0) + 1
+        dice_rows += (f'<tr><td>{when} · {_rc_ml.get(mid, mid)}</td>'
+                      f'<td>{t}</td><td>{owner.get(t, "") or "-"}</td>'
+                      f'<td>{c.get("player") or "?"} {c.get("minute", "")}\'</td>'
+                      f'<td>{status}</td></tr>\n')
+    dice_rows = dice_rows or '<tr><td colspan="5">no red cards yet</td></tr>'
+    pending_summary = (", ".join(f"<b>{o}</b> ({n})" for o, n in
+                                 sorted(pending_owner.items(), key=lambda kv: -kv[1]))
+                       if pending_owner else "none - all rolled")
+    dice_banner = (f'<div class="dice-banner">🎲 <b>{dice_pending}</b> red-card dice roll'
+                   f'{"s" if dice_pending != 1 else ""} still to roll — owed by {pending_summary}. '
+                   f'Details in <b>📊 Stats → Red-card dice</b>.</div>'
+                   if dice_pending else '')
+
+    # Event explorer: for each scoring element, the chronological list of games that
+    # impact it (only those games). Powers the "By event" tab.
+    def _evkey(e):
+        try:
+            mi = int(e.get("match_id") or 0)
+        except ValueError:
+            mi = 0
+        return (mi, parse_minute(e.get("minute", "")) or 0)
+    def _evm(mid):
+        return f"{_fmt_date(_rc_md.get(mid, ''))} · {_rc_ml.get(mid, mid)}"
+    _g, _c, _s, _o = (result["raw"]["goals"], result["raw"]["cards"],
+                      result["raw"]["subs"], result["raw"]["own_goals"])
+    _mt = result.get("match_teams", {})
+    def _good(g):
+        return not truthy(g.get("disallowed", "")) and (g.get("type") or "open") != "shootout"
+    def _inj(e):
+        return (e.get("minute") or "").replace(" ", "").startswith("90+")
+    EVENTS = []
+    def _emit(key, label, desc, rows):
+        EVENTS.append({"key": key, "label": label, "desc": desc, "rows": rows})
+    def _row(e, who, pts):
+        t = e["team"]
+        return {"match": _evm(e.get("match_id", "")), "team": t,
+                "owner": owner.get(t, "") or "-", "who": who, "pts": pts}
+    # red cards
+    _emit("red", "🟥 Red cards", "Every red card — each triggers a d6 dice roll for the owner.",
+          [_row(c, f"{c.get('player') or '?'} {c.get('minute','')}'",
+                (f"🎲 {c['dice']} → {(int(c['dice'])/2) if int(c['dice'])%2 else -(int(c['dice'])/2):+g}"
+                 if (c.get('dice') or '').strip().isdigit() else "⏳ dice pending"))
+           for c in sorted((c for c in _c if (c.get('color') or '').lower() == 'red'), key=_evkey)])
+    # 90+X injury-time goals (flip triggers)
+    inj = [g for g in _g if _good(g) and _inj(g)] + \
+          [dict(o, _og=True) for o in _o if _inj(o)]
+    _emit("inj", "⏱️ 90+X injury-time goals", "Goals in full-time injury time (90+X) — each flips that team's in-game total ×-1.",
+          [_row(e, f"{e.get('scorer') or e.get('player') or '?'} {e.get('minute','')}'"
+                + (" (OG)" if e.get('_og') else ""), "flips in-game ×-1")
+           for e in sorted(inj, key=_evkey)])
+    # own goals
+    _emit("og", "⚽ Own goals", "Own goals — feed the fastest-own-goal prize and count +0.5 for the team they benefit.",
+          [_row(o, f"{o.get('player') or '?'} {o.get('minute','')}'",
+                f"+0.5 for {abbr(_mt.get(o['match_id'],('',''))[0] if o['team']==_mt.get(o['match_id'],('',''))[1] else _mt.get(o['match_id'],('',''))[1])}")
+           for o in sorted(_o, key=_evkey)])
+    # penalties (open-play, scored)
+    _emit("pen", "🎯 Penalties scored", "Non-shootout penalties — -1.5 each.",
+          [_row(g, f"{g.get('scorer') or '?'} {g.get('minute','')}'", "-1.5")
+           for g in sorted((g for g in _g if _good(g) and g.get('type') == 'penalty'), key=_evkey)])
+    # free-kick goals
+    _emit("fk", "🪄 Free-kick goals", "Free-kick goals — double the OPPONENT team's in-game total (×2).",
+          [_row(g, f"{g.get('scorer') or '?'} {g.get('minute','')}'", "doubles opponent (×2)")
+           for g in sorted((g for g in _g if _good(g) and g.get('type') == 'freekick'), key=_evkey)])
+    # 23' / 67' goals
+    _emit("b2367", "⭐ 23' / 67' goals", "A goal scored (or conceded) in the 23rd or 67th minute — +4 (capped per game).",
+          [_row(g, f"{g.get('scorer') or '?'} {g.get('minute','')}'", "+4 (23'/67')")
+           for g in sorted((g for g in _g if _good(g) and parse_minute(g.get('minute','')) in (23, 67)), key=_evkey)])
+    # VAR disallowed
+    _emit("var", "🚩 VAR-disallowed goals", "Goals given then chalked off by VAR — -1 each.",
+          [_row(g, f"{g.get('scorer') or '?'} {g.get('minute','')}'", "-1")
+           for g in sorted((g for g in _g if truthy(g.get('disallowed','')) ), key=_evkey)])
+    # yellow cards
+    _emit("yellow", "🟨 Yellow cards", "Every yellow — feeds the quickest-yellow prize and the fewest-cards award (1 each).",
+          [_row(c, f"{c.get('player') or '?'} {c.get('minute','')}'", "")
+           for c in sorted((c for c in _c if (c.get('color') or '').lower() == 'yellow'), key=_evkey)])
+    # open-play goals
+    _emit("open", "🥅 Open-play goals", "Open-play goals — +0.5 each.",
+          [_row(g, f"{g.get('scorer') or '?'} {g.get('minute','')}'", "+0.5")
+           for g in sorted((g for g in _g if _good(g) and (g.get('type') or 'open') == 'open'), key=_evkey)])
+    EVENTS = [e for e in EVENTS if e["rows"]]
 
     # Fixtures: who plays whom on which day (display only; owners annotated).
     fixtures = result.get("fixtures", [])
@@ -1515,6 +1651,7 @@ def write_html(result: dict, out_dir: str) -> None:
  table.ledger td.pos-cell,table.ledger th.pos-cell{{text-align:left;white-space:normal}}
  table.ledger .pos{{color:#137a37;font-weight:700}} table.ledger .neg{{color:#b42318;font-weight:700}}
  .has-why{{cursor:help;text-decoration:underline dotted rgba(0,0,0,.35);text-underline-offset:2px}}
+ .pend{{color:#c2410c}} .dice-banner{{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:.5rem .75rem;margin:.6rem 0;color:#9a3412}}
 </style></head><body>
 <h1>🏆 WC 2026 Friends Pool</h1>
 <p class="sub">Draft pool - 16 players, 3 teams each (one per pot). Auto-updated {updated}.
@@ -1524,6 +1661,7 @@ def write_html(result: dict, out_dir: str) -> None:
 <a href="#tab-leaderboard">🏆 Leaderboard</a>
 <a href="#tab-trends">📈 Trends</a>
 <a href="#tab-ledger">📒 Point log</a>
+<a href="#tab-events">🧩 By event</a>
 <a href="#tab-players">👥 Player teams</a>
 <a href="#tab-fixtures">📅 Fixtures</a>
 <a href="#tab-stats">📊 Stats</a>
@@ -1534,6 +1672,7 @@ def write_html(result: dict, out_dir: str) -> None:
 
 <section class="tab" id="tab-leaderboard">
 <h2>Leaderboard</h2>
+{dice_banner}
 <table class="lb sortable"><tr><th>#</th><th>Player</th><th>Points</th></tr>
 {lb}
 </table>
@@ -1567,6 +1706,16 @@ what they're made of). The <b>Position</b> column shows the leaderboard place th
 overtook them or who they overtook.</p>
 <p class="sub"><label>Player: <select id="ledgerPick"></select></label> &nbsp;<span id="ledgerHead" class="r"></span></p>
 <div id="ledgerOut" class="scroll"></div>
+</section>
+
+<section class="tab" id="tab-events">
+<h2>🧩 By event</h2>
+<p class="sub">Pick a scoring element to see <b>every game that impacts it</b>, in order — e.g. all red cards,
+all 90+X injury-time goals, all own goals, all penalties. Each row shows the match, the team (owner), the
+player &amp; minute, and the points effect.</p>
+<div id="evPick" class="clegend"></div>
+<p class="sub" id="evDesc" style="margin-top:.6rem"></p>
+<div id="evOut" class="scroll"></div>
 </section>
 
 <section class="tab" id="tab-players">
@@ -1617,6 +1766,13 @@ are eliminated - nobody scores here until teams actually start going out.</p>
 <p class="sub">Which teams:</p>
 <table class="tt"><tr><th>Team</th><th>Owner</th><th>Goals</th></tr>
 {prime_rows}
+</table>
+
+<h2>🎲 Red-card dice</h2>
+<p class="sub">Every red card means the owner rolls a <b>d6</b> (odd = +roll/2, even = -roll/2).
+<b>{dice_done} rolled</b>, <b class="pend">{dice_pending} still to roll</b>. Owners with pending rolls: {pending_summary}.</p>
+<table class="tt sortable"><tr><th>Match</th><th>Team</th><th>Owner</th><th>Red card</th><th>Dice</th></tr>
+{dice_rows}
 </table>
 
 </section>
@@ -1711,6 +1867,7 @@ document.querySelectorAll('table.sortable').forEach(function(tbl){
     prog = result.get("progression") or {"players": [], "times": [], "ranks": {},
                                           "totals": {}, "slots": {}}
     prog_js = ("<script>const PROG = " + json.dumps(prog, ensure_ascii=False)
+               + "; const EV = " + json.dumps(EVENTS, ensure_ascii=False)
                + ";</script>" + CHART_JS)
     html = html.replace("</body></html>", sort_js + tab_js + prog_js + "\n</body></html>")
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as fh:
