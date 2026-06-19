@@ -308,11 +308,16 @@ def score(data_dir: str, upto: int | None = None) -> dict:
                     d = int(c["dice"])
                     reddice += (d / 2) if d % 2 == 1 else -(d / 2)
             p += b2367 + b0sot + cs + reddice + og_for
+            raw_p = p                          # before the multipliers
             if ninety % 2 == 1:
                 p = -p  # 90'+ flip (pairs cancel)
+            flipped_p = p
             opp_fk = sum(1 for g in og if g.get("type") == "freekick" and not truthy(g.get("disallowed", "")))
             p *= (2 ** opp_fk)
             pts[team]["in_game"] += p
+            # split the two multiplier effects so they can be shown separately
+            detail[team]["flip_effect"] += (flipped_p - raw_p)   # 90+X injury-time flip (×-1)
+            detail[team]["fk_effect"] += (p - flipped_p)          # opponent free-kick doubling (×2)
 
             detail[team]["goal_open"] += d_open
             detail[team]["goal_pen"] += d_pen
@@ -636,11 +641,13 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
     # for the in-game composition tooltip: track each team's cumulative in-game parts so
     # we can show what a match's in-game delta is made of (goals/pens/bonuses + the multiplier).
     prev_det, prev_ig = {}, {}
+    # raw parts + the two multiplier effects (90+X flip and free-kick ×2), shown separately
     IGCOMPS = ("goal_open", "goal_pen", "goal_shootout", "var", "bonus_2367",
-               "bonus_0sot", "clean_sheet", "red_dice", "og_for")
+               "bonus_0sot", "clean_sheet", "red_dice", "og_for", "flip_effect", "fk_effect")
     IGLAB = {"goal_open": "Open goals", "goal_pen": "Pens", "goal_shootout": "Shootout pens",
              "var": "VAR ruled out", "bonus_2367": "23'/67' bonus", "bonus_0sot": "0-SOT bonus",
-             "clean_sheet": "No goals scored", "red_dice": "Red-card dice", "og_for": "OG in favour"}
+             "clean_sheet": "No goals scored", "red_dice": "Red-card dice", "og_for": "OG in favour",
+             "flip_effect": "90+X flip ×-1", "fk_effect": "free-kick ×2"}
     # the NEW headline event from each match in every ranked category — i.e. what overtook
     # whoever got pushed down that match (shown only on the player who lost points).
     newlead_at = []
@@ -665,7 +672,7 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
         mk = str(k)
         mteams = mteams_all.get(mk) or mteams_all.get(k) or ()
 
-        # match-k in-game composition per team: delta of each raw part + the multiplier effect
+        # match-k in-game composition per team: delta of each raw part + each multiplier effect
         comp_k = {}
         for t in r["teams"]:
             cur = {c: round(r["detail"][t].get(c, 0.0), 4) for c in IGCOMPS}
@@ -673,8 +680,7 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
             pv = prev_det.get(t, {})
             dcomp = {c: round(cur[c] - pv.get(c, 0.0), 2) for c in IGCOMPS}
             d_ig = round(cig - prev_ig.get(t, 0.0), 2)
-            d_eff = round(d_ig - sum(dcomp.values()), 2)   # 90+X flip / free-kick doubling effect
-            comp_k[t] = (dcomp, d_eff, d_ig)
+            comp_k[t] = (dcomp, d_ig)
             prev_det[t], prev_ig[t] = cur, cig
 
         # NEW headline event from THIS match per ranked category (what overtook anyone
@@ -722,10 +728,8 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
             for t in mteams:
                 if r["owner"].get(t, "") != o:
                     continue
-                dcomp, d_eff, d_ig = comp_k.get(t, ({}, 0.0, 0.0))
+                dcomp, d_ig = comp_k.get(t, ({}, 0.0))
                 bits = [f"{IGLAB[c]} {dcomp[c]:+g}" for c in IGCOMPS if dcomp.get(c)]
-                if d_eff:
-                    bits.append(f"90+X/free-kick x {d_eff:+g}")
                 ev = []
                 for g in r["raw"]["goals"]:
                     if g["match_id"] != mk or g["team"] != t:
@@ -1522,18 +1526,17 @@ def write_html(result: dict, out_dir: str) -> None:
                  "var": "VAR", "bonus_2367": "23'/67'", "bonus_0sot": "0-SOT",
                  "clean_sheet": "No goals scored", "red_dice": "Red dice", "og_for": "OG for"}
 
-    def _effect(t):   # 90+X full-time injury-time x-1 and opponent free-kick doubling: final in-game minus raw parts
-        raw = sum(detail[t].get(k, 0) for k in _ingame_pts)
-        return round(pts[t].get("in_game", 0.0) - raw, 2)
-
     grid_cols = []   # (short, full, desc, num_fn, key) where num_fn(team) -> number
     for k in _ingame_pts:
         grid_cols.append((_gd_short[k], DETAIL_LABELS[k],
                           "In-game component (raw, before the 90+X injury-time / free-kick multipliers).",
                           lambda t, k=k: detail[t].get(k, 0), k))
-    grid_cols.append(("90+X/FK x", "Full-time injury-time (90+X) & free-kick multiplier",
-                      "Effect of the full-time injury-time (90+X only - not a plain 90, not extra time) x-1 flip and opponent free-kick doubling on this game's in-game total.",
-                      _effect, "effect"))
+    grid_cols.append(("90+X flip", "Full-time injury-time (90+X) flip",
+                      "Effect of the 90+X injury-time x-1 flip (90+X only - not a plain 90, not extra time) on this game's in-game total.",
+                      lambda t: round(detail[t].get("flip_effect", 0.0), 2), "flip_effect"))
+    grid_cols.append(("Free-kick ×2", "Opponent free-kick doubling",
+                      "Effect of an opponent free-kick goal doubling this team's in-game total (×2).",
+                      lambda t: round(detail[t].get("fk_effect", 0.0), 2), "fk_effect"))
     for c in CATEGORY_ORDER:
         if c == "in_game":
             continue
@@ -1574,7 +1577,7 @@ def write_html(result: dict, out_dir: str) -> None:
 
     # These in-game components show a per-team contribution breakdown (amount + team)
     # so you can see which teams gave each player their open-goal/pen/no-goals/OG/90+X points.
-    TEAM_BREAKDOWN_KEYS = {"goal_open", "goal_pen", "clean_sheet", "og_for", "effect"}
+    TEAM_BREAKDOWN_KEYS = {"goal_open", "goal_pen", "clean_sheet", "og_for", "flip_effect", "fk_effect"}
 
     # By-category tab: one mini by-player leaderboard per category (with the why).
     def _cat_card(title, desc, key, num_fn):
@@ -1797,7 +1800,7 @@ are eliminated - nobody scores here until teams actually start going out.</p>
 <section class="tab" id="tab-breakdown">
 <h2>Full breakdown - by team</h2>
 <p class="sub">In-game points are split into their parts - <b>Goals · Pens · S.O. pens · VAR · 23'/67' · 0-SOT · No goals scored · Red dice</b>,
-plus a <b>90+X/FK x</b> column for the full-time injury-time (90+X) flip and free-kick doubling - then the ranked prizes and bonuses. Every column adds up to <b>Total</b>.</p>
+plus separate <b>90+X flip</b> and <b>Free-kick ×2</b> columns for the two multipliers - then the ranked prizes and bonuses. Every column adds up to <b>Total</b>.</p>
 <div class="scroll wide"><table class="num grid sortable"><tr>{grid_head}</tr>
 {grid_rows}
 </table></div>
