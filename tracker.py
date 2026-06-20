@@ -1271,29 +1271,35 @@ def write_html(result: dict, out_dir: str) -> None:
     standings = sorted(result["owner_totals"].items(), key=lambda kv: (-kv[1], kv[0]))
     n_players = len(standings)
     # Joint (competition) places: players level on points share a place (1, 2=, 2=, 4...).
-    # 'last' is the worst place actually present (tied bottom players share it).
-    lb_rank = [(1 + sum(1 for _, t2 in standings if t2 > total), o, total) for o, total in standings]
-    _rank_list = [rk for rk, _, _ in lb_rank]
-    last_rank = max(_rank_list, default=0)
+    # A tie of k players starting at place r OCCUPIES places r..r+k-1, so a marker position
+    # that falls inside a tie's span still counts - e.g. two players joint 3rd occupy 3 AND 4,
+    # so the 4th-place 😈 applies to both (crossovers count).
+    lb_rank = []
+    for o, total in standings:
+        rank = 1 + sum(1 for _, t2 in standings if t2 > total)
+        tie = sum(1 for _, t2 in standings if t2 == total)
+        lb_rank.append((rank, tie, o, total))
 
-    def lb_mark(rank):
+    def lb_mark(rank, tie):
+        covered = range(rank, rank + tie)        # the places this (possibly joint) player occupies
         m = ""
-        if rank == 1:
+        if 1 in covered:
             m += "👑"
-        if n_players > 1 and rank == last_rank:
+        if n_players > 1 and n_players in covered:
             m += "💩"
-        if DICE_PAYER and rank == DICE_PAYER:
+        if DICE_PAYER and DICE_PAYER in covered:
             m += "😈"
-        if DICE_RECEIVER and rank == DICE_RECEIVER:
+        if DICE_RECEIVER and DICE_RECEIVER in covered:
             m += "😇"
         return f" {m}" if m else ""
 
-    def _pos(rank):                       # '2=' when shared, else '2'
-        return f"{rank}=" if _rank_list.count(rank) > 1 else f"{rank}"
+    def _pos(rank, tie):                  # '2=' when shared, else '2'
+        return f"{rank}=" if tie > 1 else f"{rank}"
 
     lb = "\n".join(
-        f"<tr><td>{_pos(rank)}</td><td>{(o or '(undrafted)')}{lb_mark(rank)}</td><td>{round(total, 2):g}</td></tr>"
-        for rank, o, total in lb_rank) or '<tr><td colspan="3">-</td></tr>'
+        f"<tr><td>{_pos(rank, tie)}</td><td>{(o or '(undrafted)')}{lb_mark(rank, tie)}</td>"
+        f"<td>{round(total, 2):g}</td></tr>"
+        for rank, tie, o, total in lb_rank) or '<tr><td colspan="3">-</td></tr>'
     def _ord(n):
         return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
     dice_note = (f" Dice rolled: whoever finishes {_ord(DICE_PAYER)} (😈) buys whoever finishes "
