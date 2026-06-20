@@ -108,15 +108,29 @@ def abbr(team):
 # --- small helpers -----------------------------------------------------------
 
 def parse_minute(raw: str) -> int | None:
-    """'67' -> 67, '90+3' -> 90, '' -> None."""
+    """'67' -> 67, '90+3' -> 90, '1:11' -> 1 (elapsed minute, for ranking), '' -> None.
+    A 'M:SS' value (precise clock time, e.g. a very fast goal) ranks by its elapsed minute."""
     raw = (raw or "").strip()
     if not raw:
         return None
     base = raw.split("+", 1)[0].strip()
+    if ":" in base:                       # 'M:SS' precise time -> elapsed whole minute
+        try:
+            return int(base.split(":", 1)[0])
+        except ValueError:
+            return None
     try:
         return int(base)
     except ValueError:
         return None
+
+
+def mdisp(raw) -> str:
+    """Display a minute: '2' -> "2'", '90+4' -> "90+4'", '1:11' -> '1:11' (precise mm:ss time)."""
+    raw = str(raw or "").strip()
+    if not raw:
+        return ""
+    return raw if ":" in raw else raw + "'"
 
 
 def truthy(raw: str) -> bool:
@@ -568,16 +582,16 @@ def cat_detail_fns(result: dict) -> dict:
         return min(rows, key=lambda mr: mr[0])[1] if rows else None
 
     def d_qgoal(t):
-        r = _minrow(_tg(t), "minute"); return f"{r['minute']}' - {r['scorer']} ({abbr(t)})" if r else ""
+        r = _minrow(_tg(t), "minute"); return f"{mdisp(r['minute'])} - {r['scorer']} ({abbr(t)})" if r else ""
     def d_qyel(t):
         r = _minrow([c for c in rcards if c["team"] == t and c.get("color") == "yellow"], "minute")
-        return f"{r['minute']}' - {r.get('player') or '?'} ({abbr(t)})" if r else ""
+        return f"{mdisp(r['minute'])} - {r.get('player') or '?'} ({abbr(t)})" if r else ""
     def d_fsub(t):
         r = _minrow([s for s in rsubs if s["team"] == t], "minute")
-        return f"{r['minute']}' {r.get('off') or '?'} off ({abbr(t)})" if r else ""
+        return f"{mdisp(r['minute'])} {r.get('off') or '?'} off ({abbr(t)})" if r else ""
     def d_fog(t):
         r = _minrow([o for o in rog if o["team"] == t], "minute")
-        return f"{r['minute']}' - {r.get('player') or '?'} ({abbr(t)})" if r else ""
+        return f"{mdisp(r['minute'])} - {r.get('player') or '?'} ({abbr(t)})" if r else ""
 
     def _name_age_pool(t):
         pool = list(_tg(t))
@@ -712,11 +726,11 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
             if not x:
                 continue
             if cat == "fastest_sub":
-                newlead[cat] = f"{x.get('minute', '')}' {x.get('off', '?')} off ({abbr(x['team'])})"
+                newlead[cat] = f"{mdisp(x.get('minute', ''))} {x.get('off', '?')} off ({abbr(x['team'])})"
             elif cat in ("quickest_yellow", "fastest_own_goal"):
-                newlead[cat] = f"{x.get('minute', '')}' - {x.get('player', '?')} ({abbr(x['team'])})"
+                newlead[cat] = f"{mdisp(x.get('minute', ''))} - {x.get('player', '?')} ({abbr(x['team'])})"
             elif cat == "quickest_goal":
-                newlead[cat] = f"{x.get('minute', '')}' - {x.get('scorer', '?')} ({abbr(x['team'])})"
+                newlead[cat] = f"{mdisp(x.get('minute', ''))} - {x.get('scorer', '?')} ({abbr(x['team'])})"
             elif cat in ("youngest_scorer", "oldest_scorer"):
                 newlead[cat] = f"{x.get('scorer_age', '')} - {x.get('scorer', '?')} ({abbr(x['team'])})"
             else:
@@ -737,10 +751,10 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
                     ty = (g.get("type") or "open").strip()
                     tag = (" disallowed" if truthy(g.get("disallowed", "")) else
                            {"penalty": " pen", "freekick": " FK", "shootout": " SO"}.get(ty, ""))
-                    ev.append(f"{g.get('scorer', '?')} {g.get('minute', '')}'{tag}")
+                    ev.append(f"{g.get('scorer', '?')} {mdisp(g.get('minute', ''))}{tag}")
                 for og in r["raw"]["own_goals"]:        # opponent OG counted for this team
                     if og["match_id"] == mk and og["team"] != t:
-                        ev.append(f"OG {og.get('player', '?')} {og.get('minute', '')}'")
+                        ev.append(f"OG {og.get('player', '?')} {mdisp(og.get('minute', ''))}")
                 head = f"{abbr(t)} {d_ig:+g}"
                 body = "; ".join(bits) if bits else "no in-game points"
                 parts.append(f"{head} = {body}" + (("  [" + ", ".join(ev) + "]") if ev else ""))
@@ -1393,7 +1407,7 @@ def write_html(result: dict, out_dir: str) -> None:
                 pending_owner[o] = pending_owner.get(o, 0) + 1
         dice_rows += (f'<tr><td>{when} · {_rc_ml.get(mid, mid)}</td>'
                       f'<td>{t}</td><td>{owner.get(t, "") or "-"}</td>'
-                      f'<td>{c.get("player") or "?"} {c.get("minute", "")}\'</td>'
+                      f'<td>{c.get("player") or "?"} {mdisp(c.get("minute", ""))}</td>'
                       f'<td>{status}</td></tr>\n')
     dice_rows = dice_rows or '<tr><td colspan="5">no red cards yet</td></tr>'
     pending_summary = (", ".join(f"<b>{o}</b> ({n})" for o, n in
@@ -1430,7 +1444,7 @@ def write_html(result: dict, out_dir: str) -> None:
                 "owner": owner.get(t, "") or "-", "who": who, "pts": pts}
     # red cards
     _emit("red", "🟥 Red cards", "Every red card — each triggers a d6 dice roll for the owner.",
-          [_row(c, f"{c.get('player') or '?'} {c.get('minute','')}'",
+          [_row(c, f"{c.get('player') or '?'} {mdisp(c.get('minute',''))}",
                 (f"🎲 {c['dice']} → {(int(c['dice'])/2) if int(c['dice'])%2 else -(int(c['dice'])/2):+g}"
                  if (c.get('dice') or '').strip().isdigit() else "⏳ dice pending"))
            for c in sorted((c for c in _c if (c.get('color') or '').lower() == 'red'), key=_evkey)])
@@ -1438,37 +1452,37 @@ def write_html(result: dict, out_dir: str) -> None:
     inj = [g for g in _g if _good(g) and _inj(g)] + \
           [dict(o, _og=True) for o in _o if _inj(o)]
     _emit("inj", "⏱️ 90+X injury-time goals", "Goals in full-time injury time (90+X) — each flips that team's in-game total ×-1.",
-          [_row(e, f"{e.get('scorer') or e.get('player') or '?'} {e.get('minute','')}'"
+          [_row(e, f"{e.get('scorer') or e.get('player') or '?'} {mdisp(e.get('minute',''))}"
                 + (" (OG)" if e.get('_og') else ""), "flips in-game ×-1")
            for e in sorted(inj, key=_evkey)])
     # own goals
     _emit("og", "⚽ Own goals", "Own goals — feed the fastest-own-goal prize and count +0.5 for the team they benefit.",
-          [_row(o, f"{o.get('player') or '?'} {o.get('minute','')}'",
+          [_row(o, f"{o.get('player') or '?'} {mdisp(o.get('minute',''))}",
                 f"+0.5 for {abbr(_mt.get(o['match_id'],('',''))[0] if o['team']==_mt.get(o['match_id'],('',''))[1] else _mt.get(o['match_id'],('',''))[1])}")
            for o in sorted(_o, key=_evkey)])
     # penalties (open-play, scored)
     _emit("pen", "🎯 Penalties scored", "Non-shootout penalties — -1.5 each.",
-          [_row(g, f"{g.get('scorer') or '?'} {g.get('minute','')}'", "-1.5")
+          [_row(g, f"{g.get('scorer') or '?'} {mdisp(g.get('minute',''))}", "-1.5")
            for g in sorted((g for g in _g if _good(g) and g.get('type') == 'penalty'), key=_evkey)])
     # free-kick goals
     _emit("fk", "🪄 Free-kick goals", "Free-kick goals — double the OPPONENT team's in-game total (×2).",
-          [_row(g, f"{g.get('scorer') or '?'} {g.get('minute','')}'", "doubles opponent (×2)")
+          [_row(g, f"{g.get('scorer') or '?'} {mdisp(g.get('minute',''))}", "doubles opponent (×2)")
            for g in sorted((g for g in _g if _good(g) and g.get('type') == 'freekick'), key=_evkey)])
     # 23' / 67' goals
     _emit("b2367", "⭐ 23' / 67' goals", "A goal scored (or conceded) in the 23rd or 67th minute — +4 (capped per game).",
-          [_row(g, f"{g.get('scorer') or '?'} {g.get('minute','')}'", "+4 (23'/67')")
+          [_row(g, f"{g.get('scorer') or '?'} {mdisp(g.get('minute',''))}", "+4 (23'/67')")
            for g in sorted((g for g in _g if _good(g) and parse_minute(g.get('minute','')) in (23, 67)), key=_evkey)])
     # VAR disallowed
     _emit("var", "🚩 VAR-disallowed goals", "Goals given then chalked off by VAR — -1 each.",
-          [_row(g, f"{g.get('scorer') or '?'} {g.get('minute','')}'", "-1")
+          [_row(g, f"{g.get('scorer') or '?'} {mdisp(g.get('minute',''))}", "-1")
            for g in sorted((g for g in _g if truthy(g.get('disallowed','')) ), key=_evkey)])
     # yellow cards
     _emit("yellow", "🟨 Yellow cards", "Every yellow — feeds the quickest-yellow prize and the fewest-cards award (1 each).",
-          [_row(c, f"{c.get('player') or '?'} {c.get('minute','')}'", "")
+          [_row(c, f"{c.get('player') or '?'} {mdisp(c.get('minute',''))}", "")
            for c in sorted((c for c in _c if (c.get('color') or '').lower() == 'yellow'), key=_evkey)])
     # open-play goals
     _emit("open", "🥅 Open-play goals", "Open-play goals — +0.5 each.",
-          [_row(g, f"{g.get('scorer') or '?'} {g.get('minute','')}'", "+0.5")
+          [_row(g, f"{g.get('scorer') or '?'} {mdisp(g.get('minute',''))}", "+0.5")
            for g in sorted((g for g in _g if _good(g) and (g.get('type') or 'open') == 'open'), key=_evkey)])
     # substitutions (who came OFF) — earliest first; a team's earliest feeds the fastest-sub prize
     _sub_min = {}
@@ -1485,7 +1499,7 @@ def write_html(result: dict, out_dir: str) -> None:
     _emit("subs", "🔁 Substitutions (who came off)",
           "Every substitution, earliest first. A team's EARLIEST sub feeds the fastest-substitution prize "
           "(10/8/5/3/2/1). Shows who was subbed OFF.",
-          [_row(s, f"{s.get('off') or '?'} off {s.get('minute','')}'", _subpts(s))
+          [_row(s, f"{s.get('off') or '?'} off {mdisp(s.get('minute',''))}", _subpts(s))
            for s in sorted(_s, key=_subkey)])
     EVENTS = [e for e in EVENTS if e["rows"]]
 
