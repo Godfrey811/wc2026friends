@@ -114,9 +114,10 @@ def parse_minute(raw: str) -> int | None:
     if not raw:
         return None
     base = raw.split("+", 1)[0].strip()
-    if ":" in base:                       # 'M:SS' precise time -> elapsed whole minute
+    if ":" in base:                       # 'M:SS' precise time -> elapsed minutes (fractional)
+        mm, ss = (base.split(":", 1) + ["0"])[:2]   # so 1:04 (1.07) ranks below 1:11 (1.18)
         try:
-            return int(base.split(":", 1)[0])
+            return int(mm) + int(ss) / 60
         except ValueError:
             return None
     try:
