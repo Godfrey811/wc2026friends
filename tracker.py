@@ -1638,7 +1638,7 @@ def write_html(result: dict, out_dir: str) -> None:
             else:
                 det = ""
             rows.append((o, v, det))
-        rows.sort(key=lambda r: (-abs(r[1]), r[0]))
+        rows.sort(key=lambda r: (-r[1], r[0]))   # by actual points (highest first), not absolute value
         if any(r[2] for r in rows):
             head = '<tr><th>Player</th><th>Detail</th><th>Pts</th></tr>'
             body = "".join(f"<tr><td>{o}</td><td class='det'>{det}</td><td>{_cell(v)}</td></tr>"
