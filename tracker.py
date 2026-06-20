@@ -993,8 +993,9 @@ def write_outputs(result: dict, out_dir: str) -> None:
     with open(os.path.join(out_dir, "standings.csv"), "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["position", "owner", "total"])
-        for i, (o, total) in enumerate(standings, 1):
-            w.writerow([i, o or "(undrafted)", round(total, 2)])
+        for o, total in standings:        # joint places: tied players share a position
+            pos = 1 + sum(1 for _, t2 in standings if t2 > total)
+            w.writerow([pos, o or "(undrafted)", round(total, 2)])
 
     # Reference sheets: every goal / every card with the details (viewable on GitHub).
     goal_rows, card_rows, sub_rows = match_logs(result)
@@ -1010,8 +1011,9 @@ def print_standings(result: dict) -> None:
     standings = sorted(result["owner_totals"].items(), key=lambda kv: (-kv[1], kv[0]))
     print("\n  WC2026 Friends — standings")
     print("  " + "-" * 30)
-    for i, (o, total) in enumerate(standings, 1):
-        print(f"  {i:>2}. {o or '(undrafted)':<18} {total:>7.2f}")
+    for o, total in standings:            # joint places: tied players share a position
+        pos = 1 + sum(1 for _, t2 in standings if t2 > total)
+        print(f"  {pos:>2}. {o or '(undrafted)':<18} {total:>7.2f}")
     print()
 
 
@@ -1266,22 +1268,30 @@ def write_html(result: dict, out_dir: str) -> None:
 
     standings = sorted(result["owner_totals"].items(), key=lambda kv: (-kv[1], kv[0]))
     n_players = len(standings)
+    # Joint (competition) places: players level on points share a place (1, 2=, 2=, 4...).
+    # 'last' is the worst place actually present (tied bottom players share it).
+    lb_rank = [(1 + sum(1 for _, t2 in standings if t2 > total), o, total) for o, total in standings]
+    _rank_list = [rk for rk, _, _ in lb_rank]
+    last_rank = max(_rank_list, default=0)
 
-    def lb_mark(pos):
+    def lb_mark(rank):
         m = ""
-        if pos == 1:
+        if rank == 1:
             m += "👑"
-        if n_players > 1 and pos == n_players:
+        if n_players > 1 and rank == last_rank:
             m += "💩"
-        if DICE_PAYER and pos == DICE_PAYER:
+        if DICE_PAYER and rank == DICE_PAYER:
             m += "😈"
-        if DICE_RECEIVER and pos == DICE_RECEIVER:
+        if DICE_RECEIVER and rank == DICE_RECEIVER:
             m += "😇"
         return f" {m}" if m else ""
 
+    def _pos(rank):                       # '2=' when shared, else '2'
+        return f"{rank}=" if _rank_list.count(rank) > 1 else f"{rank}"
+
     lb = "\n".join(
-        f"<tr><td>{i}</td><td>{(o or '(undrafted)')}{lb_mark(i)}</td><td>{round(total, 2):g}</td></tr>"
-        for i, (o, total) in enumerate(standings, 1)) or '<tr><td colspan="3">-</td></tr>'
+        f"<tr><td>{_pos(rank)}</td><td>{(o or '(undrafted)')}{lb_mark(rank)}</td><td>{round(total, 2):g}</td></tr>"
+        for rank, o, total in lb_rank) or '<tr><td colspan="3">-</td></tr>'
     def _ord(n):
         return f"{n}{'th' if 10 <= n % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
     dice_note = (f" Dice rolled: whoever finishes {_ord(DICE_PAYER)} (😈) buys whoever finishes "
