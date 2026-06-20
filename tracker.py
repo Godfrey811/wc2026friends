@@ -993,8 +993,9 @@ def write_outputs(result: dict, out_dir: str) -> None:
     with open(os.path.join(out_dir, "standings.csv"), "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(["position", "owner", "total"])
-        for o, total in standings:        # joint places: tied players share a position
-            pos = 1 + sum(1 for _, t2 in standings if t2 > total)
+        for o, total in standings:        # joint places: tied players share a position (11=)
+            rank = 1 + sum(1 for _, t2 in standings if t2 > total)
+            pos = f"{rank}=" if sum(1 for _, t2 in standings if t2 == total) > 1 else f"{rank}"
             w.writerow([pos, o or "(undrafted)", round(total, 2)])
 
     # Reference sheets: every goal / every card with the details (viewable on GitHub).
@@ -1011,9 +1012,10 @@ def print_standings(result: dict) -> None:
     standings = sorted(result["owner_totals"].items(), key=lambda kv: (-kv[1], kv[0]))
     print("\n  WC2026 Friends — standings")
     print("  " + "-" * 30)
-    for o, total in standings:            # joint places: tied players share a position
-        pos = 1 + sum(1 for _, t2 in standings if t2 > total)
-        print(f"  {pos:>2}. {o or '(undrafted)':<18} {total:>7.2f}")
+    for o, total in standings:            # joint places: tied players share a position (11=)
+        rank = 1 + sum(1 for _, t2 in standings if t2 > total)
+        pos = f"{rank}=" if sum(1 for _, t2 in standings if t2 == total) > 1 else f"{rank}"
+        print(f"  {pos:>3} {o or '(undrafted)':<18} {total:>7.2f}")
     print()
 
 

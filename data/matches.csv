@@ -28,4 +28,4 @@ match_id,stage,team_a,team_b,team_a_sot,team_b_sot
 27,group,Canada,Qatar,10,0
 28,group,Mexico,South Korea,,
 29,group,USA,Australia,,
-30,group,Scotland,Morocco,,
+30,group,Scotland,Morocco,0,2
