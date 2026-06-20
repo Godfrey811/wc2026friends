@@ -86,3 +86,6 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 28,Mexico,50,open,Luis Romo,31y 21d,,1995-06-05
 29,USA,43,open,Alex Freeman,21y 319d,,2004-08-09
 30,Morocco,1:11,open,Ismael Saibari,25y 148d,,2001-01-28
+31,Brazil,23,open,Matheus Cunha,27y 30d,,1999-05-27
+31,Brazil,36,open,Matheus Cunha,27y 30d,,1999-05-27
+31,Brazil,45+3,open,Vinícius Júnior,25y 348d,,2000-07-12
