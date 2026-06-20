@@ -256,6 +256,7 @@ def score(data_dir: str, upto: int | None = None) -> dict:
     pts = defaultdict(lambda: defaultdict(float))     # team -> category -> points
     detail = defaultdict(lambda: defaultdict(float))  # team -> in_game sub-component -> RAW points
     #   (raw = before the 90'+ flip and opponent free-kick doubling are applied)
+    zero_sot = []   # (match_id, team) for teams that had 0 shots on target (the +4 bonus)
 
     # ---- per-match in-game scoring ----
     for m in matches:
@@ -307,6 +308,8 @@ def score(data_dir: str, upto: int | None = None) -> dict:
 
             b2367 = 4.0 if (hit_2367(tg) or hit_2367(og)) else 0.0   # capped at +4 per game
             b0sot = 4.0 if sot.get(team) == 0 else 0.0
+            if sot.get(team) == 0:
+                zero_sot.append({"match_id": mid, "team": team})
             # own goal by the opponent counts +0.5 for this team (part of in-game, so it flips too)
             og_for = 0.5 * sum(1 for o in own_goals_by_match.get(mid, []) if o["team"] == opp)
             # an own goal in our favour in injury time (90+X) is a late goal FOR us, so it
@@ -555,6 +558,7 @@ def score(data_dir: str, upto: int | None = None) -> dict:
         "early_exit": early_exit,
         "match_scores": match_scores,
         "cards_total": dict(cards_total),
+        "zero_sot": zero_sot,
         "raw": {"goals": goals, "cards": cards, "subs": subs, "own_goals": own_goals},
         "match_label": {m["match_id"]: f'{m["team_a"]} v {m["team_b"]}' for m in matches},
         "match_teams": {m["match_id"]: (m["team_a"], m["team_b"]) for m in matches},
@@ -1502,6 +1506,13 @@ def write_html(result: dict, out_dir: str) -> None:
     _emit("open", "🥅 Open-play goals", "Open-play goals — +0.5 each.",
           [_row(g, f"{g.get('scorer') or '?'} {mdisp(g.get('minute',''))}", "+0.5")
            for g in sorted((g for g in _g if _good(g) and (g.get('type') or 'open') == 'open'), key=_evkey)])
+    # 0 shots on target (team-level bonus)
+    _emit("zerosot", "🚫 0 shots on target",
+          "A team that managed 0 shots on target in a game — +4 (a team-level bonus, not a player event).",
+          [{"match": _evm(z["match_id"]), "team": z["team"], "owner": owner.get(z["team"], "") or "-",
+            "who": "0 shots on target", "pts": "+4"}
+           for z in sorted(result.get("zero_sot", []),
+                           key=lambda z: int(z["match_id"]) if str(z["match_id"]).isdigit() else 0)])
     # substitutions (who came OFF) — earliest first; a team's earliest feeds the fastest-sub prize
     _sub_min = {}
     for s in _s:
