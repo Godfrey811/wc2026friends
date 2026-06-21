@@ -299,15 +299,14 @@ def score(data_dir: str, upto: int | None = None) -> dict:
                 if typ != "shootout" and raw_min.startswith("90+"):
                     ninety += 1
 
-            def hit_2367(rows):
-                for g in rows:
-                    if truthy(g.get("disallowed", "")) or (g.get("type") == "shootout"):
-                        continue
-                    if parse_minute(g.get("minute", "")) in (23, 67):
-                        return True
-                return False
+            def count_2367(rows):
+                return sum(1 for g in rows
+                           if not truthy(g.get("disallowed", "")) and g.get("type") != "shootout"
+                           and parse_minute(g.get("minute", "")) in (23, 67))
 
-            b2367 = 4.0 if (hit_2367(tg) or hit_2367(og)) else 0.0   # capped at +4 per game
+            # +4 PER goal scored OR conceded in the 23rd/67th minute (no per-game cap; if you
+            # own both teams a 23'/67' goal pays +4 on each — scored on one, conceded on the other).
+            b2367 = 4.0 * (count_2367(tg) + count_2367(og))
             b0sot = 4.0 if sot.get(team) == 0 else 0.0
             if sot.get(team) == 0:
                 zero_sot.append({"match_id": mid, "team": team})
@@ -947,7 +946,7 @@ CAT_SHORT = {
 
 CAT_DESC = {
     "in_game": "In-game points: goals (open +0.5, pen -1.5, shootout -0.5, free-kick 0), VAR -1, "
-               "a goal/concede in the 23rd or 67th min +4, 0 shots on target +4, no goals scored in a game -1, "
+               "a goal scored/conceded in the 23rd or 67th min +4 PER GOAL (no per-game cap; +4 each if you own both teams), 0 shots on target +4, no goals scored in a game -1, "
                "red-card dice - then the full-time injury-time multiply (only a 90+X goal - the added time at the end of the 90, not a plain 90 and not extra time - = x -1) and opponent free-kick doubling (x2) are applied (both together = x -2).",
     "prime": "-3 while the team is on a PRIME number of (non-shootout) goals.",
     "progression": "Points for the round a team is knocked out in: R32 +1, R16 +2, QF +3, SF +5, "
@@ -1492,7 +1491,7 @@ def write_html(result: dict, out_dir: str) -> None:
           [_row(g, f"{g.get('scorer') or '?'} {mdisp(g.get('minute',''))}", "doubles opponent (×2)")
            for g in sorted((g for g in _g if _good(g) and g.get('type') == 'freekick'), key=_evkey)])
     # 23' / 67' goals
-    _emit("b2367", "⭐ 23' / 67' goals", "A goal scored (or conceded) in the 23rd or 67th minute — +4 (capped per game).",
+    _emit("b2367", "⭐ 23' / 67' goals", "A goal scored or conceded in the 23rd or 67th minute — +4 PER GOAL (no per-game cap; +4 each if you own both teams).",
           [_row(g, f"{g.get('scorer') or '?'} {mdisp(g.get('minute',''))}", "+4 (23'/67')")
            for g in sorted((g for g in _g if _good(g) and parse_minute(g.get('minute','')) in (23, 67)), key=_evkey)])
     # VAR disallowed

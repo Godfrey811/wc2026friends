@@ -12,7 +12,7 @@ Everyone drafts teams from three odds-tiered pots. Your teams earn (and lose) po
 | Penalty scored — in a shootout | -0.5 each |
 | Goal GIVEN then ruled out by VAR | -1 each (only a goal that was awarded and then chalked off by VAR - a real-time offside flag does NOT count) |
 | 0 shots on target in a game | +4 |
-| Goal scored OR conceded in the 23rd or 67th minute | +4 (max +4 per game, even if you own both teams) |
+| Goal scored OR conceded in the 23rd or 67th minute | +4 PER GOAL - every goal at 23' or 67' pays +4, with no per-game cap. If you own BOTH teams a 23'/67' goal pays twice (+4 scored, +4 conceded). |
 | Each game your team fails to score (clean sheet against you) | -1 (own both teams & it's 0-0 = 0; extra time excluded) |
 | Prime number of total goals in the tournament (excludes shootout goals) | -3 |
 
