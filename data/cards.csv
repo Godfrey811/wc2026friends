@@ -2,9 +2,9 @@ match_id,team,minute,color,dice,player
 1,Mexico,23,yellow,,Brian Gutiérrez
 1,South Africa,17,yellow,,Teboho Mokoena
 1,South Africa,74,yellow,,Nkosinathi Sibisi
-1,South Africa,49,red,,Sphephelo Sithole
-1,South Africa,84,red,,Themba Zwane
-1,Mexico,90+2,red,,César Montes
+1,South Africa,49,red,2,Sphephelo Sithole
+1,South Africa,84,red,6,Themba Zwane
+1,Mexico,90+2,red,6,César Montes
 2,South Korea,90+6,yellow,,Lee Gi-hyuk
 3,Canada,11,yellow,,Alistair Johnston
 3,Canada,53,yellow,,Luc de Fougerolles
@@ -60,11 +60,11 @@ match_id,team,minute,color,dice,player
 26,Switzerland,65,yellow,,Nico Elvedi
 26,Bosnia & Herzegovina,59,yellow,,Amar Dedić
 26,Bosnia & Herzegovina,61,yellow,,Edin Džeko
-26,Bosnia & Herzegovina,80,red,,Tarik Muharemović
+26,Bosnia & Herzegovina,80,red,6,Tarik Muharemović
 27,Canada,9,yellow,,Derek Cornelius
 27,Qatar,62,yellow,,Ahmed Fathy
-27,Qatar,33,red,,Homam Ahmed
-27,Qatar,51,red,,Assim Madibo
+27,Qatar,33,red,3,Homam Ahmed
+27,Qatar,51,red,3,Assim Madibo
 28,South Korea,4,yellow,,Lee Kang-in
 28,South Korea,58,yellow,,Paik Seung-ho
 29,USA,56,yellow,,Antonee Robinson
@@ -82,7 +82,7 @@ match_id,team,minute,color,dice,player
 31,Haiti,72,yellow,,Danley Jean Jacques
 32,Turkey,71,yellow,,Eren Elmalı
 32,Paraguay,4,yellow,,Matías Galarza
-32,Paraguay,45+3,red,,Miguel Almirón
+32,Paraguay,45+3,red,4,Miguel Almirón
 33,Sweden,53,yellow,,Gabriel Gudmundsson
 33,Sweden,75,yellow,,Yasin Ayari
 33,Sweden,80,yellow,,Lucas Bergvall
@@ -96,7 +96,7 @@ match_id,team,minute,color,dice,player
 37,Saudi Arabia,44,yellow,,Abdulelah Al-Amri
 38,Belgium,3,yellow,,Romelu Lukaku
 38,Iran,33,yellow,,Saeid Ezatolahi
-38,Belgium,66,red,,Nathan Ngoy
+38,Belgium,66,red,5,Nathan Ngoy
 39,New Zealand,20,yellow,,Sarpreet Singh
 39,New Zealand,34,yellow,,Callum McCowatt
 39,Egypt,17,yellow,,Mohanad Lasheen
