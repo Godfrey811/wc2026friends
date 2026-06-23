@@ -1233,6 +1233,78 @@ CHART_JS = r"""<script>
     render(order[0]);
   })();
 
+  // Tab - By game: invert the ledger by match. Every owner who moved that game (in-game
+  // for the teams playing, OR a tournament-wide re-rank the match triggered) shows here.
+  (function gameTab(){
+    var pick = document.getElementById('gamePick'),
+        out = document.getElementById('gameOut'),
+        head = document.getElementById('gameHead');
+    if (!pick || !out || !PROG.ledger) return;
+    function esc(s){ return String(s).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+    function fmt(n){ return (n > 0 ? '+' : '') + (Math.round(n*100)/100); }
+    var byM = {};
+    PROG.players.forEach(function(o){
+      (PROG.ledger[o]||[]).forEach(function(rw){ (byM[rw.m] = byM[rw.m] || []).push({o:o, rw:rw}); });
+    });
+    var times = PROG.times.slice().reverse();   // newest match first
+    times.forEach(function(tm){
+      var op = document.createElement('option');
+      op.value = tm.m;
+      op.textContent = 'M' + tm.m + '  ' + tm.label + (tm.date ? '  · ' + tm.date : '') +
+                       '   (' + ((byM[tm.m]||[]).length) + ' moved)';
+      pick.appendChild(op);
+    });
+    var FEW = {fewest_goals:1, fewest_cards:1};
+    function posCell(rw){
+      if (rw.rfrom == null) return '<span class="r">' + ord(rw.rto) + ' (start)</span>';
+      if (rw.rto === rw.rfrom) return '<span class="r">' + ord(rw.rto) + ' =</span>';
+      var up = rw.rto < rw.rfrom, names = up ? rw.over : rw.by;
+      var who = (names && names.length)
+        ? '<br><span class="r">' + (up ? 'overtook ' : 'overtaken by ') + names.map(esc).join(', ') + '</span>' : '';
+      return '<span class="' + (up ? 'pos' : 'neg') + '">' + ord(rw.rfrom) + ' &rarr; ' + ord(rw.rto) +
+             ' ' + (up ? '▲' : '▼') + '</span>' + who;
+    }
+    function render(m){
+      m = parseInt(m, 10);
+      var list = (byM[m] || []).slice().sort(function(a,b){ return Math.abs(b.rw.dtotal) - Math.abs(a.rw.dtotal); });
+      var tm = PROG.times.filter(function(t){ return t.m === m; })[0] || {};
+      head.textContent = list.length + ' owner(s) moved · ' + (tm.label||'') + (tm.date ? ' · ' + tm.date : '');
+      var h = '<table class="tt ledger"><tr><th>Player</th><th>What moved</th>' +
+              '<th class="num-cell" title="Fewest goals + fewest cards shared awards combined">Fewest G/C</th>' +
+              '<th class="num-cell">&Delta;</th><th class="num-cell">Total</th><th class="pos-cell">Position</th></tr>';
+      if (!list.length) h += '<tr><td colspan="6">no point movements this match</td></tr>';
+      list.forEach(function(x){
+        var rw = x.rw;
+        var cats = Object.keys(rw.deltas).filter(function(c){ return !FEW[c]; })
+                     .sort(function(a,b){ return Math.abs(rw.deltas[b]) - Math.abs(rw.deltas[a]); });
+        var chips = cats.map(function(c){
+          var d = rw.deltas[c], why = (rw.details && rw.details[c]) || '';
+          var tip = esc((PROG.catLabels[c]||c) + (why ? ' — ' + why : ''));
+          return '<span class="dchip ' + (d>0?'pos':'neg') + (why?' has-why':'') + '" title="' + tip + '">' +
+                 esc(PROG.catLabels[c]||c) + ' ' + fmt(d) + '</span>';
+        }).join(' ') || '<span class="r">—</span>';
+        var few = (rw.deltas.fewest_goals||0) + (rw.deltas.fewest_cards||0);
+        var fwhy = [];
+        if (rw.details && rw.details.fewest_goals) fwhy.push('fewest goals: ' + rw.details.fewest_goals);
+        if (rw.details && rw.details.fewest_cards) fwhy.push('fewest cards: ' + rw.details.fewest_cards);
+        var fewCell = few
+          ? '<span class="' + (few>0?'pos':'neg') + (fwhy.length?' has-why':'') + '"' +
+            (fwhy.length?' title="' + esc(fwhy.join(' · ')) + '"':'') + '>' + fmt(few) + '</span>'
+          : '<span class="r">–</span>';
+        var dc = rw.dtotal > 0 ? 'pos' : (rw.dtotal < 0 ? 'neg' : '');
+        h += '<tr><td><b>' + esc(x.o) + '</b></td>' +
+             '<td class="det">' + chips + '</td>' +
+             '<td class="num-cell">' + fewCell + '</td>' +
+             '<td class="num-cell ' + dc + '">' + fmt(rw.dtotal) + '</td>' +
+             '<td class="num-cell"><b>' + rw.total + '</b></td>' +
+             '<td class="pos-cell">' + posCell(rw) + '</td></tr>';
+      });
+      out.innerHTML = h + '</table>';
+    }
+    pick.addEventListener('change', function(){ render(pick.value); });
+    if (times.length) render(times[0].m);
+  })();
+
   // Tab - By event: clickable element chips; lists every game that impacts the chosen element.
   (function eventTab(){
     if (typeof EV === 'undefined' || !EV.length) return;
@@ -1724,6 +1796,7 @@ def write_html(result: dict, out_dir: str) -> None:
 <a href="#tab-leaderboard">🏆 Leaderboard</a>
 <a href="#tab-trends">📈 Trends</a>
 <a href="#tab-ledger">📒 Point log</a>
+<a href="#tab-bygame">🎬 By game</a>
 <a href="#tab-events">🧩 By event</a>
 <a href="#tab-players">👥 Player teams</a>
 <a href="#tab-fixtures">📅 Fixtures</a>
@@ -1769,6 +1842,18 @@ what they're made of). The <b>Position</b> column shows the leaderboard place th
 overtook them or who they overtook.</p>
 <p class="sub"><label>Player: <select id="ledgerPick"></select></label> &nbsp;<span id="ledgerHead" class="r"></span></p>
 <div id="ledgerOut" class="scroll"></div>
+</section>
+
+<section class="tab" id="tab-bygame">
+<h2>🎬 By game — what every match did to the points</h2>
+<p class="sub">The mirror image of the Point log: pick a <b>match</b> to see <b>every point movement it caused</b>, across
+<b>all</b> owners — not just the two teams playing. That's the in-game goals / bonuses / flips for the teams involved,
+<b>plus</b> any tournament-wide re-rank the match set off — a new fastest sub, longest/shortest name, youngest/oldest
+scorer, a prime flip, fewest goals/cards — that nudged <b>other</b> owners too. <b>Hover a chip</b> for the player, sub
+or card behind it. The <b>Position</b> column shows each owner's leaderboard place after that match (from &rarr; to) and
+who they overtook or were overtaken by.</p>
+<p class="sub"><label>Match: <select id="gamePick"></select></label> &nbsp;<span id="gameHead" class="r"></span></p>
+<div id="gameOut" class="scroll"></div>
 </section>
 
 <section class="tab" id="tab-events">
