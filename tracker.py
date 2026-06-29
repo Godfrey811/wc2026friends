@@ -281,6 +281,10 @@ def score(data_dir: str, upto: int | None = None) -> dict:
                     p += -1.0  # VAR
                     d_var += -1.0
                     continue
+                raw_min = (g.get("minute") or "").replace(" ", "")
+                # Extra time = base minute 91-120 (NOT "90+X" stoppage, whose base is 90).
+                _base = raw_min.split("+")[0]
+                extra_time = _base.isdigit() and int(_base) > 90
                 gp = GOAL_POINTS.get(typ, 0.0)
                 p += gp
                 if typ == "penalty":
@@ -291,11 +295,13 @@ def score(data_dir: str, upto: int | None = None) -> dict:
                     d_open += gp
                     if typ == "freekick":
                         fk_scored += 1
-                if typ != "shootout":
+                # An extra-time goal still scores its points (open +0.5 etc.), but does NOT
+                # count as "scoring" for the clean-sheet / no-goals check (rules: extra time
+                # excluded - a team whose only goal is in ET still cops the -1).
+                if typ != "shootout" and not extra_time:
                     scored += 1
                 # Only 2nd-half INJURY time (90+X) flips. A goal in the 90th minute
                 # proper ("90", before stoppage) does NOT, nor does extra time (91-120).
-                raw_min = (g.get("minute") or "").replace(" ", "")
                 if typ != "shootout" and raw_min.startswith("90+"):
                     ninety += 1
 
