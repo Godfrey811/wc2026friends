@@ -1349,6 +1349,9 @@ def write_html(result: dict, out_dir: str) -> None:
     os.makedirs(out_dir, exist_ok=True)
     owner, tt, teams = result["owner"], result["team_totals"], result["teams"]
     updated = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    n_games = len(result.get("match_label", {}))   # games entered/played so far
+    total_games = 104                              # whole tournament (group + knockout)
+    games_pct = round(n_games / total_games * 100) if total_games else 0
 
     standings = sorted(result["owner_totals"].items(), key=lambda kv: (-kv[1], kv[0]))
     n_players = len(standings)
@@ -1814,6 +1817,7 @@ def write_html(result: dict, out_dir: str) -> None:
 
 <section class="tab" id="tab-leaderboard">
 <h2>Leaderboard</h2>
+<p class="sub"><b>{n_games} of {total_games}</b> games played &middot; {games_pct}% of the tournament done.</p>
 {dice_banner}
 <table class="lb sortable"><tr><th>#</th><th>Player</th><th>Points</th></tr>
 {lb}
