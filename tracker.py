@@ -1701,7 +1701,9 @@ def write_html(result: dict, out_dir: str) -> None:
 
     # These in-game components show a per-team contribution breakdown (amount + team)
     # so you can see which teams gave each player their open-goal/pen/no-goals/OG/90+X points.
-    TEAM_BREAKDOWN_KEYS = {"goal_open", "goal_pen", "clean_sheet", "og_for", "flip_effect", "fk_effect"}
+    TEAM_BREAKDOWN_KEYS = {"goal_open", "goal_pen", "goal_shootout", "var", "bonus_2367",
+                           "bonus_0sot", "clean_sheet", "red_dice", "og_for",
+                           "flip_effect", "fk_effect", "progression"}
 
     # By-category tab: one mini by-player leaderboard per category (with the why).
     def _cat_card(title, desc, key, num_fn):
