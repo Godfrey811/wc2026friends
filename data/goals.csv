@@ -110,7 +110,7 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 39,New Zealand,15,open,Finn Surman,22y 277d,,2003-09-23
 39,Egypt,58,open,Mostafa Ziko,29y 62d,,1997-04-27
 39,Egypt,67,open,Mohamed Salah,34y 14d,,1992-06-15
-39,Egypt,82,open,Trézéguet,31y 271d,,1994-10-01
+39,Egypt,82,open,Mahmoud Trézéguet,31y 271d,,1994-10-01
 40,Uruguay,44,open,Maxi Araújo,26y 133d,,2000-02-15
 40,Uruguay,45+6,open,Agustín Canobbio,27y 270d,,1998-10-01
 40,Cape Verde,21,freekick,Kevin Pina,29y 152d,,1997-01-27
@@ -209,13 +209,13 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 72,Argentina,31,penalty,Lautaro Martínez,28y 309d,,1997-08-22
 72,Argentina,80,freekick,Lionel Messi,39y 3d,,1987-06-24
 73,Canada,90+2,open,Stephan Eustáquio,29y 188d,,1996-12-21
-74,Brazil,56,open,Casemiro,34y 126d,,1992-02-23
+74,Brazil,56,open,Carlos Casemiro,34y 126d,,1992-02-23
 74,Brazil,90+5,open,Gabriel Martinelli,25y 11d,,2001-06-18
 74,Japan,29,open,Kaishu Sano,25y 181d,,2000-12-30
 75,Paraguay,42,open,Julio Enciso,22y 157d,,2004-01-23
 75,Germany,54,open,Kai Havertz,27y 18d,,1999-06-11
 75,Germany,105,open,Jonathan Tah,,yes,
-75,Paraguay,120,shootout,Maurício,,,
+75,Paraguay,120,shootout,Maurício Prado,,,
 75,Paraguay,120,shootout,Diego Gómez,,,
 75,Paraguay,120,shootout,Matías Galarza,,,
 75,Paraguay,120,shootout,José Canale,,,
