@@ -243,6 +243,22 @@ def score(data_dir: str, upto: int | None = None) -> dict:
         subs = [s for s in subs if _keep(s)]
         own_goals = [o for o in own_goals if _keep(o)]
 
+    # For the match-by-match replay (upto set), the tournament-level bonuses
+    # (progression, early-exit) should surface at the match where a team's fate was
+    # decided - i.e. their latest game played by `upto` - not lump onto match 1. A team
+    # only plays again if still in, so their highest match_id IS their decisive game.
+    # upto=None => final standings, no gating (every team revealed).
+    _reveal: dict[str, int] = {}
+    for _m in load(data_dir, "matches.csv"):
+        _mid = str(_m.get("match_id", "")).strip()
+        if _mid.isdigit():
+            for _t in (_m.get("team_a"), _m.get("team_b")):
+                if _t:
+                    _reveal[_t] = max(_reveal.get(_t, 0), int(_mid))
+
+    def _revealed(t):
+        return upto is None or _reveal.get(t, 0) <= upto
+
     goals_by_match: dict[str, list] = defaultdict(list)
     for g in goals:
         goals_by_match[g["match_id"]].append(g)
@@ -372,6 +388,8 @@ def score(data_dir: str, upto: int | None = None) -> dict:
     # ---- progression ----
     for r in progression:
         team = r["team"]
+        if not _revealed(team):
+            continue  # not yet confirmed by `upto` (replay); credited at the decisive match
         val = STAGE_POINTS.get((r.get("stage") or "group").strip(), 0)
         if r.get("stage") == "third":
             val = -5  # 3rd-place playoff WINNER: -5 overall (NOT the SF +5)
@@ -486,7 +504,8 @@ def score(data_dir: str, upto: int | None = None) -> dict:
     # attached to the team that set the owner's exit, so it flows into totals.
     team_stage = {r["team"]: ((r.get("stage") or "group").strip() or "group")
                   for r in progression}
-    team_out = {r["team"]: (r.get("out") or "").strip() for r in progression}
+    team_out = {r["team"]: ((r.get("out") or "").strip() if _revealed(r["team"]) else "")
+                for r in progression}
     owner_teams: dict[str, list] = defaultdict(list)
     for t in teams:
         if owner.get(t, ""):
