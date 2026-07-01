@@ -265,16 +265,14 @@ def score(data_dir: str, upto: int | None = None) -> dict:
     def _revealed(t):        # last appearance played (used for the early-exit gate)
         return upto is None or _reveal.get(t, 0) <= upto
 
-    # The match that SECURED a team's stage is the game in the round BEFORE it - the one
-    # they won (for R32, their last group game / qualification) - NOT their elimination
-    # game. So a knocked-out team's progression shows when they qualified/advanced, not at
-    # the match they went out.
-    _PREV_ROUND = {"R32": "group", "R16": "R32", "QF": "R16",
-                   "SF": "QF", "RU": "SF", "winner": "SF", "third": "SF"}
-
-    def _prog_clinch(team, stage):
-        pr = _PREV_ROUND.get(stage)
-        return _stage_match.get(team, {}).get(pr) if pr else None
+    # Progression is CUMULATIVE by furthest stage, but revealed INCREMENTALLY per round:
+    # each round advanced adds only (STAGE_POINTS[new] - STAGE_POINTS[prev]) at the match
+    # that SECURED it - the win that got them there (for R32, their last group game /
+    # qualification). So reaching the R16 shows +1 on top of the R32 +1, not +2, and it
+    # lands at the R32 match they won - not their eventual exit.
+    _STAGE_SEQ = ["R32", "R16", "QF", "SF", "RU", "winner"]
+    _SECURE_ROUND = {"R32": "group", "R16": "R32", "QF": "R16",
+                     "SF": "QF", "RU": "SF", "winner": "final"}
 
     goals_by_match: dict[str, list] = defaultdict(list)
     for g in goals:
@@ -402,20 +400,29 @@ def score(data_dir: str, upto: int | None = None) -> dict:
         if is_prime(goals_for[team]):
             pts[team]["prime"] += -3.0
 
-    # ---- progression ----
+    # ---- progression (cumulative by stage; revealed incrementally at each securing match) ----
+    def _reveal_prog(team, incr, secure_stage):
+        # add `incr` progression, gated in the replay by the match that secured it
+        clinch = _stage_match.get(team, {}).get(secure_stage)
+        if upto is None or (clinch is not None and clinch <= upto):
+            pts[team]["progression"] += incr
+
     for r in progression:
         team = r["team"]
         stage = (r.get("stage") or "group").strip()
-        if upto is not None:
-            clinch = _prog_clinch(team, stage)   # match that secured this stage
-            if clinch is None or clinch > upto:
-                continue  # stage not yet secured by `upto` in the replay
-        val = STAGE_POINTS.get(stage, 0)
+        flip = truthy(r.get("flip", ""))
         if stage == "third":
-            val = -5  # 3rd-place playoff WINNER: -5 overall (NOT the SF +5)
-        if truthy(r.get("flip", "")):
-            val = -val
-        pts[team]["progression"] += val
+            # won the 3rd-place playoff: -5 overall (replaces the SF +5)
+            _reveal_prog(team, 5 if flip else -5, _stage_match.get(team, {}).get("third")
+                         and "third" or "SF")
+            continue
+        if stage not in _STAGE_SEQ:
+            continue  # group / unknown -> 0 progression
+        prev = 0
+        for s in _STAGE_SEQ[:_STAGE_SEQ.index(stage) + 1]:
+            incr = STAGE_POINTS.get(s, 0) - prev
+            prev = STAGE_POINTS.get(s, 0)
+            _reveal_prog(team, -incr if flip else incr, _SECURE_ROUND[s])
 
     # ---- ranked categories ----
     def _recency(r, minute_key):
