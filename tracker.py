@@ -249,15 +249,32 @@ def score(data_dir: str, upto: int | None = None) -> dict:
     # only plays again if still in, so their highest match_id IS their decisive game.
     # upto=None => final standings, no gating (every team revealed).
     _reveal: dict[str, int] = {}
+    _stage_match: dict = {}   # team -> {stage: latest match_id they played at that stage}
     for _m in load(data_dir, "matches.csv"):
         _mid = str(_m.get("match_id", "")).strip()
-        if _mid.isdigit():
-            for _t in (_m.get("team_a"), _m.get("team_b")):
-                if _t:
-                    _reveal[_t] = max(_reveal.get(_t, 0), int(_mid))
+        if not _mid.isdigit():
+            continue
+        _st = (_m.get("stage") or "group").strip() or "group"
+        for _t in (_m.get("team_a"), _m.get("team_b")):
+            if not _t:
+                continue
+            _reveal[_t] = max(_reveal.get(_t, 0), int(_mid))
+            sm = _stage_match.setdefault(_t, {})
+            sm[_st] = max(sm.get(_st, 0), int(_mid))
 
-    def _revealed(t):
+    def _revealed(t):        # last appearance played (used for the early-exit gate)
         return upto is None or _reveal.get(t, 0) <= upto
+
+    # The match that SECURED a team's stage is the game in the round BEFORE it - the one
+    # they won (for R32, their last group game / qualification) - NOT their elimination
+    # game. So a knocked-out team's progression shows when they qualified/advanced, not at
+    # the match they went out.
+    _PREV_ROUND = {"R32": "group", "R16": "R32", "QF": "R16",
+                   "SF": "QF", "RU": "SF", "winner": "SF", "third": "SF"}
+
+    def _prog_clinch(team, stage):
+        pr = _PREV_ROUND.get(stage)
+        return _stage_match.get(team, {}).get(pr) if pr else None
 
     goals_by_match: dict[str, list] = defaultdict(list)
     for g in goals:
@@ -388,10 +405,13 @@ def score(data_dir: str, upto: int | None = None) -> dict:
     # ---- progression ----
     for r in progression:
         team = r["team"]
-        if not _revealed(team):
-            continue  # not yet confirmed by `upto` (replay); credited at the decisive match
-        val = STAGE_POINTS.get((r.get("stage") or "group").strip(), 0)
-        if r.get("stage") == "third":
+        stage = (r.get("stage") or "group").strip()
+        if upto is not None:
+            clinch = _prog_clinch(team, stage)   # match that secured this stage
+            if clinch is None or clinch > upto:
+                continue  # stage not yet secured by `upto` in the replay
+        val = STAGE_POINTS.get(stage, 0)
+        if stage == "third":
             val = -5  # 3rd-place playoff WINNER: -5 overall (NOT the SF +5)
         if truthy(r.get("flip", "")):
             val = -val
