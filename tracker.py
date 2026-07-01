@@ -871,7 +871,7 @@ def standings_progression(data_dir: str, full: dict | None = None) -> dict:
                 return [b, a, round(a - b, 2)]
             rows.append({"m": times[i]["m"], "date": times[i]["date"], "label": times[i]["label"],
                          "deltas": deltas, "details": why, "dtotal": round(totals[o][i] - prev_tot, 2),
-                         "total": totals[o][i], "rfrom": rfrom, "rto": rto,
+                         "ptotal": round(prev_tot, 2), "total": totals[o][i], "rfrom": rfrom, "rto": rto,
                          "by": [p for _, p in by], "over": [p for _, p in over],
                          "fg": _few("fewest_goals"), "fc": _few("fewest_cards")})
         ledger[o] = rows
@@ -1249,7 +1249,7 @@ CHART_JS = r"""<script>
              '<td class="num-cell">' + fewCell(rw.fg, rw.details && rw.details.fewest_goals) + '</td>' +
              '<td class="num-cell">' + fewCell(rw.fc, rw.details && rw.details.fewest_cards) + '</td>' +
              '<td class="num-cell ' + dc + '">' + fmt(rw.dtotal) + '</td>' +
-             '<td class="num-cell"><b>' + rw.total + '</b></td>' +
+             '<td class="num-cell"><span class="r">' + rw.ptotal + '</span> &rarr; <b>' + rw.total + '</b></td>' +
              '<td class="pos-cell">' + posCell(rw) + '</td></tr>';
       });
       out.innerHTML = h + '</table>';
@@ -1321,7 +1321,7 @@ CHART_JS = r"""<script>
              '<td class="det">' + chips + '</td>' +
              '<td class="num-cell">' + fewCell + '</td>' +
              '<td class="num-cell ' + dc + '">' + fmt(rw.dtotal) + '</td>' +
-             '<td class="num-cell"><b>' + rw.total + '</b></td>' +
+             '<td class="num-cell"><span class="r">' + rw.ptotal + '</span> &rarr; <b>' + rw.total + '</b></td>' +
              '<td class="pos-cell">' + posCell(rw) + '</td></tr>';
       });
       out.innerHTML = h + '</table>';
