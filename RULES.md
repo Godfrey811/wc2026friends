@@ -68,14 +68,14 @@ Points for how far each team gets - scored in the round it's KNOCKED OUT (the wi
 
 ## Early-exit bonus
 
-A reward for drafting teams that all crash out early. Players are ranked by when their LAST surviving team is knocked out - the sooner all three of your teams are gone, the more you score.
+A reward for drafting teams that all crash out early. Players are ranked by the ROUND in which their LAST surviving team is knocked out - the earlier the round all three of your teams are gone, the more you score.
 
 | 1st all-out | 2nd | 3rd or 4th | 5th or 6th | 7th or 8th | 9th-16th |
 | --- | --- | --- | --- | --- | --- |
 | 5 | 4 | 3 | 2 | 1 | 0 |
 
-- Your exit is set by your FURTHEST team - you're only 'out' once all three are eliminated.
-- It's about WHEN you're confirmed out, not just the stage. A team mathematically eliminated earlier in its group (say after game 5) ranks ahead of one that isn't confirmed out until a later game - you don't wait for the group to finish.
+- Your exit is set by your FURTHEST team - you're only 'out' once all three are eliminated, in the round that furthest team goes out.
+- It's the ROUND, not the date. Two players whose last team both go out in the SAME round (e.g. both in the Round of 32) TIE and split the summed points for the positions they fill - so two tied for 1st/2nd each get (5+4)/2 = 4.5 - regardless of which day their games fell on.
 - Players confirmed out at the SAME time tie, and split the summed points for the positions they fill. Example: if three players' last teams are all confirmed out together, they take positions 1-3 and split 5 + 4 + 3 = 12, i.e. 4 points each.
 - A team that wins the tournament never goes out, so its owner finishes last here (0).
 

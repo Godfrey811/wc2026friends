@@ -521,14 +521,13 @@ def score(data_dir: str, upto: int | None = None) -> dict:
     award_fewest(cards_total, "fewest_cards")
 
     # ---- early-exit bonus (owner-level: scored when your LAST team is out) ----
-    # Players are ranked by WHEN their final team is confirmed out: each eliminated
-    # team carries its knock-out DATE in progression.csv `out` (YYYY-MM-DD), so a team
-    # confirmed out earlier in the group stage ranks ahead of one not settled until a
-    # later game - it's the date, not just the stage. A player only places once ALL
-    # three of their teams have an `out` date; until then they score 0, so nobody banks
-    # anything before teams actually go out. Players whose last team is out at the same
-    # time tie and split the summed points for the positions they fill. The bonus is
-    # attached to the team that set the owner's exit, so it flows into totals.
+    # Players are ranked by the ROUND at which their final team is knocked out - NOT the
+    # exact date. Two owners whose last-surviving team both go out in the SAME round (e.g.
+    # both in the R32) TIE and split the summed points for the positions they fill,
+    # whatever day each game fell on. A player only places once ALL three of their teams
+    # are out (each has an `out` date); until then they score 0, so nobody banks anything
+    # before teams actually go out. The bonus is attached to the team that set the owner's
+    # exit (their longest-surviving team), so it flows into totals.
     team_stage = {r["team"]: ((r.get("stage") or "group").strip() or "group")
                   for r in progression}
     team_out = {r["team"]: ((r.get("out") or "").strip() if _revealed(r["team"]) else "")
@@ -544,15 +543,14 @@ def score(data_dir: str, upto: int | None = None) -> dict:
     # A team is out once it has an `out` date; a player places once all theirs do.
     placed = {o for o, ts in owner_teams.items()
               if ts and all(team_out.get(t, "") for t in ts)}
-    # The team that sets a player's exit = their LAST out (latest date, then stage).
-    exit_team = {o: max(ts, key=lambda t: (team_out.get(t, ""), stage_rank(t), t))
+    # The team that sets a player's exit = their LONGEST-surviving team (highest round).
+    exit_team = {o: max(ts, key=lambda t: (stage_rank(t), t))
                  for o, ts in owner_teams.items()}
 
-    def exit_metric(o):       # (knock-out date, stage rank) of the last team out
-        et = exit_team[o]
-        return (team_out.get(et, ""), stage_rank(et))
+    def exit_metric(o):       # the ROUND their last team went out (date-independent)
+        return stage_rank(exit_team[o])
 
-    def sort_key(o):          # placed players first, then earliest exit (date, stage)
+    def sort_key(o):          # placed players first, then earliest KO round (ties split)
         return (o not in placed, exit_metric(o))
 
     early_exit = []  # (owner, exit_team, stage, out_date, points) for placed players
