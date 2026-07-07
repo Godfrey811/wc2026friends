@@ -287,3 +287,9 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 94,Belgium,33,open,Charles De Ketelaere,25y 118d,,2001-03-10
 94,Belgium,57,open,Hans Vanaken,33y 316d,,1992-08-24
 94,Belgium,90+3,open,Romelu Lukaku,33y 54d,,1993-05-13
+95,Egypt,15,open,Yasser Ibrahim,,,
+95,Egypt,67,open,Mostafa Zico,,,
+95,Egypt,72,open,Mostafa Zico,,yes,
+95,Argentina,79,open,Cristian Romero,28y 71d,,1998-04-27
+95,Argentina,83,open,Lionel Messi,39y 13d,,1987-06-24
+95,Argentina,90+2,open,Enzo Fernández,25y 171d,,2001-01-17
