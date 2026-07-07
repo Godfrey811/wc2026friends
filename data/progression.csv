@@ -3,7 +3,7 @@ Algeria,R32,,2026-07-02
 Argentina,R16,,
 Australia,R32,,2026-07-03
 Austria,R32,,2026-07-02
-Belgium,R16,,
+Belgium,QF,,
 Bosnia & Herzegovina,R32,,2026-07-02
 Brazil,R16,1,2026-07-05
 Canada,R16,,2026-07-04
@@ -44,6 +44,6 @@ Sweden,R32,,2026-06-30
 Switzerland,R16,,
 Tunisia,group,,2026-06-25
 Turkey,group,,2026-06-25
-USA,R16,,
+USA,R16,,2026-07-06
 Uruguay,group,,2026-06-26
 Uzbekistan,group,,2026-06-27
