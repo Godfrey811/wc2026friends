@@ -155,7 +155,7 @@ match_id,team,minute,color,dice,player
 62,Senegal,81,yellow,,Pape Gueye
 62,Iraq,75,yellow,,Amir Al-Ammari
 62,Iraq,90,yellow,,Merchas Doski
-62,Iraq,13,red,,Rebin Sulaka
+62,Iraq,13,red,4,Rebin Sulaka
 63,Cape Verde,8,yellow,,Wagner Pina
 63,Saudi Arabia,4,yellow,,Saud Abdulhamid
 63,Saudi Arabia,67,yellow,,Nasser Al-Dawsari
@@ -164,7 +164,7 @@ match_id,team,minute,color,dice,player
 64,Uruguay,58,yellow,,Guillermo Varela
 64,Uruguay,90+3,yellow,,Nicolás de la Cruz
 64,Spain,46,yellow,,Álex Baena
-64,Uruguay,90+4,red,,Agustín Canobbio
+64,Uruguay,90+4,red,1,Agustín Canobbio
 65,Iran,89,yellow,,Ehsan Hajsafi
 65,Egypt,19,yellow,,Mahmoud Saber
 65,Egypt,41,yellow,,Yasser Ibrahim
@@ -204,11 +204,11 @@ match_id,team,minute,color,dice,player
 77,Norway,45+1,yellow,,Antonio Nusa
 79,Ecuador,90+3,yellow,,Kendry Páez
 79,Ecuador,90+9,yellow,,Moisés Caicedo
-79,Ecuador,90+5,red,,Piero Hincapié
+79,Ecuador,90+5,red,4,Piero Hincapié
 80,England,20,yellow,,Jude Bellingham
 81,Senegal,70,yellow,,Lamine Camara
 82,Bosnia & Herzegovina,80,yellow,,Stjepan Radeljić
-82,USA,64,red,,Folarin Balogun
+82,USA,64,red,1,Folarin Balogun
 83,Austria,83,yellow,,Stefan Posch
 84,Portugal,17,yellow,,Rúben Dias
 84,Croatia,59,yellow,,Luka Modrić
@@ -241,7 +241,7 @@ match_id,team,minute,color,dice,player
 92,England,68,yellow,,Marc Guéhi
 92,England,72,yellow,,Nico O'Reilly
 92,Mexico,78,yellow,,Jorge Sánchez
-92,England,54,red,,Jarell Quansah
+92,England,54,red,4,Jarell Quansah
 93,Spain,90+8,yellow,,Ferran Torres
 93,Portugal,13,yellow,,Renato Veiga
 93,Portugal,89,yellow,,Bernardo Silva
