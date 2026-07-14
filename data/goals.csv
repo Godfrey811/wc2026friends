@@ -313,3 +313,6 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 100,Argentina,112,open,Julián Álvarez,26y 161d,,2000-01-31
 100,Argentina,120+1,open,Lautaro Martínez,28y 323d,,1997-08-22
 99,Norway,55,open,Torbjørn Heggem,27y 76d,yes,1999-04-26
+101,Spain,22,penalty,Mikel Oyarzabal,29y 84d,,1997-04-21
+101,Spain,58,open,Pedro Porro,26y 304d,,1999-09-13
+101,Spain,78,open,Lamine Yamal,19y 1d,yes,2007-07-13
