@@ -315,3 +315,6 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 99,Norway,55,open,Torbjørn Heggem,27y 76d,yes,1999-04-26
 101,Spain,22,penalty,Mikel Oyarzabal,29y 84d,,1997-04-21
 101,Spain,58,open,Pedro Porro,26y 304d,,1999-09-13
+102,England,55,open,Anthony Gordon,25y 141d,,2001-02-24
+102,Argentina,85,open,Enzo Fernández,25y 179d,,2001-01-17
+102,Argentina,90+2,open,Lautaro Martínez,28y 327d,,1997-08-22
