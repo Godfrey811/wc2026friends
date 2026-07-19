@@ -166,7 +166,7 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 59,Turkey,10,open,Arda Güler,21y 120d,,2005-02-25
 59,Turkey,31,open,Barış Alper Yılmaz,26y 33d,,2000-05-23
 59,Turkey,90+8,open,Kaan Ayhan,31y 227d,,1994-11-10
-59,USA,3,open,Auston Trusty,27y 317d,,1998-08-12
+59,USA,2:13,open,Auston Trusty,27y 317d,,1998-08-12
 59,USA,49,open,Sebastian Berhalter,25y 46d,,2001-05-10
 61,Norway,21,open,Thelo Aasgaard,24y 55d,,2002-05-02
 61,France,7,open,Ousmane Dembélé,29y 42d,,1997-05-15
@@ -318,7 +318,7 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 102,England,55,open,Anthony Gordon,25y 141d,,2001-02-24
 102,Argentina,85,open,Enzo Fernández,25y 179d,,2001-01-17
 102,Argentina,90+2,open,Lautaro Martínez,28y 327d,,1997-08-22
-103,England,3,open,Declan Rice,27y 185d,,1999-01-14
+103,England,2:14,open,Declan Rice,27y 185d,,1999-01-14
 103,England,18,open,Ezri Konsa,28y 268d,,1997-10-23
 103,England,37,open,Bukayo Saka,24y 316d,,2001-09-05
 103,England,45+1,open,Bukayo Saka,24y 316d,,2001-09-05
