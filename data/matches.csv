@@ -34,7 +34,7 @@ match_id,stage,team_a,team_b,team_a_sot,team_b_sot
 33,group,Netherlands,Sweden,,
 34,group,Germany,Ivory Coast,,
 35,group,Ecuador,Curaçao,,
-36,group,Tunisia,Japan,1,4
+36,group,Tunisia,Japan,0,4
 37,group,Spain,Saudi Arabia,9,1
 38,group,Belgium,Iran,7,3
 39,group,New Zealand,Egypt,,
@@ -44,7 +44,7 @@ match_id,stage,team_a,team_b,team_a_sot,team_b_sot
 43,group,Norway,Senegal,,
 44,group,Jordan,Algeria,4,8
 45,group,Portugal,Uzbekistan,9,2
-46,group,England,Ghana,3,1
+46,group,England,Ghana,3,0
 47,group,Panama,Croatia,1,2
 48,group,Colombia,DR Congo,9,1
 49,group,Switzerland,Canada,2,3
@@ -61,7 +61,7 @@ match_id,stage,team_a,team_b,team_a_sot,team_b_sot
 60,group,Paraguay,Australia,2,5
 61,group,Norway,France,4,9
 62,group,Senegal,Iraq,3,1
-63,group,Cape Verde,Saudi Arabia,1,0
+63,group,Cape Verde,Saudi Arabia,2,3
 64,group,Uruguay,Spain,1,1
 65,group,Egypt,Iran,3,4
 66,group,New Zealand,Belgium,2,10
@@ -88,7 +88,7 @@ match_id,stage,team_a,team_b,team_a_sot,team_b_sot
 87,R32,Argentina,Cape Verde,6,2
 88,R32,Colombia,Ghana,8,0
 89,R16,Canada,Morocco,3,4
-90,R16,Paraguay,France,1,5
+90,R16,Paraguay,France,0,5
 91,R16,Brazil,Norway,4,5
 92,R16,Mexico,England,5,5
 93,R16,Portugal,Spain,2,6

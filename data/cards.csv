@@ -17,7 +17,7 @@ match_id,team,minute,color,dice,player
 4,Paraguay,79,yellow,,Diego Gómez
 4,Paraguay,88,yellow,,Álex Arce
 4,Paraguay,90+3,yellow,,Júnior Alonso
-5,Qatar,16,yellow,,Mahmoud Abunada
+5,Qatar,13,yellow,,Mahmoud Abunada
 5,Qatar,23,yellow,,Jassem Gaber
 5,Switzerland,42,yellow,,Denis Zakaria
 6,Brazil,37,yellow,,Casemiro
@@ -63,10 +63,9 @@ match_id,team,minute,color,dice,player
 26,Bosnia & Herzegovina,80,red,6,Tarik Muharemović
 27,Canada,9,yellow,,Derek Cornelius
 27,Qatar,62,yellow,,Ahmed Fathy
-27,Canada,32,yellow,,Cyle Larin
 27,Qatar,33,red,3,Homam Ahmed
-27,Qatar,51,red,3,Assim Madibo
-28,South Korea,4,yellow,,Lee Kang-in
+27,Qatar,53,red,3,Assim Madibo
+28,South Korea,3:11,yellow,,Lee Kang-in
 28,South Korea,58,yellow,,Paik Seung-ho
 29,USA,56,yellow,,Antonee Robinson
 29,USA,89,yellow,,Folarin Balogun
@@ -76,25 +75,24 @@ match_id,team,minute,color,dice,player
 29,Australia,89,yellow,,Jacob Italiano
 29,Australia,89,yellow,,Harry Souttar
 30,Scotland,65,yellow,,Andy Robertson
-30,Morocco,23,yellow,,Issa Diop
+30,Morocco,22,yellow,,Issa Diop
 31,Brazil,65,yellow,,Douglas Santos
-31,Haiti,4,yellow,,Carlens Arcus
+31,Haiti,3:07,yellow,,Carlens Arcus
 31,Haiti,45+4,yellow,,Frantzdy Pierrot
 31,Haiti,72,yellow,,Danley Jean Jacques
 32,Turkey,71,yellow,,Eren Elmalı
-32,Paraguay,4,yellow,,Matías Galarza
+32,Paraguay,3:21,yellow,,Matías Galarza
 32,Paraguay,45+3,red,4,Miguel Almirón
 33,Sweden,53,yellow,,Gabriel Gudmundsson
 33,Sweden,75,yellow,,Yasin Ayari
 33,Sweden,80,yellow,,Lucas Bergvall
 35,Ecuador,38,yellow,,Jordy Alcívar
-35,Ecuador,71,yellow,,Pervis Estupiñán
 35,Curaçao,39,yellow,,Leandro Bacuna
 35,Curaçao,53,yellow,,Juninho Bacuna
 35,Curaçao,56,yellow,,Livano Comenencia
 35,Curaçao,75,yellow,,Juriën Gaari
 35,Curaçao,90+1,yellow,,Gervane Kastaneer
-37,Saudi Arabia,44,yellow,,Abdulelah Al-Amri
+37,Saudi Arabia,30,yellow,,Salem Al-Dawsari
 38,Belgium,3,yellow,,Romelu Lukaku
 38,Iran,33,yellow,,Saeid Ezatolahi
 38,Belgium,66,red,5,Nathan Ngoy
@@ -112,7 +110,6 @@ match_id,team,minute,color,dice,player
 44,Jordan,64,yellow,,Husam Abu Dahab
 44,Algeria,44,yellow,,Ramiz Zerrouki
 45,Portugal,68,yellow,,Renato Veiga
-45,Portugal,88,yellow,,Nélson Semedo
 45,Uzbekistan,14,yellow,,Odiljon Hamrobekov
 46,England,41,yellow,,Declan Rice
 46,Ghana,60,yellow,,Iñaki Williams
@@ -132,7 +129,7 @@ match_id,team,minute,color,dice,player
 52,Haiti,79,yellow,,Johny Placide
 52,Haiti,80,yellow,,Duckens Nazon
 52,Haiti,90+3,yellow,,Josué Casimir
-53,Mexico,64,yellow,,Edson Álvarez
+53,Mexico,63,yellow,,Edson Álvarez
 54,South Africa,72,yellow,,Aubrey Modiba
 54,South Korea,78,yellow,,Cho Gue-sung
 55,Ecuador,43,yellow,,Piero Hincapié
@@ -144,7 +141,6 @@ match_id,team,minute,color,dice,player
 56,Ivory Coast,34,yellow,,Nicolas Pépé
 57,Sweden,32,yellow,,Isak Hien
 57,Japan,77,yellow,,Shōgo Taniguchi
-57,Sweden,80,yellow,,Lucas Bergvall
 57,Sweden,84,yellow,,Viktor Gyökeres
 59,USA,19,yellow,,Sebastian Berhalter
 60,Australia,46,yellow,,Jackson Irvine
@@ -157,7 +153,7 @@ match_id,team,minute,color,dice,player
 62,Iraq,90,yellow,,Merchas Doski
 62,Iraq,13,red,4,Rebin Sulaka
 63,Cape Verde,8,yellow,,Wagner Pina
-63,Saudi Arabia,4,yellow,,Saud Abdulhamid
+63,Saudi Arabia,3:08,yellow,,Saud Abdulhamid
 63,Saudi Arabia,67,yellow,,Nasser Al-Dawsari
 63,Saudi Arabia,90+3,yellow,,Firas Al-Buraikan
 64,Uruguay,54,yellow,,Juan Manuel Sanabria
@@ -165,7 +161,6 @@ match_id,team,minute,color,dice,player
 64,Uruguay,90+3,yellow,,Nicolás de la Cruz
 64,Spain,46,yellow,,Álex Baena
 64,Uruguay,90+4,red,1,Agustín Canobbio
-65,Iran,89,yellow,,Ehsan Hajsafi
 65,Egypt,19,yellow,,Mahmoud Saber
 65,Egypt,41,yellow,,Yasser Ibrahim
 65,Egypt,90+2,yellow,,Mohanad Lasheen
@@ -189,7 +184,7 @@ match_id,team,minute,color,dice,player
 72,Jordan,17,yellow,,Mohannad Abu Taha
 72,Jordan,64,yellow,,Yazan Al-Arab
 72,Jordan,90+4,yellow,,Mohammad Abu Zrayq
-73,Canada,58,yellow,,Nathan Saliba
+73,Canada,54,yellow,,Nathan Saliba
 73,Canada,67,yellow,,Niko Sigur
 74,Japan,12,yellow,,Kaishu Sano
 74,Brazil,14,yellow,,Carlos Casemiro
@@ -200,6 +195,7 @@ match_id,team,minute,color,dice,player
 75,Germany,115,yellow,,Jamal Musiala
 75,Paraguay,117,yellow,,Matías Galarza
 75,Paraguay,65,yellow,,Andrés Cubas
+75,Paraguay,117,yellow,,Alejandro Manograsso
 76,Morocco,47,yellow,,Issa Diop
 77,Norway,45+1,yellow,,Antonio Nusa
 79,Ecuador,90+3,yellow,,Kendry Páez
@@ -209,13 +205,14 @@ match_id,team,minute,color,dice,player
 81,Senegal,70,yellow,,Lamine Camara
 82,Bosnia & Herzegovina,80,yellow,,Stjepan Radeljić
 82,USA,64,red,1,Folarin Balogun
+82,Bosnia & Herzegovina,80,yellow,,Sergej Barbarez
 83,Austria,83,yellow,,Stefan Posch
 84,Portugal,17,yellow,,Rúben Dias
 84,Croatia,59,yellow,,Luka Modrić
 84,Croatia,90+7,yellow,,Ivan Perišić
 85,Algeria,36,yellow,,Farès Chaïbi
 85,Algeria,72,yellow,,Hicham Boudaoui
-86,Egypt,105,yellow,,Haissem Hassan
+86,Egypt,104,yellow,,Haissem Hassan
 87,Cape Verde,68,yellow,,Kevin Pina
 87,Argentina,115,yellow,,Gonzalo Montiel
 88,Colombia,12,yellow,,Jhon Arias
@@ -240,30 +237,44 @@ match_id,team,minute,color,dice,player
 92,England,1,yellow,,Declan Rice
 92,England,68,yellow,,Marc Guéhi
 92,England,72,yellow,,Nico O'Reilly
-92,Mexico,78,yellow,,Jorge Sánchez
+92,Mexico,71,yellow,,Jorge Sánchez
 92,England,54,red,4,Jarell Quansah
 93,Spain,90+8,yellow,,Ferran Torres
-93,Portugal,13,yellow,,Renato Veiga
+93,Portugal,90+3,yellow,,Renato Veiga
 93,Portugal,89,yellow,,Bernardo Silva
 94,USA,35,yellow,,Weston McKennie
 94,USA,69,yellow,,Malik Tillman
 95,Egypt,90+8,yellow,,Marawan Attia
 95,Egypt,73,yellow,,Haissem Hassan
 95,Egypt,90+4,yellow,,Hamdy Fathy
-96,Switzerland,51,yellow,,Granit Xhaka
+96,Switzerland,59,yellow,,Granit Xhaka
 96,Switzerland,59,yellow,,Denis Zakaria
 96,Switzerland,105,yellow,,Miro Muheim
 96,Colombia,60,yellow,,Luis Suárez
-96,Colombia,95,yellow,,Davinson Sánchez
-98,Spain,47,yellow,,Pau Cubarsí
-98,Spain,90+2,yellow,,Aymeric Laporte
+96,Colombia,94,yellow,,Davinson Sánchez
+96,Colombia,95,yellow,,Luis Perea
+98,Spain,43,yellow,,Pau Cubarsí
+98,Spain,90+3,yellow,,Aymeric Laporte
 99,Norway,117,yellow,,Kristoffer Ajer
 100,Switzerland,45,yellow,,Breel Embolo
 100,Switzerland,70,red,,Breel Embolo
 100,Argentina,98,yellow,,Thiago Almada
-101,France,20,yellow,,Adrien Rabiot
-101,France,88,yellow,,Kylian Mbappé
+101,France,8,yellow,,Adrien Rabiot
+101,France,86,yellow,,Kylian Mbappé
 102,England,37,yellow,,Elliot Anderson
 102,Argentina,42,yellow,,Lisandro Martínez
 102,Argentina,51,yellow,,Cristian Romero
 102,Argentina,73,yellow,,Rodrigo De Paul
+98,Belgium,85,yellow,,Kevin De Bruyne
+81,Belgium,64,yellow,,Brandon Mechele
+98,Belgium,90+5,yellow,,Axel Witsel
+100,Argentina,98,yellow,,Lautaro Martínez
+100,Argentina,114,yellow,,José Manuel López
+70,DR Congo,62,yellow,,Samuel Moutoussamy
+80,DR Congo,28,yellow,,Noah Sadiki
+95,Egypt,90+3,yellow,,Mostafa Shobeir
+86,Egypt,120,yellow,,Yasser Ibrahim
+42,Iraq,6,yellow,,Amir Al-Ammari
+97,Morocco,63,yellow,,Issa Diop
+37,Saudi Arabia,60,yellow,,Mohamed Kanno
+101,Spain,31,yellow,,Marc Cucurella

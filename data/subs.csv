@@ -127,7 +127,7 @@ match_id,team,minute,off,on
 14,Belgium,86,Jeremy Doku,Matias Fernandez-Pardo
 14,Egypt,71,Emam Ashour,Ramy Rabia
 14,Egypt,76,Mohamed Salah,Hamza Abdelkarim
-14,Egypt,76,Zizo,Mostafa Zico
+14,Egypt,76,Zizo,Mostafa Ziko
 14,Egypt,88,Ahmed Fatouh,Karim Hafez
 14,Egypt,88,Hamdy Fathy,Ibrahim Adel
 15,Saudi Arabia,63,Musab Al-Juwayr,Nasser Al-Dawsari
@@ -340,11 +340,11 @@ match_id,team,minute,off,on
 36,Japan,78,Takehiro Tomiyasu,Ayumu Seko
 36,Japan,78,Keito Nakamura,Yuito Suzuki
 36,Japan,84,Ayase Ueda,Keisuke Gotō
-37,Saudi Arabia,63,Musab Al-Juwayr,Nasser Al-Dawsari
-37,Saudi Arabia,81,Mohammed Abu Al-Shamat,Nawaf Boushal
-37,Saudi Arabia,90+3,Firas Al-Buraikan,Abdullah Al-Hamdan
-37,Saudi Arabia,90+3,Saud Abdulhamid,Ali Lajami
-37,Saudi Arabia,90+3,Moteb Al-Harbi,Alaa Al-Hejji
+37,Saudi Arabia,46,Abdullah Al-Khaibari,Mohamed Kanno
+37,Saudi Arabia,46,Musab Al-Juwayr,Abdullah Al-Hamdan
+37,Saudi Arabia,60,Firas Al-Buraikan,Mohammed Abu Al-Shamat
+37,Saudi Arabia,60,Abdulelah Al-Amri,Alaa Al-Hajji
+37,Saudi Arabia,90,Nasser Al-Dawsari,Khalid Al-Ghannam
 38,Belgium,58,Thomas Meunier,Timothy Castagne
 38,Belgium,58,Nicolas Raskin,Hans Vanaken
 38,Belgium,58,Alexis Saelemaekers,Dodi Lukébakio
@@ -365,6 +365,7 @@ match_id,team,minute,off,on
 39,Egypt,76,Omar Marmoush,Trézéguet
 39,Egypt,84,Mohamed Salah,Zizo
 39,Egypt,84,Emam Ashour,Hossam Abdelmaguid
+39,Egypt,90+9,Hossam Abdelmaguid,Mohamed Abdelmoneim
 40,Uruguay,70,Manuel Ugarte,Nicolás de la Cruz
 40,Uruguay,70,Federico Viñas,Darwin Núñez
 40,Uruguay,81,Maxi Araújo,Brian Rodríguez
@@ -383,8 +384,8 @@ match_id,team,minute,off,on
 41,Austria,67,David Alaba,Alexander Prass
 41,Austria,78,Romano Schmid,Patrick Wimmer
 41,Austria,85,Michael Gregoritsch,Carney Chukwuemeka
-37,Spain,46,Lamine Yamal,Ferran Torres
-37,Spain,46,Mikel Oyarzabal,Yéremy Pino
+37,Spain,46,Mikel Oyarzabal,Ferran Torres
+37,Spain,46,Lamine Yamal,Yéremy Pino
 37,Spain,61,Dani Olmo,Mikel Merino
 37,Spain,61,Álex Baena,Nico Williams
 37,Spain,70,Pedri,Fabián Ruiz
@@ -398,7 +399,7 @@ match_id,team,minute,off,on
 42,Iraq,60,Zaid Ismail,Youssef Amyn
 42,Iraq,68,Ibrahim Bayesh,Aimar Sher
 42,Iraq,68,Amir Al-Ammari,Marko Farji
-43,Norway,13,Julian Ryerson,Marcus Pedersen
+43,Norway,12:01,Julian Ryerson,Marcus Pedersen
 43,Norway,46,Fredrik Aursnes,Patrick Berg
 43,Norway,71,Antonio Nusa,Andreas Schjelderup
 43,Norway,84,Alexander Sørloth,Oscar Bobb
@@ -406,17 +407,18 @@ match_id,team,minute,off,on
 43,Senegal,54,El Hadji Malick Diouf,Ibrahim Mbaye
 43,Senegal,54,Pape Gueye,Ismail Jakobs
 43,Senegal,63,Lamine Camara,Pathé Ciss
+43,Senegal,63,Edouard Mendy,Mory Diaw
 43,Senegal,72,Kalidou Koulibaly,Pape Matar Sarr
-44,Algeria,45,Hicham Boudaoui,Nadhir Benbouali
-44,Algeria,45,Ramiz Zerrouki,Nabil Bentaleb
+44,Algeria,46,Hicham Boudaoui,Nadhir Benbouali
+44,Algeria,46,Ramiz Zerrouki,Nabil Bentaleb
 44,Algeria,76,Riyad Mahrez,Anis Hadj Moussa
 44,Algeria,85,Rayan Aït-Nouri,Jaouen Hadjam
-44,Algeria,86,Amine Gouiri,Zineddine Belaïd
+44,Algeria,85,Amine Gouiri,Zineddine Belaïd
 44,Jordan,76,Mahmoud Al-Mardi,Odeh Al-Fakhoury
 44,Jordan,84,Ali Azaizeh,Musa Al-Tamari
-44,Jordan,85,Mohannad Abu Taha,Mohammad Abu Hashish
+44,Jordan,84,Mohannad Abu Taha,Mohammad Abu Hashish
 44,Jordan,90+1,Husam Abu Dahab,Salim Obaid
-44,Jordan,90+2,Ali Olwan,Mohammad Abu Zrayq
+44,Jordan,90+1,Ali Olwan,Mohammad Abu Zrayq
 45,Portugal,46,João Cancelo,Nélson Semedo
 45,Portugal,46,Pedro Neto,Francisco Conceição
 45,Portugal,63,João Félix,Francisco Trincão
@@ -444,6 +446,7 @@ match_id,team,minute,off,on
 47,Panama,77,Jiovany Ramos,Cecilio Waterman
 47,Panama,83,José Fajardo,Azarias Londoño
 47,Panama,90,César Blackman,Eric Davis
+47,Panama,90,Yoel Bárcenas,Tomás Rodríguez
 48,Colombia,58,James Rodríguez,Juan Fernando Quintero
 48,Colombia,58,Luis Suárez,Jhon Córdoba
 48,Colombia,77,Jhon Arias,Richard Ríos
@@ -498,6 +501,10 @@ match_id,team,minute,off,on
 53,Mexico,72,Gilberto Mora,Álvaro Fidalgo
 53,Mexico,78,Raúl Rangel,Guillermo Ochoa
 53,Mexico,78,Mateo Chávez,Jesús Gallardo
+53,Czechia,56,Denis Višinský,Lukáš Provod
+53,Czechia,87,Tomáš Souček,Alexandr Sojka
+53,Mexico,63,Luis Romo,Obed Vargas
+53,Mexico,63,Guillermo Martínez,Santiago Giménez
 54,South Africa,62,Oswin Appollis,Tshepang Moremi
 54,South Africa,75,Thapelo Maseko,Iqraam Rayners
 54,South Africa,80,Relebohile Mofokeng,Jayden Adams
@@ -533,6 +540,7 @@ match_id,team,minute,off,on
 57,Japan,75,Keito Nakamura,Tsuyoshi Watanabe
 57,Sweden,37,Isak Hien,Lucas Bergvall
 57,Sweden,75,Alexander Bernhardsson,Daniel Svensson
+57,Sweden,75,Elliot Stroud,Ken Sema
 57,Sweden,87,Gabriel Gudmundsson,Carl Starfelt
 57,Sweden,87,Victor Lindelöf,Benjamin Nygren
 58,Tunisia,67,Mohamed Amine Ben Hamida,Mortadha Ben Ouanes
@@ -554,7 +562,7 @@ match_id,team,minute,off,on
 59,USA,76,Giovanni Reyna,Alejandro Zendejas
 59,USA,76,Brenden Aaronson,Alex Freeman
 59,USA,86,Weston McKennie,Malik Tillman
-60,Paraguay,46,Alexandro Maidana,Maurício
+60,Paraguay,46,Alexandro Maidana,Maurício Prado
 60,Paraguay,67,Gabriel Ávalos,Álex Arce
 60,Paraguay,84,Omar Alderete,José Canale
 60,Paraguay,90+2,Matías Galarza,Júnior Alonso
@@ -562,23 +570,52 @@ match_id,team,minute,off,on
 60,Australia,58,Cristian Volpato,Ajdin Hrustic
 60,Australia,84,Nestory Irankunda,Tete Yengi
 60,Australia,84,Jackson Irvine,Paul Okon-Engstler
-61,Norway,46,Fredrik André Bjørkan,Morten Thorsby
+61,Norway,46,Fredrik André Bjørkan,Marcus Holmgren Pedersen
 61,France,65,Ousmane Dembélé,Bradley Barcola
 61,France,65,Michael Olise,Rayan Cherki
+61,Norway,46,Kristian Thorstvedt,Morten Thorsby
+61,Norway,66,Henrik Falchener,Sondre Langås
+61,Norway,83,Oscar Bobb,Antonio Nusa
+61,Norway,83,Andreas Schjelderup,Jens Petter Hauge
+61,France,76,Dayot Upamecano,Ibrahima Konaté
+61,France,86,Kylian Mbappé,Jean-Philippe Mateta
+61,France,86,Jules Koundé,Malo Gusto
 62,Iraq,16,Ahmed Qasem,Manaf Younis
 62,Senegal,56,Habib Diarra,Nicolas Jackson
 62,Senegal,56,Lamine Camara,Iliman Ndiaye
 62,Senegal,56,Ibrahim Mbaye,Pape Gueye
-63,Saudi Arabia,33,Hassan Al-Tambakti,Ali Lajami
+62,Senegal,58,Abdoulaye Seck,Pathé Ciss
+62,Senegal,81,Ismaïla Sarr,Assane Diao
+62,Iraq,46,Ahmed Basil,Jalal Hassan
+62,Iraq,57,Ali Alhamadi,Ali Yousif
+62,Iraq,57,Ali Jasim,Ahmed Maknazi
+62,Iraq,67,Zidane Iqbal,Kevin Yakob
+63,Cape Verde,61,Willy Semedo,Hélio Varela
+63,Cape Verde,61,Dailon Livramento,Nuno da Costa
+63,Cape Verde,71,Jamiro Monteiro,Laros Duarte
+63,Cape Verde,71,Ryan Mendes,Garry Rodrigues
+63,Cape Verde,90+4,Wagner Pina,Steven Moreira
+63,Saudi Arabia,46,Abdullah Al-Khaibari,Musab Al-Juwayr
+63,Saudi Arabia,65,Sultan Mandash,Abdullah Al-Hamdan
+63,Saudi Arabia,65,Salem Al-Dawsari,Mohammed Abu Al-Shamat
+63,Saudi Arabia,82,Nawaf Bu Washl,Moteb Al-Harbi
 64,Uruguay,45,Manuel Ugarte,Nicolás de la Cruz
-64,Spain,60,Fabián Ruiz,Dani Olmo
+64,Uruguay,46,Fernando Muslera,Sergio Rochet
+64,Uruguay,56,Federico Valverde,Federico Viñas
+64,Uruguay,70,Juan Manuel Sanabria,Brian Rodríguez
+64,Spain,60,Pedri,Fabián Ruiz
+64,Spain,60,Mikel Merino,Dani Olmo
+64,Spain,66,Álex Baena,Yéremy Pino
+64,Spain,76,Mikel Oyarzabal,Ferran Torres
+64,Spain,76,Lamine Yamal,Nico Williams
 65,Egypt,14,Mohamed Abdelmonem,Yasser Ibrahim
-65,Egypt,46,Mahmoud Saber,Omar Marmoush
-65,Egypt,46,Emam Ashour,Marwan Attia
-65,Egypt,57,Zizo,Mohamed Salah
-65,Iran,45,Saleh Hardani,Hossein Kanani
-65,Iran,67,Mehdi Ghayedi,Saman Ghoddos
-65,Iran,90+1,Alireza Jahanbakhsh,Mehdi Mohebbi
+65,Egypt,46,Mahmoud Saber,Marwan Attia
+65,Egypt,46,Emam Ashour,Omar Marmoush
+65,Egypt,57,Mohamed Salah,Zizo
+65,Egypt,76,Mostafa Ziko,Hamza Abdelkarim
+65,Iran,46,Hossein Kanani,Saleh Hardani
+65,Iran,67,Saman Ghoddos,Shahriyar Moghanloo
+65,Iran,90+1,Mohammad Mohebbi,Alireza Jahanbakhsh
 66,New Zealand,45,Ryan Thomas,Ben Old
 66,New Zealand,45,Sarpreet Singh,Jesse Randall
 66,New Zealand,64,Tim Payne,Michael Boxall
@@ -589,15 +626,33 @@ match_id,team,minute,off,on
 66,Belgium,72,Leandro Trossard,Alexis Saelemaekers
 66,Belgium,85,Charles De Ketelaere,Romelu Lukaku
 66,Belgium,85,Youri Tielemans,Nicolas Raskin
+67,Panama,46,Tomás Rodríguez,José Fajardo
+67,Panama,71,José Luis Rodríguez,Azarias Londoño
+67,Panama,71,Yoel Bárcenas,Ismael Díaz
+67,Panama,88,Jorge Gutiérrez,Eric Davis
+67,Panama,88,Carlos Harvey,Alberto Quintero
 67,England,63,Jarell Quansah,Djed Spence
 67,England,63,Bukayo Saka,Noni Madueke
-67,Panama,46,Tomás Rodríguez,José Fajardo
-68,Croatia,46,Ante Budimir,Igor Matanović
-68,Croatia,46,Petar Musa,Andrej Kramarić
+67,England,71,Jude Bellingham,Eberechi Eze
+67,England,84,Harry Kane,Ollie Watkins
+67,England,84,Elliot Anderson,Jordan Henderson
+68,Croatia,66,Ante Budimir,Igor Matanović
+68,Croatia,78,Mateo Kovačić,Mario Pašalić
+68,Croatia,88,Nikola Vlašić,Joško Gvardiol
+68,Croatia,88,Martin Baturina,Marco Pašalić
 68,Ghana,46,Jonas Adjetey,Kojo Peprah Oppong
 68,Ghana,46,Elisha Owusu,Abdul Fatawu
+68,Ghana,71,Jordan Ayew,Brandon Thomas-Asante
+68,Ghana,71,Kamaldeen Sulemana,Ernest Nuamah
+68,Ghana,85,Kwasi Sibo,Caleb Yirenkyi
 74,Brazil,45,Lucas Paquetá,Endrick
 74,Japan,66,Ritsu Dōan,Yukinari Sugawara
+74,Brazil,65,Matheus Cunha,Gabriel Martinelli
+74,Brazil,90+7,Bruno Guimarães,Danilo Santos
+74,Japan,66,Keito Nakamura,Junnosuke Suzuki
+74,Japan,78,Junya Itō,Shuto Machino
+74,Japan,78,Daichi Kamada,Ao Tanaka
+74,Japan,90+7,Daizen Maeda,Kōki Ogawa
 77,Ivory Coast,60,Christ-Inao Oulaï,Amad Diallo
 77,Ivory Coast,60,Ange Yoan Bonny,Elye Wahi
 77,Norway,72,Antonio Nusa,Oscar Bobb
@@ -621,9 +676,18 @@ match_id,team,minute,off,on
 79,Mexico,80,Roberto Alvarado,Israel Reyes
 80,England,70,Noni Madueke,Bukayo Saka
 80,England,70,Marcus Rashford,Anthony Gordon
-81,Senegal,91,Sadio Mané,Nicolas Jackson
-81,Senegal,91,Ismaïl Jakobs,El Hadji Diouf
-81,Senegal,91,Pape Gueye,Bara Ndiaye
+81,Belgium,46,Charles De Ketelaere,Romelu Lukaku
+81,Belgium,56,Jeremy Doku,Dodi Lukebakio
+81,Belgium,63,Kevin De Bruyne,Nicolas Raskin
+81,Belgium,64,Hans Vanaken,Diego Moreira
+81,Belgium,75,Maxim De Cuyper,Thomas Meunier
+81,Belgium,109,Leandro Trossard,Amadou Onana
+81,Senegal,68,Pape Gueye,Lamine Camara
+81,Senegal,73,Habib Diarra,Pape Matar Sarr
+81,Senegal,73,Iliman Ndiaye,Ibrahim Mbaye
+81,Senegal,95,Ismail Jakobs,El Hadji Malick Diouf
+81,Senegal,95,Sadio Mané,Nicolas Jackson
+81,Senegal,98,Idrissa Gana Gueye,Bara Ndiaye
 82,Bosnia & Herzegovina,51,Armin Gigović,Esmir Bajraktarević
 82,Bosnia & Herzegovina,51,Edin Džeko,Ermin Mahmić
 82,Bosnia & Herzegovina,51,Ivan Šunjić,Benjamin Tahirović
@@ -652,7 +716,7 @@ match_id,team,minute,off,on
 85,Switzerland,87,Dan Ndoye,Michel Aebischer
 85,Switzerland,87,Denis Zakaria,Silvan Widmer
 88,Colombia,8,Jhon Córdoba,Luis Suárez
-88,Ghana,13,Marvin Senaya,Alidu Seidu
+88,Ghana,12:24,Marvin Senaya,Alidu Seidu
 88,Colombia,45,James Rodríguez,Richard Ríos
 88,Ghana,62,Iñaki Williams,Fatawu Issahaku
 88,Ghana,62,Kwasi Sibo,Elisha Owusu
@@ -698,7 +762,7 @@ match_id,team,minute,off,on
 95,Argentina,66,Rodrigo De Paul,Lautaro Martínez
 95,Argentina,73,Nahuel Molina,Gonzalo Montiel
 95,Egypt,73,Haissem Hassan,Mahmoud Trézéguet
-95,Egypt,80,Mostafa Zico,Omar Marmoush
+95,Egypt,80,Mostafa Ziko,Omar Marmoush
 95,Argentina,90+5,Julián Álvarez,Facundo Medina
 95,Argentina,90+5,Cristian Romero,Nicolás Otamendi
 95,Egypt,90+6,Mohanad Lashin,Zizo
@@ -712,3 +776,196 @@ match_id,team,minute,off,on
 97,Morocco,85,Chemsdine Talbi,Amine Sbaï
 97,France,87,Jules Koundé,Malo Gusto
 98,Belgium,71,Thibaut Courtois,Senne Lammens
+69,Colombia,60,Jhon Córdoba,Luis Suárez
+69,Colombia,60,Jefferson Lerma,Richard Ríos
+69,Colombia,76,James Rodríguez,Juan Quintero
+69,Colombia,76,Jhon Arias,Kevin Castaño
+69,Colombia,87,Santiago Arias,Daniel Muñoz
+69,Portugal,46,João Cancelo,Diogo Dalot
+69,Portugal,46,Rúben Neves,João Neves
+69,Portugal,70,Vitinha,Samu Costa
+69,Portugal,70,João Félix,Rafael Leão
+69,Portugal,90+2,Nuno Mendes,Matheus Nunes
+70,DR Congo,51,Cédric Bakambu,Fiston Mayele
+70,DR Congo,72,Samuel Moutoussamy,Ngalayel Mukau
+70,DR Congo,72,Nathanaël Mbuku,Meschack Elia
+70,DR Congo,72,Brian Cipenga,Theo Bongonda
+70,DR Congo,83,Arthur Masuaku,Joris Kayembe
+70,Uzbekistan,58,Dostonbek Khamdamov,Azizjon Ganiev
+70,Uzbekistan,58,Otabek Shukurov,Odiljon Xamrobekov
+70,Uzbekistan,73,Abbosbek Fayzullaev,Oston Urunov
+70,Uzbekistan,82,Jakhongir Urozov,Igor Sergeev
+70,Uzbekistan,82,Akmal Mozgovoy,Jamshid Iskanderov
+71,Algeria,71,Jaouen Hadjam,Rayan Aït-Nouri
+71,Algeria,71,Amine Gouiri,Zineddine Belaïd
+71,Algeria,71,Rafik Belghali,Samir Chergui
+71,Algeria,90+4,Houssem Aouar,Fares Ghedjemis
+71,Austria,46,Xaver Schlager,Florian Grillitsch
+71,Austria,46,Romano Schmid,Paul Wanner
+71,Austria,46,Marko Arnautović,Michael Gregoritsch
+71,Austria,62,David Alaba,Kevin Danso
+71,Austria,90+5,Phillip Mwene,Saša Kalajdžić
+72,Jordan,46,Ali Azaizeh,Musa Al-Tamari
+72,Jordan,46,Odeh Al-Fakhoury,Mahmoud Al-Mardi
+72,Jordan,76,Nizar Al-Rashdan,Amer Jamous
+72,Jordan,90,Ali Olwan,Mohammad Abu Zrayq
+72,Jordan,90,Husam Abu Dahab,Salim Obaid
+72,Argentina,60,Nico Paz,Alexis Mac Allister
+72,Argentina,60,Lautaro Martínez,Lionel Messi
+72,Argentina,60,Giovani Lo Celso,Thiago Almada
+72,Argentina,71,Giuliano Simeone,Valentín Barco
+72,Argentina,82,Julián Álvarez,José Manuel López
+73,South Africa,46,Relebohile Mofokeng,Thalente Mbatha
+73,South Africa,86,Thapelo Maseko,Tshepang Moremi
+73,South Africa,86,Evidence Makgopa,Iqraam Rayners
+73,Canada,59,Moïse Bombito,Luc de Fougerolles
+73,Canada,59,Nathan Saliba,Niko Sigur
+73,Canada,70,Liam Millar,Jacob Shaffelburg
+73,Canada,70,Tani Oluwaseyi,Promise David
+73,Canada,75,Tajon Buchanan,Alphonso Davies
+76,Netherlands,71,Brian Brobbey,Wout Weghorst
+76,Netherlands,71,Nathan Aké,Teun Koopmeiners
+76,Netherlands,86,Micky van de Ven,Jorrel Hato
+76,Netherlands,86,Ryan Gravenberch,Quinten Timber
+76,Netherlands,110,Frenkie de Jong,Marten de Roon
+76,Netherlands,113,Cody Gakpo,Justin Kluivert
+76,Morocco,75,Chadi Riad,Anass Salah Eddine
+76,Morocco,79,Ayyoub Bouaddi,Samir El Mourabet
+76,Morocco,79,Brahim Díaz,Gessime Yassine
+76,Morocco,86,Bilal El Khannouss,Chemsdine Talbi
+76,Morocco,86,Azzedine Ounahi,Soufiane Rahimi
+77,Ivory Coast,87,Nicolas Pépé,Oumar Diakité
+77,Ivory Coast,90+3,Ghislain Konan,Bazoumana Touré
+77,Ivory Coast,90+3,Yan Diomandé,Evann Guessand
+77,Norway,83,Marcus Holmgren Pedersen,Fredrik Aursnes
+78,France,85,Kylian Mbappé,Jean-Philippe Mateta
+78,Sweden,65,Elliot Stroud,Taha Ali
+78,Sweden,82,Yasin Ayari,Benjamin Nygren
+80,England,75,Djed Spence,Eberechi Eze
+80,England,90+1,Declan Rice,John Stones
+80,DR Congo,64,Nathanaël Mbuku,Meschack Elia
+80,DR Congo,76,Ngalayel Mukau,Edo Kayembe
+80,DR Congo,76,Brian Cipenga,Theo Bongonda
+80,DR Congo,89,Arthur Masuaku,Joris Kayembe
+80,DR Congo,89,Samuel Moutoussamy,Fiston Mayele
+83,Austria,46,Nicolas Seiwald,Carney Chukwuemeka
+84,Portugal,62,Pedro Neto,Francisco Conceição
+84,Portugal,62,Vitinha,Bernardo Silva
+84,Portugal,62,Bruno Fernandes,Nélson Semedo
+84,Portugal,62,João Cancelo,Gonçalo Ramos
+84,Portugal,81,Cristiano Ronaldo,Rúben Neves
+84,Croatia,46,Ante Budimir,Igor Matanović
+84,Croatia,68,Martin Baturina,Mario Pašalić
+84,Croatia,90+2,Nikola Vlašić,Joško Gvardiol
+84,Croatia,90+6,Mateo Kovačić,Andrej Kramarić
+86,Australia,46,Jordan Bos,Kai Trewin
+86,Australia,74,Nestory Irankunda,Mohamed Toure
+86,Australia,74,Cristian Volpato,Ajdin Hrustic
+86,Australia,105,Aidan O'Neill,Paul Okon-Engstler
+86,Australia,105,Connor Metcalfe,Awer Mabil
+86,Australia,119,Patrick Beach,Mathew Ryan
+86,Egypt,67,Hamdy Fathy,Hossam Abdelmaguid
+86,Egypt,67,Mostafa Ziko,Haissem Hassan
+86,Egypt,80,Karim Hafez,Trézéguet
+86,Egypt,105,Omar Marmoush,Hamza Abdelkarim
+86,Egypt,120+1,Marwan Attia,Mahmoud Saber
+87,Argentina,63,Lautaro Martínez,Julián Álvarez
+87,Argentina,63,Thiago Almada,Nico González
+87,Argentina,84,Facundo Medina,Nicolás Tagliafico
+87,Argentina,84,Rodrigo De Paul,Leandro Paredes
+87,Argentina,104,Nahuel Molina,Gonzalo Montiel
+87,Cape Verde,67,Laros Duarte,Jamiro Monteiro
+87,Cape Verde,67,Nuno da Costa,Dailon Livramento
+87,Cape Verde,80,Ryan Mendes,Willy Semedo
+87,Cape Verde,80,Jovane Cabral,Hélio Varela
+87,Cape Verde,100,Deroy Duarte,Yannick Semedo
+87,Cape Verde,100,Kevin Pina,Gilson Benchimol
+92,Mexico,46,César Montes,Edson Álvarez
+92,Mexico,61,Luis Romo,Brian Gutiérrez
+92,Mexico,61,Gilberto Mora,Santiago Giménez
+92,Mexico,79,Jorge Sánchez,Álvaro Fidalgo
+92,Mexico,81,Julián Quiñones,Guillermo Martínez
+92,England,57,Bukayo Saka,John Stones
+92,England,75,Nico O'Reilly,Djed Spence
+92,England,75,Elliot Anderson,Dan Burn
+92,England,90,Harry Kane,Morgan Rogers
+96,Switzerland,71,Ricardo Rodríguez,Miro Muheim
+96,Switzerland,87,Breel Embolo,Cedric Itten
+96,Switzerland,87,Denis Zakaria,Silvan Widmer
+96,Switzerland,90+1,Dan Ndoye,Rubén Vargas
+96,Switzerland,105,Fabian Rieder,Zeki Amdouni
+96,Colombia,66,Jhon Arias,Jáminton Campaz
+96,Colombia,71,James Rodríguez,Juan Quintero
+96,Colombia,82,Luis Suárez,Cucho Hernández
+96,Colombia,82,Jefferson Lerma,Richard Ríos
+96,Colombia,98,Jhon Lucumí,Yerry Mina
+98,Spain,55,Álex Baena,Ferran Torres
+98,Spain,55,Fabián Ruiz,Pedri
+98,Spain,79,Mikel Oyarzabal,Nico Williams
+98,Spain,86,Dani Olmo,Mikel Merino
+98,Belgium,60,Hans Vanaken,Romelu Lukaku
+98,Belgium,60,Leandro Trossard,Axel Witsel
+98,Belgium,60,Maxim De Cuyper,Joaquin Seys
+98,Belgium,86,Kevin De Bruyne,Alexis Saelemaekers
+101,France,30,William Saliba,Maxence Lacroix
+101,France,46,Adrien Rabiot,Manu Koné
+101,France,57,Bradley Barcola,Désiré Doué
+101,France,72,Lucas Digne,Théo Hernández
+101,France,72,Michael Olise,Rayan Cherki
+101,Spain,74,Mikel Oyarzabal,Ferran Torres
+101,Spain,77,Fabián Ruiz,Pedri
+101,Spain,77,Dani Olmo,Mikel Merino
+101,Spain,83,Álex Baena,Nico Williams
+101,Spain,83,Pedro Porro,Marcos Llorente
+94,USA,46,Sergiño Dest,Giovanni Reyna
+94,USA,59,Christian Pulisic,Sebastian Berhalter
+94,USA,72,Tyler Adams,Ricardo Pepi
+94,USA,90+2,Antonee Robinson,Max Arfsten
+94,USA,90+2,Folarin Balogun,Haji Wright
+94,Belgium,21,Amadou Onana,Hans Vanaken
+94,Belgium,67,Dodi Lukebakio,Jeremy Doku
+94,Belgium,67,Charles De Ketelaere,Romelu Lukaku
+94,Belgium,89,Nicolas Raskin,Axel Witsel
+94,Belgium,89,Leandro Trossard,Alexis Saelemaekers
+99,Norway,60,Julian Ryerson,Fredrik Aursnes
+99,Norway,67,Alexander Sørloth,Oscar Bobb
+99,Norway,67,Andreas Schjelderup,Antonio Nusa
+99,Norway,90,David Møller Wolfe,Marcus Holmgren Pedersen
+99,Norway,105,Torbjørn Heggem,Leo Østigård
+99,Norway,105,Erling Haaland,Jørgen Strand Larsen
+99,England,46,Noni Madueke,Bukayo Saka
+99,England,46,Declan Rice,Eberechi Eze
+99,England,77,Anthony Gordon,Reece James
+99,England,87,Jude Bellingham,Dan Burn
+99,England,88,Nico O'Reilly,Djed Spence
+100,Argentina,85,Nahuel Molina,Gonzalo Montiel
+100,Argentina,85,Rodrigo De Paul,Lautaro Martínez
+100,Argentina,85,Nicolás Tagliafico,Nico González
+100,Argentina,105,Enzo Fernández,Thiago Almada
+100,Argentina,105,Cristian Romero,Nicolás Otamendi
+100,Argentina,110,Leandro Paredes,José Manuel López
+100,Switzerland,88,Ricardo Rodríguez,Eray Cömert
+100,Switzerland,88,Dan Ndoye,Zeki Amdouni
+100,Switzerland,88,Djibril Sow,Silvan Widmer
+100,Switzerland,88,Fabian Rieder,Miro Muheim
+100,Switzerland,120+1,Remo Freuler,Rubén Vargas
+102,England,72,Anthony Gordon,Ezri Konsa
+102,England,82,Declan Rice,Nico O'Reilly
+102,England,82,Reece James,Dan Burn
+102,England,90+6,Djed Spence,Marcus Rashford
+102,England,90+6,John Stones,Ivan Toney
+102,Argentina,64,Leandro Paredes,Nico González
+102,Argentina,72,Giuliano Simeone,Rodrigo De Paul
+102,Argentina,72,Nahuel Molina,Gonzalo Montiel
+102,Argentina,72,Lisandro Martínez,Nicolás Otamendi
+102,Argentina,81,Nicolás Tagliafico,Lautaro Martínez
+103,France,46,Rayan Cherki,Ousmane Dembélé
+103,France,46,Théo Hernández,Lucas Digne
+103,France,46,Désiré Doué,Bradley Barcola
+103,France,46,Ibrahima Konaté,Dayot Upamecano
+103,France,90+2,Malo Gusto,Jules Koundé
+103,England,46,Marcus Rashford,Ollie Watkins
+103,England,79,Ivan Toney,Elliot Anderson
+103,England,79,Eberechi Eze,Jude Bellingham
+103,England,83,Jarell Quansah,Reece James
+103,England,90+2,Marc Guéhi,Trevoh Chalobah

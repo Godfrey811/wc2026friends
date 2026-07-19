@@ -155,7 +155,7 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 54,South Africa,63,open,Thapelo Maseko,22y 225d,,2003-11-11
 55,Ecuador,9,open,Nilson Angulo,23y 6d,,2003-06-19
 55,Ecuador,77,open,Gonzalo Plata,25y 236d,,2000-11-01
-55,Germany,2,open,Leroy Sané,30y 165d,,1996-01-11
+55,Germany,1:49,open,Leroy Sané,30y 165d,,1996-01-11
 56,Ivory Coast,7,open,Nicolas Pépé,31y 27d,,1995-05-29
 56,Ivory Coast,64,open,Nicolas Pépé,31y 27d,,1995-05-29
 57,Japan,56,open,Daizen Maeda,28y 248d,,1997-10-20
@@ -288,8 +288,8 @@ match_id,team,minute,type,scorer,scorer_age,disallowed,dob
 94,Belgium,57,open,Hans Vanaken,33y 316d,,1992-08-24
 94,Belgium,90+3,open,Romelu Lukaku,33y 54d,,1993-05-13
 95,Egypt,15,open,Yasser Ibrahim,,,
-95,Egypt,67,open,Mostafa Zico,,,
-95,Egypt,72,open,Mostafa Zico,,yes,
+95,Egypt,67,open,Mostafa Ziko,,,
+95,Egypt,72,open,Mostafa Ziko,,yes,
 95,Argentina,79,open,Cristian Romero,28y 71d,,1998-04-27
 95,Argentina,83,open,Lionel Messi,39y 13d,,1987-06-24
 95,Argentina,90+2,open,Enzo Fernández,25y 171d,,2001-01-17
