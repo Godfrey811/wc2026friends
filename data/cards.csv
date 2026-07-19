@@ -257,7 +257,7 @@ match_id,team,minute,color,dice,player
 98,Spain,90+3,yellow,,Aymeric Laporte
 99,Norway,117,yellow,,Kristoffer Ajer
 100,Switzerland,45,yellow,,Breel Embolo
-100,Switzerland,70,red,,Breel Embolo
+100,Switzerland,70,red,6,Breel Embolo
 100,Argentina,98,yellow,,Thiago Almada
 101,France,8,yellow,,Adrien Rabiot
 101,France,86,yellow,,Kylian Mbappé
@@ -281,5 +281,5 @@ match_id,team,minute,color,dice,player
 104,Argentina,41,yellow,,Lisandro Martínez
 104,Argentina,52,yellow,,Leandro Paredes
 104,Argentina,82,yellow,,Enzo Fernández
-104,Argentina,90+3,red,,Enzo Fernández
+104,Argentina,90+3,red,6,Enzo Fernández
 104,Argentina,111,yellow,,Alexis Mac Allister
